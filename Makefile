@@ -4,7 +4,10 @@ CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x
 %.o: %.asm
 	nasm -f elf32 $< -o $@
 
-flix: boot.o main.o
+%.o: %.cpp
+	g++ -c $(CXXFLAGS) $< -o $@
+
+flix: boot.o main.o Screen.o
 	ld -m elf_i386 -Tlink.ld $+ -o $@
 
 clean:

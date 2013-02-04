@@ -17,8 +17,6 @@ T* Singleton<T>::m_obj = nullptr;
 template <typename T>
 T* Singleton<T>::get()
 {
-  if (!m_obj)
-    m_obj = new T();
   return m_obj;
 }
 
