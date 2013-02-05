@@ -15,7 +15,7 @@ extern "C" int main(struct multiboot *mboot_ptr)
   //Screen::putChar({3, 0}, 'l');
   //Screen::putChar({4, 0}, 'x');
 
-  Screen::putString("Hello world!\n\nI'm here!");
+  Screen::putString("Hello world!\n\nI'm here!\n");
 
   return 0xDEADBEEF;
 }
