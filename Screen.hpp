@@ -36,6 +36,7 @@ class Screen
   public:
     inline static void clear();
     inline static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    inline static void putInt(int value, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void updateCursor();
@@ -60,6 +61,39 @@ void Screen::putString(const char* c, Color fg, Color bg)
   }
 
   updateCursor();
+}
+
+void Screen::putInt(int value, Color fg, Color bg)
+{
+  bool neg = value < 0;
+  if (neg)
+    value = -value;
+
+  char buf[12];
+  buf[0] = '-';
+  buf[11] = '\0';
+
+  char* ptr = buf+1;
+  int div = 1000000000;
+  char* start = buf+1;
+  do
+  {
+    *ptr = value / div + '0';
+    if (*ptr == '0')
+    {
+      ++start;
+      *ptr = '-';
+    }
+    value = value % div;
+
+    div /= 10;
+    ++ptr;
+  } while (div);
+
+  if (start == buf + 11)
+    *--start = '0';
+
+  putString(neg ? start-1 : start, fg, bg);
 }
 
 void Screen::putChar(char c, Color fg, Color bg)

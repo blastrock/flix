@@ -1,5 +1,6 @@
 CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32
-CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x
+CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions
+OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o
 
 include $(wildcard *.d)
 
@@ -9,10 +10,10 @@ include $(wildcard *.d)
 %.o: %.cpp
 	g++ -MD -c $(CXXFLAGS) $< -o $@
 
-flix: boot.o main.o Screen.o
+flix: $(OBJECTS)
 	ld -m elf_i386 -Tlink.ld $+ -o $@
 
 clean:
-	rm -f flix *.o *.d
+	rm -f flix $(OBJECTS) *.d
 
 .DEFAULT_GOAL := flix

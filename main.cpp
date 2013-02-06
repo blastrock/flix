@@ -2,11 +2,12 @@
 // Made for JamesM's tutorials
 
 #include "Screen.hpp"
-#include "Singleton.hpp"
+#include "DescTables.hpp"
 
 extern "C" int main(struct multiboot *mboot_ptr)
 {
   // All our initialisation calls will go in here.
+  DescTables::Init();
 
   Screen::clear();
   //Screen::putChar({0, 0}, 'h');
@@ -16,6 +17,11 @@ extern "C" int main(struct multiboot *mboot_ptr)
   //Screen::putChar({4, 0}, 'x');
 
   Screen::putString("Hello world!\n\nI'm here!\n");
+
+  asm volatile ("int $0x3");
+  asm volatile ("int $0x4");
+  asm volatile ("int $0x10");
+  asm volatile ("int $0x16");
 
   return 0xDEADBEEF;
 }
