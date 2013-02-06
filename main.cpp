@@ -4,7 +4,7 @@
 #include "Screen.hpp"
 #include "DescTables.hpp"
 
-extern "C" int main(struct multiboot *mboot_ptr)
+extern "C" int kmain(struct multiboot *mboot_ptr)
 {
   // All our initialisation calls will go in here.
   DescTables::Init();

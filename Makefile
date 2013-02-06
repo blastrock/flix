@@ -1,5 +1,6 @@
+CXX=clang++
 CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32
-CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions
+CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions -Wall -Wextra -pedantic
 OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o
 
 include $(wildcard *.d)
@@ -8,7 +9,7 @@ include $(wildcard *.d)
 	nasm -f elf32 $< -o $@
 
 %.o: %.cpp
-	g++ -MD -c $(CXXFLAGS) $< -o $@
+	$(CXX) -MD -c $(CXXFLAGS) $< -o $@
 
 flix: $(OBJECTS)
 	ld -m elf_i386 -Tlink.ld $+ -o $@
