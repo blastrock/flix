@@ -3,11 +3,12 @@
 
 #include "Screen.hpp"
 #include "DescTables.hpp"
+#include "Timer.hpp"
 
 extern "C" int kmain(struct multiboot *mboot_ptr)
 {
   // All our initialisation calls will go in here.
-  DescTables::Init();
+  DescTables::init();
 
   Screen::clear();
   //Screen::putChar({0, 0}, 'h');
@@ -22,6 +23,9 @@ extern "C" int kmain(struct multiboot *mboot_ptr)
   asm volatile ("int $0x4");
   asm volatile ("int $0x10");
   asm volatile ("int $0x16");
+
+  asm volatile ("sti");
+  Timer::init(5);
 
   return 0xDEADBEEF;
 }

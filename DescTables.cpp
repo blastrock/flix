@@ -1,5 +1,6 @@
 #include "DescTables.hpp"
 #include "string.h"
+#include "io.hpp"
 
 #define idt_isr(num) \
   extern "C" void isr##num();
@@ -35,6 +36,22 @@ idt_isr(28)
 idt_isr(29)
 idt_isr(30)
 idt_isr(31)
+idt_isr(32)
+idt_isr(33)
+idt_isr(34)
+idt_isr(35)
+idt_isr(36)
+idt_isr(37)
+idt_isr(38)
+idt_isr(39)
+idt_isr(40)
+idt_isr(41)
+idt_isr(42)
+idt_isr(43)
+idt_isr(44)
+idt_isr(45)
+idt_isr(46)
+idt_isr(47)
 #undef idt_isr
 
 DescTables::GdtEntry DescTables::g_gdt_entries[5];
@@ -45,13 +62,13 @@ DescTables::IdtPtr   DescTables::g_idt_ptr;
 extern "C" void gdt_set(void* addr);
 extern "C" void idt_set(void* addr);
 
-void DescTables::Init()
+void DescTables::init()
 {
-  InitIdt();
-  InitGdt();
+  initIdt();
+  initGdt();
 }
 
-void DescTables::InitGdt()
+void DescTables::initGdt()
 {
   g_gdt_ptr.limit = (sizeof(GdtEntry) * 5) - 1;
   g_gdt_ptr.base  = (u32)&g_gdt_entries;
@@ -78,12 +95,29 @@ void DescTables::gdt_set_gate(u32 num, u32 base, u32 limit, u8 access, u8 gran)
   g_gdt_entries[num].access      = access;
 }
 
-void DescTables::InitIdt()
+void DescTables::initIdt()
 {
   g_idt_ptr.limit = sizeof(IdtEntry) * 256 -1;
   g_idt_ptr.base  = (u32)&g_idt_entries;
 
   memset(&g_idt_entries, 0, sizeof(IdtEntry)*256);
+
+  // Remap the irq table.
+  // init
+  io::outb(0x20, 0x11);
+  io::outb(0xA0, 0x11);
+  // offsets
+  io::outb(0x21, 0x20);
+  io::outb(0xA1, 0x28);
+  // connections
+  io::outb(0x21, 0x04);
+  io::outb(0xA1, 0x02);
+  // environment
+  io::outb(0x21, 0x01);
+  io::outb(0xA1, 0x01);
+  // reset masks
+  io::outb(0x21, 0x0);
+  io::outb(0xA1, 0x0);
 
 #define idt_set(num) \
   idt_set_gate(num, (u32)isr##num, 0x08, 0x8E);
@@ -119,6 +153,22 @@ void DescTables::InitIdt()
   idt_set(29)
   idt_set(30)
   idt_set(31)
+  idt_set(32)
+  idt_set(33)
+  idt_set(34)
+  idt_set(35)
+  idt_set(36)
+  idt_set(37)
+  idt_set(38)
+  idt_set(39)
+  idt_set(40)
+  idt_set(41)
+  idt_set(42)
+  idt_set(43)
+  idt_set(44)
+  idt_set(45)
+  idt_set(46)
+  idt_set(47)
 #undef idt_set
 
   idt_set(&g_idt_ptr);

@@ -3,7 +3,7 @@
 
 #include "inttypes.hpp"
 #include "string.h"
-#include "io.h"
+#include "io.hpp"
 
 struct Position
 {

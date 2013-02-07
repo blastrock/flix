@@ -11,7 +11,23 @@ struct Registers
 
 extern "C" void isr_handler(Registers regs)
 {
-  Screen::putString("Int ");
-  Screen::putInt(regs.int_no);
-  Screen::putString("!\n");
+  if (regs.int_no <= 47)
+  {
+    if (regs.int_no >= 40)
+      io::outb(0xA0, 0x20);
+    io::outb(0x20, 0x20);
+  }
+
+  if (regs.int_no < 32)
+  {
+    Screen::putString("Isr ");
+    Screen::putInt(regs.int_no);
+    Screen::putString("!\n");
+  }
+  else
+  {
+    Screen::putString("Irq ");
+    Screen::putInt(regs.int_no - 32);
+    Screen::putString("!\n");
+  }
 }

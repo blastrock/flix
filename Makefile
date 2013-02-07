@@ -1,7 +1,7 @@
 CXX=clang++
 CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32
 CXXFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions -Wall -Wextra -pedantic
-OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o
+OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o Timer.o
 
 include $(wildcard *.d)
 

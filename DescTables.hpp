@@ -6,7 +6,7 @@
 class DescTables
 {
   public:
-    static void Init();
+    static void init();
 
   private:
     // This structure contains the value of one GDT entry.
@@ -51,9 +51,9 @@ class DescTables
     static IdtEntry g_idt_entries[256];
     static IdtPtr   g_idt_ptr;
 
-    static void InitGdt();
+    static void initGdt();
     static void gdt_set_gate(u32 num, u32 base, u32 limit, u8 access, u8 gran);
-    static void InitIdt();
+    static void initIdt();
     static void idt_set_gate(u8 num, u32 base, u16 sel, u8 flags);
 };
 
