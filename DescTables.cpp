@@ -73,26 +73,13 @@ void DescTables::initGdt()
   g_gdt_ptr.limit = (sizeof(GdtEntry) * 5) - 1;
   g_gdt_ptr.base  = (u32)&g_gdt_entries;
 
-  gdt_set_gate(0, 0, 0, 0, 0);                // Null segment
-  gdt_set_gate(1, 0, 0xFFFFFFFF, 0x9A, 0xCF); // Code segment
-  gdt_set_gate(2, 0, 0xFFFFFFFF, 0x92, 0xCF); // Data segment
-  gdt_set_gate(3, 0, 0xFFFFFFFF, 0xFA, 0xCF); // User mode code segment
-  gdt_set_gate(4, 0, 0xFFFFFFFF, 0xF2, 0xCF); // User mode data segment
+  g_gdt_entries[0] = {0, 0, 0, 0, 0, 0};
+  g_gdt_entries[1] = {0xFFFF, 0x0000, 0x00, 0x9A, 0xCF, 0x00};
+  g_gdt_entries[2] = {0xFFFF, 0x0000, 0x00, 0x92, 0xCF, 0x00};
+  g_gdt_entries[3] = {0xFFFF, 0x0000, 0x00, 0xFA, 0xCF, 0x00};
+  g_gdt_entries[4] = {0xFFFF, 0x0000, 0x00, 0xF2, 0xCF, 0x00};
 
   gdt_set(&g_gdt_ptr);
-}
-
-void DescTables::gdt_set_gate(u32 num, u32 base, u32 limit, u8 access, u8 gran)
-{
-  g_gdt_entries[num].base_low    = (base & 0xFFFF);
-  g_gdt_entries[num].base_middle = (base >> 16) & 0xFF;
-  g_gdt_entries[num].base_high   = (base >> 24) & 0xFF;
-
-  g_gdt_entries[num].limit_low   = (limit & 0xFFFF);
-  g_gdt_entries[num].granularity = (limit >> 16) & 0x0F;
-
-  g_gdt_entries[num].granularity |= gran & 0xF0;
-  g_gdt_entries[num].access      = access;
 }
 
 void DescTables::initIdt()

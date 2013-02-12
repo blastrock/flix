@@ -37,6 +37,7 @@ class Screen
     inline static void clear();
     inline static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void putInt(int value, Color fg = Color::LightGrey, Color bg = Color::Black);
+    inline static void putHex(int value, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
     inline static void updateCursor();
@@ -94,6 +95,29 @@ void Screen::putInt(int value, Color fg, Color bg)
     *--start = '0';
 
   putString(neg ? start-1 : start, fg, bg);
+}
+
+void Screen::putHex(int value, Color fg, Color bg)
+{
+  char buf[9];
+  buf[8] = '\0';
+
+  char* ptr = buf;
+  int div = 0x10000000;
+  do
+  {
+    *ptr = value / div;
+    if (*ptr < 10)
+      *ptr += '0';
+    else
+      *ptr += 'A'-10;
+    value = value % div;
+
+    div /= 16;
+    ++ptr;
+  } while (div);
+
+  putString(buf, fg, bg);
 }
 
 void Screen::putChar(char c, Color fg, Color bg)

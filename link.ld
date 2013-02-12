@@ -4,15 +4,15 @@ SECTIONS
   .text 0x100000 :
   {
     code = .;
-    *(.text)
+    *(.text*)
     . = ALIGN(4096);
   }
 
   .data :
   {
      data = .;
-     *(.data)
-     *(.rodata)
+     *(.data*)
+     *(.rodata*)
      . = ALIGN(4096);
   }
 
