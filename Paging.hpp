@@ -1,7 +1,7 @@
 #ifndef PAGING_HPP
 #define PAGING_HPP
 
-#include "inttypes.hpp"
+#include "cstdint"
 
 class Paging
 {
@@ -33,7 +33,7 @@ class Paging
     struct PageDirectory
     {
       PageTable* tables[1024];
-      u32 tablesDir[1024];
+      uint32_t tablesDir[1024];
     };
 
     static PageDirectory* g_kernel_directory;
@@ -49,7 +49,7 @@ class Paging
       If make == 1, if the page-table in which this page should
       reside isn't created, create it!
      **/
-    static Page* get_page(u32 address, int make, PageDirectory *dir);
+    static Page* get_page(uint32_t address, int make, PageDirectory *dir);
 
     /**
       Handler for page faults.

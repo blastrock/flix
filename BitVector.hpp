@@ -1,35 +1,35 @@
 #ifndef BIT_VECTOR_HPP
 #define BIT_VECTOR_HPP
 
-#include "inttypes.hpp"
+#include "cstdint"
 #include "string.h"
 
 class BitVector
 {
   public:
-    inline void setData(u64 size, u8* data);
+    inline void setData(uint64_t size, uint8_t* data);
 
-    inline bool getBit(u32 n) const;
-    inline void setBit(u32 n, bool b);
+    inline bool getBit(uint32_t n) const;
+    inline void setBit(uint32_t n, bool b);
     inline void fill(bool b);
 
   private:
-    u64 m_size;
-    u8* m_data;
+    uint64_t m_size;
+    uint8_t* m_data;
 };
 
-void BitVector::setData(u64 size, u8* data)
+void BitVector::setData(uint64_t size, uint8_t* data)
 {
   m_size = size;
   m_data = data;
 }
 
-bool BitVector::getBit(u32 n) const
+bool BitVector::getBit(uint32_t n) const
 {
   return m_data[n/8] & (1 << (n%8));
 }
 
-void BitVector::setBit(u32 n, bool b)
+void BitVector::setBit(uint32_t n, bool b)
 {
   if (b)
     m_data[n/8] |= (1 << (n%8));

@@ -1,12 +1,12 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
-#include "inttypes.hpp"
+#include "cstdint"
 
 class Timer
 {
   public:
-    static void init(u32 frequency);
+    static void init(uint32_t frequency);
 };
 
 #endif /* TIMER_HPP */

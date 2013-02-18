@@ -15,23 +15,24 @@ void Memory::init(Multiboot const& mboot)
     return;
   }
 
-  u64 maxAddr = 0;
-  forEachRange(mboot, [&maxAddr](u64 baseAddr, u64 length){
+  uint64_t maxAddr = 0;
+  forEachRange(mboot, [&maxAddr](uint64_t baseAddr, uint64_t length){
       //debug("base_addr", baseAddr);
       //debug("length", length);
-      u64 end = baseAddr + length;
+      uint64_t end = baseAddr + length;
       if (end > maxAddr)
         maxAddr = end;
       });
 
-  u8* frames = (u8*)KHeap::kmalloc_a(maxAddr/8);
+  uint8_t* frames = (uint8_t*)KHeap::kmalloc_a(maxAddr/8);
   g_frames.setData(maxAddr/8, frames);
   g_frames.fill(false);
 
   // TODO optimize lawl...
+  // TODO mark other used pages, by bios and all
   // XXX constants
-  forEachRange(mboot, [](u64 baseAddr, u64 length){
-      for (u64 page = (baseAddr + 0x1000 - 1) / 0x1000,
+  forEachRange(mboot, [](uint64_t baseAddr, uint64_t length){
+      for (uint64_t page = (baseAddr + 0x1000 - 1) / 0x1000,
           end = (baseAddr + length) / 0x1000;
           page < end;
           ++page)
@@ -39,8 +40,8 @@ void Memory::init(Multiboot const& mboot)
       });
 
   // XXX constants
-  for (u64 page = reinterpret_cast<u64>(kernelStartAddress) / 0x1000,
-      end = reinterpret_cast<u64>(KHeap::kmalloc_a(0)) / 0x1000;
+  for (uint64_t page = reinterpret_cast<uint64_t>(kernelStartAddress) / 0x1000,
+      end = reinterpret_cast<uint64_t>(KHeap::kmalloc_a(0)) / 0x1000;
       page < end;
       ++page)
     g_frames.setBit(page, false);

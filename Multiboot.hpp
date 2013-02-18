@@ -1,28 +1,28 @@
 #ifndef MULTIBOOT_HPP
 #define MULTIBOOT_HPP
 
-#include "inttypes.hpp"
+#include "cstdint"
 
 struct Multiboot
 {
-  u32 flags;
-  u32 mem_lower;
-  u32 mem_upper;
-  u32 boot_device;
-  u32 cmdline;
-  u32 mods_count;
-  u32 mods_addr;
-  u8 syms[16];
-  u32 mmap_length;
-  u32 mmap_addr;
+  uint32_t flags;
+  uint32_t mem_lower;
+  uint32_t mem_upper;
+  uint32_t boot_device;
+  uint32_t cmdline;
+  uint32_t mods_count;
+  uint32_t mods_addr;
+  uint8_t syms[16];
+  uint32_t mmap_length;
+  uint32_t mmap_addr;
 } __attribute__((packed));
 
 struct MapRange
 {
-  u32 size;
-  u64 base_addr;
-  u64 length;
-  u32 type;
+  uint32_t size;
+  uint64_t base_addr;
+  uint64_t length;
+  uint32_t type;
 } __attribute__((packed));
 
 #endif /* MULTIBOOT_HPP */

@@ -9,7 +9,7 @@ extern "C" void* kernelEndAddress;
 
 char* KHeap::placement_address = (char*)&kernelEndAddress;
 
-void* KHeap::kmalloc(u32 sz, void** phys)
+void* KHeap::kmalloc(uint32_t sz, void** phys)
 {
   if (phys)
     *phys = placement_address;
@@ -18,7 +18,7 @@ void* KHeap::kmalloc(u32 sz, void** phys)
   return tmp;
 }
 
-void* KHeap::kmalloc_a(u32 sz, void** phys)
+void* KHeap::kmalloc_a(uint32_t sz, void** phys)
 {
   // This will eventually call malloc() on the kernel heap.
   // For now, though, we just assign memory at placement_address

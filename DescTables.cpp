@@ -71,7 +71,7 @@ void DescTables::init()
 void DescTables::initGdt()
 {
   g_gdt_ptr.limit = (sizeof(GdtEntry) * 5) - 1;
-  g_gdt_ptr.base  = (u32)&g_gdt_entries;
+  g_gdt_ptr.base  = (uint32_t)&g_gdt_entries;
 
   g_gdt_entries[0] = {0, 0, 0, 0, 0, 0};
   g_gdt_entries[1] = {0xFFFF, 0x0000, 0x00, 0x9A, 0xCF, 0x00};
@@ -85,7 +85,7 @@ void DescTables::initGdt()
 void DescTables::initIdt()
 {
   g_idt_ptr.limit = sizeof(IdtEntry) * 256 -1;
-  g_idt_ptr.base  = (u32)&g_idt_entries;
+  g_idt_ptr.base  = (uint32_t)&g_idt_entries;
 
   memset(&g_idt_entries, 0, sizeof(IdtEntry)*256);
 
@@ -107,7 +107,7 @@ void DescTables::initIdt()
   io::outb(0xA1, 0x0);
 
 #define idt_set(num) \
-  idt_set_gate(num, (u32)isr##num, 0x08, 0x8E);
+  idt_set_gate(num, (uint32_t)isr##num, 0x08, 0x8E);
   idt_set(0)
   idt_set(1)
   idt_set(2)
@@ -161,7 +161,7 @@ void DescTables::initIdt()
   idt_set(&g_idt_ptr);
 }
 
-void DescTables::idt_set_gate(u8 num, u32 base, u16 sel, u8 flags)
+void DescTables::idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags)
 {
   g_idt_entries[num].base_lo = base & 0xFFFF;
   g_idt_entries[num].base_hi = (base >> 16) & 0xFFFF;
