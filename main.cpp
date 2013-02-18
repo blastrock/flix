@@ -5,10 +5,14 @@
 #include "DescTables.hpp"
 #include "Timer.hpp"
 #include "Paging.hpp"
+#include "Memory.hpp"
+#include "Multiboot.hpp"
 
-extern "C" int kmain(struct multiboot *mboot_ptr)
+extern "C" int kmain(const Multiboot& mboot)
 {
   Screen::clear();
+
+  Memory::init(mboot);
 
   // All our initialisation calls will go in here.
   DescTables::init();
@@ -20,7 +24,6 @@ extern "C" int kmain(struct multiboot *mboot_ptr)
   //Screen::putChar({3, 0}, 'l');
   //Screen::putChar({4, 0}, 'x');
 
-  Screen::putHex((int)&kmain);
   Screen::putString("Hello world!\n\nI'm here!\n");
   //Screen::putInt((int)&kmain);
 
