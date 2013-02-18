@@ -2,6 +2,9 @@
 #include "KHeap.hpp"
 #include "Debug.hpp"
 
+extern "C" void* kernelStartAddress;
+extern "C" void* kernelEndAddress;
+
 BitVector Memory::g_frames;
 
 void Memory::init(Multiboot const& mboot)
@@ -36,7 +39,7 @@ void Memory::init(Multiboot const& mboot)
       });
 
   // XXX constants
-  for (u64 page = 0x100000 / 0x1000,
+  for (u64 page = reinterpret_cast<u64>(kernelStartAddress) / 0x1000,
       end = reinterpret_cast<u64>(KHeap::kmalloc_a(0)) / 0x1000;
       page < end;
       ++page)

@@ -10,10 +10,10 @@ SECTIONS
 
   .data :
   {
-     data = .;
-     *(.data*)
-     *(.rodata*)
-     . = ALIGN(4096);
+    data = .;
+    *(.data*)
+    *(.rodata*)
+    . = ALIGN(4096);
   }
 
   .bss :
@@ -22,5 +22,6 @@ SECTIONS
     *(.bss)
     . = ALIGN(4096);
   }
-  end = .;
+  kernelStartAddress = ABSOLUTE(ADDR(.text));
+  kernelEndAddress = ABSOLUTE(.);
 }

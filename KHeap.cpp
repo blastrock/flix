@@ -5,10 +5,9 @@
 
 #include "KHeap.hpp"
 
-// end is defined in the linker script.
-extern void* end;
+extern "C" void* kernelEndAddress;
 
-char* KHeap::placement_address = (char*)&end;
+char* KHeap::placement_address = (char*)&kernelEndAddress;
 
 void* KHeap::kmalloc(u32 sz, void** phys)
 {
