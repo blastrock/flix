@@ -1,7 +1,8 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
-#include "cstdint"
+#include <cstdint>
+#include "IntUtil.hpp"
 #include "string.h"
 #include "io.hpp"
 
@@ -66,58 +67,12 @@ void Screen::putString(const char* c, Color fg, Color bg)
 
 void Screen::putInt(int value, Color fg, Color bg)
 {
-  bool neg = value < 0;
-  if (neg)
-    value = -value;
-
-  char buf[12];
-  buf[0] = '-';
-  buf[11] = '\0';
-
-  char* ptr = buf+1;
-  int div = 1000000000;
-  char* start = buf+1;
-  do
-  {
-    *ptr = value / div + '0';
-    if (*ptr == '0')
-    {
-      ++start;
-      *ptr = '-';
-    }
-    value = value % div;
-
-    div /= 10;
-    ++ptr;
-  } while (div);
-
-  if (start == buf + 11)
-    *--start = '0';
-
-  putString(neg ? start-1 : start, fg, bg);
+  putString(IntUtil::intToStr(value, 10), fg, bg);
 }
 
 void Screen::putHex(unsigned int value, Color fg, Color bg)
 {
-  char buf[9];
-  buf[8] = '\0';
-
-  char* ptr = buf;
-  unsigned int div = 0x10000000;
-  do
-  {
-    *ptr = value / div;
-    if (*ptr < 10)
-      *ptr += '0';
-    else
-      *ptr += 'A'-10;
-    value = value % div;
-
-    div /= 16;
-    ++ptr;
-  } while (div);
-
-  putString(buf, fg, bg);
+  putString(IntUtil::uintToStr(value, 16), fg, bg);
 }
 
 void Screen::putChar(char c, Color fg, Color bg)

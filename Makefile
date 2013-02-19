@@ -1,8 +1,8 @@
 CXX=clang++
 #CXX=g++
 CFLAGS=-nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32
-CXXFLAGS=-g -O0 -nostdlib -nostdinc -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions -Wall -Wextra -pedantic -mno-sse -mno-mmx
-OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o Timer.o KHeap.o Paging.o Memory.o
+CXXFLAGS=-g -O0 -Ilibkcxx -nostdlib -nostdinc -nostdinc++ -fno-builtin -fno-stack-protector -m32 -std=c++0x -fno-exceptions -Wall -Wextra -pedantic -mno-sse -mno-mmx
+OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o Timer.o KHeap.o Paging.o Memory.o IntUtil.o
 HD_SIZE=4
 
 include $(wildcard *.d)
