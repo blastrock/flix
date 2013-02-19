@@ -1,8 +1,8 @@
 #ifndef BIT_VECTOR_HPP
 #define BIT_VECTOR_HPP
 
-#include "cstdint"
-#include "string.h"
+#include <cstdint>
+#include <cstring>
 
 class BitVector
 {
@@ -40,9 +40,9 @@ void BitVector::setBit(uint32_t n, bool b)
 void BitVector::fill(bool b)
 {
   if (b)
-    memset(m_data, 0xFF, m_size);
+    std::memset(m_data, 0xFF, m_size);
   else
-    memset(m_data, 0x00, m_size);
+    std::memset(m_data, 0x00, m_size);
 }
 
 #endif /* BIT_VECTOR_HPP */

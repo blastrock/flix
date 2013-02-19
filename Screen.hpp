@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include "IntUtil.hpp"
-#include "string.h"
+#include <cstring>
 #include "io.hpp"
 
 struct Position
@@ -50,7 +50,7 @@ class Screen
 
 void Screen::clear()
 {
-  memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);
+  std::memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);
 }
 
 void Screen::putString(const char* c, Color fg, Color bg)
@@ -122,8 +122,8 @@ void Screen::updateCursor()
 
 void Screen::scrollOneLine()
 {
-  memcpy((void*)0xB8000, (void*)(0xB8000 + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
-  memset((void*)(0xB8000 + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
+  std::memcpy((void*)0xB8000, (void*)(0xB8000 + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
+  std::memset((void*)(0xB8000 + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
 }
 
 #endif /* SCREEN_HPP */

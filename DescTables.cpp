@@ -1,5 +1,5 @@
 #include "DescTables.hpp"
-#include "string.h"
+#include <cstring>
 #include "io.hpp"
 
 #define idt_isr(num) \
@@ -87,7 +87,7 @@ void DescTables::initIdt()
   g_idt_ptr.limit = sizeof(IdtEntry) * 256 -1;
   g_idt_ptr.base  = (uint32_t)&g_idt_entries;
 
-  memset(&g_idt_entries, 0, sizeof(IdtEntry)*256);
+  std::memset(&g_idt_entries, 0, sizeof(IdtEntry)*256);
 
   // Remap the irq table.
   // init

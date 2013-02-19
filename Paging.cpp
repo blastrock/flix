@@ -8,7 +8,7 @@ void Paging::initialise_paging()
 {
   // Let's make a page directory.
   g_kernel_directory = (PageDirectory*)KHeap::kmalloc_a(sizeof(PageDirectory));
-  memset(g_kernel_directory, 0, sizeof(PageDirectory));
+  std::memset(g_kernel_directory, 0, sizeof(PageDirectory));
 
   // We need to identity map (phys addr = virt addr) from
   // 0x0 to the end of used memory, so we can access this
@@ -60,7 +60,7 @@ Paging::Page* Paging::get_page(uint32_t address, int make, PageDirectory *dir)
   {
     uint32_t tmp;
     dir->tables[table_idx] = (PageTable*)KHeap::kmalloc_a(sizeof(PageTable), (void**)&tmp);
-    memset(dir->tables[table_idx], 0, 0x1000);
+    std::memset(dir->tables[table_idx], 0, 0x1000);
     dir->tablesDir[table_idx] = tmp | 0x7; // PRESENT, RW, US.
     return &dir->tables[table_idx]->pages[address%1024];
   }
