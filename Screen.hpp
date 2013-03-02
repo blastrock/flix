@@ -51,6 +51,7 @@ class Screen
 void Screen::clear()
 {
   std::memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);
+  g_cursor = {0, 0};
 }
 
 void Screen::putString(const char* c, Color fg, Color bg)
