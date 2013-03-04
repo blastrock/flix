@@ -1,7 +1,7 @@
 #ifndef DESC_TABLES_HPP
 #define DESC_TABLES_HPP
 
-#include "cstdint"
+#include <cstdint>
 
 class DescTables
 {
@@ -9,23 +9,10 @@ class DescTables
     static void init();
 
   private:
-    // This structure contains the value of one GDT entry.
-    // We use the attribute 'packed' to tell GCC not to change
-    // any of the alignment in the structure.
-    struct GdtEntry
-    {
-      uint16_t    limit_low;           // The lower 16 bits of the limit.
-      uint16_t    base_low;            // The lower 16 bits of the base.
-      uint8_t     base_middle;         // The next 8 bits of the base.
-      uint8_t     access;              // Access flags, determine what ring this segment can be used in.
-      uint8_t     granularity;
-      uint8_t     base_high;           // The last 8 bits of the base.
-    } __attribute__((packed));
-
     struct GdtPtr
     {
-      uint16_t    limit;               // The upper 16 bits of all selector limits.
-      uint32_t    base;                // The address of the first gdt_entry_t struct.
+      uint16_t limit;
+      void* base;
     } __attribute__((packed));
 
     // A struct describing an interrupt gate.
@@ -46,13 +33,13 @@ class DescTables
       uint32_t    base;                // The address of the first element in our idt_entry_t array.
     } __attribute__((packed));
 
-    static GdtEntry g_gdt_entries[5];
-    static GdtPtr   g_gdt_ptr;
+    static uint64_t g_gdtEntries[5];
+    static GdtPtr g_gdtPtr;
     static IdtEntry g_idt_entries[256];
     static IdtPtr   g_idt_ptr;
 
     static void initGdt();
-    static void gdt_set_gate(uint32_t num, uint32_t base, uint32_t limit, uint8_t access, uint8_t gran);
+    static void commitGdt(void* gdt);
     static void initIdt();
     static void idt_set_gate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
 };

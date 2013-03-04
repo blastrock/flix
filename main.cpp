@@ -4,8 +4,8 @@
 #include "Screen.hpp"
 #include "DescTables.hpp"
 #include "Timer.hpp"
-//#include "Paging.hpp"
-//#include "Memory.hpp"
+#include "Paging.hpp"
+#include "Memory.hpp"
 #include "Multiboot.hpp"
 
 extern "C" int kmain(const Multiboot& mboot)
@@ -15,7 +15,7 @@ extern "C" int kmain(const Multiboot& mboot)
   //Memory::init(mboot);
 
   // All our initialisation calls will go in here.
-  //DescTables::init();
+  DescTables::init();
   //Paging::initialise_paging();
 
   //Screen::putChar({0, 0}, 'h');
