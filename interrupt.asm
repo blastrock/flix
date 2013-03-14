@@ -1,17 +1,17 @@
 %macro ISR_NOERRCODE 1  ; define a macro, taking one parameter
-  [GLOBAL isr%1]        ; %1 accesses the first parameter.
   isr%1:
     cli
-    push byte 0
-    push byte %1
+    sub rsp, 2
+    mov byte [rsp+1], 0
+    mov byte [rsp], %1
     jmp isr_common_stub
 %endmacro
 
 %macro ISR_ERRCODE 1
-  [GLOBAL isr%1]
   isr%1:
     cli
-    push byte %1
+    sub rsp, 1
+    mov byte [rsp], %1
     jmp isr_common_stub
 %endmacro
 
@@ -65,32 +65,61 @@ ISR_NOERRCODE 45
 ISR_NOERRCODE 46
 ISR_NOERRCODE 47
 
-[EXTERN isr_handler]
+[GLOBAL intVectors]
+intVectors:
+%assign $i 0
+%rep 48
+  dq isr%[$i]
+%assign $i $i+1
+%endrep
+
+[EXTERN intHandler]
 
 ; This is our common ISR stub. It saves the processor state, sets
 ; up for kernel mode segments, calls the C-level fault handler,
 ; and finally restores the stack frame.
 isr_common_stub:
-  pusha                    ; Pushes edi,esi,ebp,esp,ebx,edx,ecx,eax
+  push rdi
+  push rsi
+  push rdx
+  push rcx
+  push rax
+  push r8
+  push r9
+  push r10
+  push r11
 
-  mov ax, ds               ; Lower 16-bits of eax = ds.
-  push eax                 ; save the data segment descriptor
+  ;mov ax, ds               ; Lower 16-bits of eax = ds.
+  ;push eax                 ; save the data segment descriptor
 
-  mov ax, 0x10  ; load the kernel data segment descriptor
-  mov ds, ax
-  mov es, ax
-  mov fs, ax
-  mov gs, ax
+  ;mov ax, 0x10  ; load the kernel data segment descriptor
+  ;mov ds, ax
+  ;mov es, ax
+  ;mov fs, ax
+  ;mov gs, ax
 
-  call isr_handler
+  ; pass the stack pointer as an argument so that the handler has access to the
+  ; machine state before the interrupt and to the interrupt number and error
+  ; code
+  mov rdi, rsp
 
-  pop eax        ; reload the original data segment descriptor
-  mov ds, ax
-  mov es, ax
-  mov fs, ax
-  mov gs, ax
+  call intHandler
 
-  popa                     ; Pops edi,esi,ebp...
-  add esp, 8     ; Cleans up the pushed error code and pushed ISR number
-  sti
-  iret           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
+  ;pop eax        ; reload the original data segment descriptor
+  ;mov ds, ax
+  ;mov es, ax
+  ;mov fs, ax
+  ;mov gs, ax
+
+  pop r11
+  pop r10
+  pop r9
+  pop r8
+  pop rax
+  pop rcx
+  pop rdx
+  pop rsi
+  pop rdi
+  add rsp, 2     ; Cleans up the pushed error code and pushed ISR number
+  ;sti
+  iretq           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
