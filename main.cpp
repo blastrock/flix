@@ -27,12 +27,12 @@ extern "C" int kmain(const Multiboot& mboot)
   Screen::putString("Hello world!\n\nI'm here!\n");
 
   asm volatile ("int $0x3");
-  asm volatile ("int $0x4");
-  asm volatile ("int $0x10");
-  asm volatile ("int $0x16");
+  //asm volatile ("int $0x4");
+  //asm volatile ("int $0x10");
+  //asm volatile ("int $0x16");
 
-  //asm volatile ("sti");
-  //Timer::init(4);
+  asm volatile ("sti");
+  Timer::init(4);
 
   return 0xDEADBEEF;
 }

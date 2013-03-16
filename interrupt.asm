@@ -121,5 +121,5 @@ isr_common_stub:
   pop rsi
   pop rdi
   add rsp, 2     ; Cleans up the pushed error code and pushed ISR number
-  ;sti
+  sti
   iretq           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
