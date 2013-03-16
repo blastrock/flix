@@ -1,28 +1,49 @@
 #ifndef MULTIBOOT_HPP
 #define MULTIBOOT_HPP
 
-#include "cstdint"
+#include <cstdint>
 
-struct Multiboot
+class MultibootLoader
 {
-  uint32_t flags;
-  uint32_t mem_lower;
-  uint32_t mem_upper;
-  uint32_t boot_device;
-  uint32_t cmdline;
-  uint32_t mods_count;
-  uint32_t mods_addr;
-  uint8_t syms[16];
-  uint32_t mmap_length;
-  uint32_t mmap_addr;
-} __attribute__((packed));
+  public:
+    void handle(void* vmboot);
 
-struct MapRange
-{
-  uint32_t size;
-  uint64_t base_addr;
-  uint64_t length;
-  uint32_t type;
-} __attribute__((packed));
+  private:
+    struct TagsHeader
+    {
+      uint32_t total_size;
+      ///< Is 0 and must be ignored by the OS
+      uint32_t reserved;
+    } __attribute__((packed));
+
+    struct Tag
+    {
+      uint32_t type;
+      uint32_t size;
+      // data
+    } __attribute__((packed));
+
+    struct MemoryMap
+    {
+      uint32_t type;
+      uint32_t size;
+      uint32_t entry_size;
+      uint32_t entry_version;
+      // entries
+    } __attribute__((packed));
+
+    struct MemoryMapEntry
+    {
+      uint64_t base_addr;
+      uint64_t length;
+      uint32_t type;
+      ///< Is 0 and must be ignored by the OS
+      uint32_t reserved;
+    } __attribute__((packed));
+
+    Tag* handleTag(Tag* tag);
+    void handleMemoryMap(MemoryMap* map);
+    void handleMemoryMapEntry(MemoryMapEntry* entry);
+};
 
 #endif /* MULTIBOOT_HPP */

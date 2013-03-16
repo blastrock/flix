@@ -144,8 +144,7 @@ high64:
 
 [EXTERN kmain]
 start64:
-  mov eax, 0xB8000
-  mov [eax], byte 'b'
+  mov rdi, rbx
   call kmain+0x80000000
 
 failure64:
