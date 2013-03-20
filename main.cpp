@@ -3,6 +3,7 @@
 #include "Timer.hpp"
 #include "Multiboot.hpp"
 #include "Debug.hpp"
+#include "Paging.hpp"
 
 extern "C" int kmain(void* mboot)
 {
@@ -15,11 +16,12 @@ extern "C" int kmain(void* mboot)
 
   //Memory::init(mboot);
 
+  Paging::test(0);
   //Paging::initialise_paging();
 
   Screen::putString("Hello world!\n\nI'm here!\n");
 
-  asm volatile ("int $0x3");
+  //asm volatile ("int $0x3");
   //asm volatile ("int $0x4");
   //asm volatile ("int $0x10");
   //asm volatile ("int $0x16");

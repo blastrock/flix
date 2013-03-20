@@ -7,7 +7,8 @@
 
 extern "C" void* kernelEndAddress;
 
-char* KHeap::placement_address = (char*)&kernelEndAddress;
+// XXX
+char* KHeap::placement_address = (char*)0x120000;//&kernelEndAddress;
 
 void* KHeap::kmalloc(uint32_t sz, void** phys)
 {
@@ -25,6 +26,6 @@ void* KHeap::kmalloc_a(uint32_t sz, void** phys)
   // and increment it by sz. Even when we've coded our kernel
   // heap, this will be useful for use before the heap is initialised.
   placement_address = (char*)(
-      ((int)(placement_address + (0x1000 - 1))) & 0xFFFFF000);
+      ((long)(placement_address + (0x1000 - 1))) & ~0xFFFL);
   return kmalloc(sz, phys);
 }
