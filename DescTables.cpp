@@ -3,13 +3,6 @@
 #include "io.hpp"
 #include "Debug.hpp"
 
-struct InterruptState
-{
-  uint64_t r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi;
-  uint8_t intNo, errCode;
-  uint64_t rip, cs, rflags, rsp, ss;
-} __attribute__((packed));
-
 uint64_t DescTables::g_gdtEntries[] = {
   0x0000000000000000,
   0x0020980000000000,
@@ -109,27 +102,4 @@ DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)
   entry.flags = 0x8E00;
 
   return entry;
-}
-
-extern "C" void intHandler(InterruptState* s)
-{
-  if (s->intNo <= 47)
-  {
-    if (s->intNo >= 40)
-      io::outb(0xA0, 0x20);
-    io::outb(0x20, 0x20);
-  }
-
-  if (s->intNo < 32)
-  {
-    Screen::putString("Isr ");
-    Screen::putInt(s->intNo);
-    Screen::putString("!\n");
-  }
-  else
-  {
-    Screen::putString("Irq ");
-    Screen::putInt(s->intNo - 32);
-    Screen::putString("!\n");
-  }
 }

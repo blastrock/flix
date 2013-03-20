@@ -5,7 +5,7 @@ CXXFLAGS=-g -O0 -Ilibkcxx -nostdlib -nostdinc -nostdinc++ -fno-builtin -fno-stac
 NASMFLAGS=-felf64
 #LDFLAGS=-nostdlib -belf64-x86-64 #-melf_i386
 LDFLAGS=-nostdlib -melf_x86_64 -z max-page-size=0x1000
-OBJECTS=boot.o main.o Screen.o IntUtil.o DescTables.o interrupt.o Timer.o Multiboot.o
+OBJECTS=boot.o main.o Screen.o IntUtil.o DescTables.o interrupt.o Timer.o Multiboot.o Interrupt.o
 #OBJECTS=boot.o main.o Screen.o DescTables.o dt_set.o Isr.o interrupt.o Timer.o KHeap.o Paging.o Memory.o IntUtil.o
 #SETUPOBJS=boot.setup.o bootstrap.setup.o DescTables.setup.o Isr.setup.o interrupt.setup.o Paging.setup.o KHeap.setup.o dt_set.setup.o
 #OBJECTS=main64.o Screen.o IntUtil.o
