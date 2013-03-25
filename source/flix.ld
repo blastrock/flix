@@ -1,5 +1,6 @@
 VIRTUAL_BASE = 0xffffffff80000000;
 PHYS_BASE = 0x100000;
+HEAP_BASE = 0xffffffffc0000000;
 SHIFT = VIRTUAL_BASE; /* - PHYS_BASE;*/
 
 ENTRY(start)
@@ -50,6 +51,9 @@ SECTIONS
     . = ALIGN(0x1000);
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
   }
+
+  . = HEAP_BASE;
+  _heapBase = .;
 
   /DISCARD/ :
   {
