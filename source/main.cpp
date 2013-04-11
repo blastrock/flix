@@ -3,6 +3,7 @@
 #include "Timer.hpp"
 #include "Multiboot.hpp"
 #include "Debug.hpp"
+#include "KHeap.hpp"
 #include "Paging.hpp"
 
 extern "C" int kmain(void* mboot)
@@ -14,12 +15,25 @@ extern "C" int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.handle(mboot);
 
+  KHeap::init();
+
+  char* buf = (char*)KHeap::kmalloc(128);
+
+  debug("buf", (long)buf);
+
+  buf[0] = 'H';
+  buf[1] = 'e';
+  buf[2] = 'l';
+  buf[3] = 'l';
+  buf[4] = '\0';
+  Screen::putString(buf);
+
   //Memory::init(mboot);
 
-  Paging::test(0);
+  //Paging::test(0);
   //Paging::initialise_paging();
 
-  Screen::putString("Hello world!\n\nI'm here!\n");
+  //Screen::putString("Hello world!\n\nI'm here!\n");
 
   //asm volatile ("int $0x3");
   //asm volatile ("int $0x4");

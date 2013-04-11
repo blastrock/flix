@@ -96,16 +96,21 @@ enableLong:
   bts eax, 0
   mov [Pdpt], eax
   mov [Pdpt + 0xFF0], eax
+  ; map heap at 0xffffffffc00000000
+  add eax, 0x1000
+  mov [Pdpt + 0xFF8], eax
 
   ; this is last level, 2MB pages
-  mov dword [Pd], 0x000083
-  mov dword [Pd + 4], 0x0
-  mov dword [Pd + 8], 0x200083
+  mov dword [Pd     ], 0x00000083
+  mov dword [Pd +  4], 0x0
+  mov dword [Pd +  8], 0x00200083
   mov dword [Pd + 12], 0x0
-  mov dword [Pd + 16], 0x400083
+  mov dword [Pd + 16], 0x00400083
   mov dword [Pd + 20], 0x0
-  mov dword [Pd + 24], 0x600083
+  mov dword [Pd + 24], 0x00600083
   mov dword [Pd + 28], 0x0
+  mov dword [Pd + 0x1000], 0x00800083
+  mov dword [Pd + 0x1004], 0x0
 
   ; Load CR3 with PML4
   mov eax, Pml4

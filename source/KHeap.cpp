@@ -1,4 +1,5 @@
 #include "KHeap.hpp"
+#include "Debug.hpp"
 
 // XXX duplicated from Multiboot
 template <typename T>
@@ -7,14 +8,17 @@ inline T alignSup(T base, uint8_t val)
   return (base + val-1) & ~(uint64_t)(val-1);
 }
 
-extern "C" void* kernelEndAddress;
+extern "C" uint8_t _heapBase;
 
-// XXX
-//char* KHeap::placement_address = (char*)0x120000;//&kernelEndAddress;
-
-// TODO initialize these
 uint8_t* KHeap::m_heapStart;
 uint8_t* KHeap::m_heapEnd;
+
+void KHeap::init()
+{
+  m_heapStart = &_heapBase;
+  m_heapEnd = m_heapStart + 0x200000;
+  std::memset(m_heapStart, 0, 0x200000);
+}
 
 void* KHeap::kmalloc(uint32_t size)
 {
@@ -53,12 +57,14 @@ void* KHeap::kmalloc(uint32_t size)
     ptr += block->size;
   }
 
+  PANIC("not implemented");
   // TODO enlarge heap to allocate block
   return nullptr;
 }
 
 void* KHeap::kmalloc_a(uint32_t sz, void** phys)
 {
+  PANIC("not implemented");
   // TODO
   return nullptr;
 }

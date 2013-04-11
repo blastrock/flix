@@ -18,7 +18,7 @@ run: flix.img
 
 debug: flix.img
 	qemu-system-x86_64 -hda flix.img -m 64 -s -S -daemonize
-	gdb flix
+	gdb build/source/flix
 .PHONY: debug
 
 clean:
