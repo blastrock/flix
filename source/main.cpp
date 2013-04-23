@@ -12,10 +12,12 @@ extern "C" int kmain(void* mboot)
 
   DescTables::init();
 
-  MultibootLoader mbl;
-  mbl.handle(mboot);
+  //MultibootLoader mbl;
+  //mbl.handle(mboot);
 
   KHeap::init();
+  Paging::init();
+  return 0;
 
   char* buf = (char*)KHeap::kmalloc(128);
 
@@ -31,7 +33,6 @@ extern "C" int kmain(void* mboot)
   //Memory::init(mboot);
 
   //Paging::test(0);
-  //Paging::initialise_paging();
 
   //Screen::putString("Hello world!\n\nI'm here!\n");
 

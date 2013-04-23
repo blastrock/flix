@@ -6,7 +6,11 @@
 #	mcopy -i $@.tmp flix ::flix
 #	echo -e "TIMEOUT 1\nDEFAULT mboot.c32 flix" | mcopy -i $@.tmp - ::syslinux.cfg
 #	mv $@.tmp $@
-flix.img: build/source/flix
+rebuild:
+	make -C build
+.PHONY: rebuild
+
+flix.img: rebuild build/source/flix
 	mkdir -p img/boot/grub
 	echo "set timeout=0\nset default=0\nmenuentry "flix" { multiboot2 /flix }" > img/boot/grub/grub.cfg
 	cp -f build/source/flix img/flix

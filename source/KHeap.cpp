@@ -27,6 +27,7 @@ void* KHeap::kmalloc(uint32_t size)
   uint8_t* ptr = m_heapStart;
   while (ptr < m_heapEnd)
   {
+    debug("block : ", (uint64_t)ptr);
     HeapBlock* block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->size & ~0x3;
 
@@ -57,6 +58,7 @@ void* KHeap::kmalloc(uint32_t size)
     ptr += block->size;
   }
 
+  debug("nooo", 0);
   PANIC("not implemented");
   // TODO enlarge heap to allocate block
   return nullptr;
@@ -64,7 +66,8 @@ void* KHeap::kmalloc(uint32_t size)
 
 void* KHeap::kmalloc_a(uint32_t sz, void** phys)
 {
-  PANIC("not implemented");
+  return kmalloc(sz);
+  //PANIC("not implemented");
   // TODO
   return nullptr;
 }

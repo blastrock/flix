@@ -144,6 +144,7 @@ enableLongSeg:
 
 [BITS 64]
 high64:
+  mov rsp, _stack + 0xffffffff80000000
   mov rax, start64 + 0xffffffff80000000
   jmp rax
 

@@ -3,7 +3,6 @@
 
 #include <cstdint>
 #include <cstring>
-#include "KHeap.hpp"
 #include "Debug.hpp"
 
 static void* const INVALID_ADDR = reinterpret_cast<void*>(-1L);
@@ -19,98 +18,130 @@ inline T* invalidPtr()
   return reinterpret_cast<T*>(INVALID_ADDR);
 }
 
-class Ppa
+template <typename T0, typename... T>
+struct LastType
 {
-  public:
-    void* allocate(uint64_t size)
-    {
-      return KHeap::kmalloc_a(size);
-    }
+  typedef typename LastType<T...>::type type;
 };
 
-template <typename CurLevel, typename... Levels>
+template <typename T0>
+struct LastType<T0>
+{
+  typedef T0 type;
+};
+
+template <typename Allocator, typename CurLevel, typename... Levels>
 class PageManager
 {
   public:
     typedef CurLevel Entry;
-    typedef PageManager<Levels...> NextLayout;
-    typedef typename NextLayout::PageType PageType;
-    
-    static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
-    static constexpr uint8_t TOTAL_BITS = ADD_BITS +
-      NextLayout::TOTAL_BITS;
+    typedef PageManager<Allocator, Levels...> NextLayout;
+    typedef typename LastType<CurLevel, Levels...>::type PageType;
 
-    static PageType* getPage(Entry& prevEntry, void* address, bool create);
+    static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
+    static constexpr uint8_t TOTAL_BITS = ADD_BITS + NextLayout::TOTAL_BITS;
+
+    void init()
+    {
+      std::memset(this, 0, sizeof(*this));
+    }
+
+    PageType* getPage(uint64_t address, bool create, Allocator& allocator);
+    Entry* getDirectory();
+
+  private:
+    Entry m_entries[1 << ADD_BITS];
+    NextLayout* m_nextLayouts[1 << ADD_BITS];
 };
 
-template <typename CurLevel>
-class PageManager<CurLevel>
+template <typename Allocator, typename CurLevel>
+class PageManager<Allocator, CurLevel>
 {
   public:
     typedef CurLevel Entry;
     typedef CurLevel PageType;
-    
+
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS;
 
-    static PageType* getPage(Entry& prevEntry, void* address, bool create);
+    // XXX
+    void init()
+    {
+      std::memset(this, 0, sizeof(*this));
+    }
+    PageType* getPage(uint64_t address, bool create, Allocator& allocator);
+    Entry* getDirectory();
+
+  private:
+    Entry m_entries[1 << ADD_BITS];
 };
 
-template <typename PrevLevel, typename CurLevel, int TOTAL_BITS, int ADD_BITS>
-CurLevel* getNextEntry(PrevLevel& prevEntry, void* address, bool create)
-{
-  CurLevel* directory;
-  // if not present
-  if (!prevEntry.p)
-  {
-    if (!create)
-      return invalidPtr<CurLevel>();
-
-    // create it
-    uint32_t directorySize = sizeof(CurLevel) * (1 << ADD_BITS);
-    directory = static_cast<CurLevel*>(KHeap::kmalloc_a(directorySize));
-    std::memset(directory, 0, directorySize);
-    prevEntry.base = reinterpret_cast<decltype(prevEntry.base)>(directory)
-      >> PrevLevel::BASE_SHIFT;
-  }
-  else
-    // get it
-    directory = reinterpret_cast<CurLevel*>(
-        prevEntry.base << PrevLevel::BASE_SHIFT);
-
-  uint64_t addval = reinterpret_cast<uint64_t>(address);
-  uint64_t idx = (addval >> (TOTAL_BITS - ADD_BITS)) & ADD_BITS;
-
-  return &directory[idx];
-}
-
-template <typename PrevLevel, typename... Levels>
-typename PageManager<PrevLevel, Levels...>::PageType*
-  PageManager<PrevLevel, Levels...>::getPage(
-    Entry& prevEntry, void* address, bool create)
+template <typename Allocator, typename CurLevel, typename... Levels>
+typename PageManager<Allocator, CurLevel, Levels...>::PageType*
+  PageManager<Allocator, CurLevel, Levels...>::getPage(
+      uint64_t address, bool create, Allocator& allocator)
 {
   debug("descending for ", (uint64_t)address);
-  debug("in ", (uint64_t)&prevEntry);
 
-  typedef PageManager<PrevLevel, Levels...> PrevPageLayout;
-  typedef typename PrevPageLayout::NextLayout CurLayout;
-  typedef typename CurLayout::Entry CurLevel;
+  //uint16_t index = getIndex(address, create, allocator);
+  uint64_t addval = reinterpret_cast<uint64_t>(address);
+  uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
+  NextLayout*& nextLayout = m_nextLayouts[index];
 
-  CurLevel* entry = getNextEntry<PrevLevel, CurLevel,
-    CurLayout::TOTAL_BITS, CurLayout::ADD_BITS>(prevEntry, address, create);
+  debug("index ", (uint64_t)index);
+  debug("add ", (uint64_t)ADD_BITS);
+  debug("total ", (uint64_t)TOTAL_BITS);
 
-  if (isInvalid(entry))
-    return invalidPtr<typename CurLayout::PageType>();
+  // if not present
+  if (!nextLayout)
+  {
+    if (!create)
+      return invalidPtr<PageType>();
 
-  return PageManager<Levels...>::getPage(*entry, address, create);
+    // create it
+    void* memory = allocator.allocate(sizeof(NextLayout));
+    //nextLayout = new (memory) NextLayout();
+    nextLayout = (NextLayout*)memory;
+    nextLayout->init();
+    m_entries[index].p = true;
+    m_entries[index].base =
+      (reinterpret_cast<uint64_t>(nextLayout->getDirectory()) - (0xffffffffc0000000 - 0x800000))
+      >> CurLevel::BASE_SHIFT;
+  }
+
+  return m_nextLayouts[index]->getPage(address, create, allocator);
 }
 
-template <typename PrevLevel>
-typename PageManager<PrevLevel>::PageType*
-  PageManager<PrevLevel>::getPage(
-    Entry& prevEntry, void*, bool)
+template <typename Allocator, typename CurLevel, typename... Levels>
+typename PageManager<Allocator, CurLevel, Levels...>::Entry*
+  PageManager<Allocator, CurLevel, Levels...>::getDirectory()
 {
-  return &prevEntry;
+  return m_entries;
+}
+
+template <typename Allocator, typename CurLevel>
+typename PageManager<Allocator, CurLevel>::PageType*
+  PageManager<Allocator, CurLevel>::getPage(
+      uint64_t address, bool, Allocator&)
+{
+  //debug("descending for ", (uint64_t)address);
+  //debug("in ", (uint64_t)&prevEntry);
+
+  uint64_t addval = reinterpret_cast<uint64_t>(address);
+  uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
+
+  debug("index ", (uint64_t)index);
+  debug("add ", (uint64_t)ADD_BITS);
+  debug("total ", (uint64_t)TOTAL_BITS);
+
+  return &m_entries[index];
+}
+
+template <typename Allocator, typename CurLevel>
+typename PageManager<Allocator, CurLevel>::Entry*
+  PageManager<Allocator, CurLevel>::getDirectory()
+{
+  return m_entries;
 }
 
 #endif /* GENERIC_PAGING_HPP */

@@ -22,6 +22,7 @@ add_executable(flix
   Multiboot.cpp
   Paging.cpp
   Screen.cpp
+  StaticMemoryPool.cpp
   Timer.cpp
 )
 

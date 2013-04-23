@@ -2,6 +2,7 @@
 #define PAGING_HPP
 
 #include <cstdint>
+#include "StaticMemoryPool.hpp"
 #include "PageManager.hpp"
 
 class Paging
@@ -9,7 +10,8 @@ class Paging
   public:
     static constexpr uint8_t ADDRESSING_BITS = 52;
 
-    static void initializePaging(void* root);
+    static void init();
+    static void enablePaging();
     static void test(void* root);
 
   private:
@@ -27,12 +29,14 @@ class Paging
       unsigned long long d : 1; ///< Dirty
       unsigned long long pat : 1; ///< Page-Attribute Table
       unsigned long long g : 1; ///< Global Page
-      unsigned long long hasFree : 1; ///< OS-defined: has free pages
-      unsigned long long avl : 2; ///< Available to Software
+      //unsigned long long hasFree : 1; ///< OS-defined: has free pages
+      unsigned long long avl : 3; ///< Available to Software
       unsigned long long base : 40; ///< Page Base Address
       unsigned long long avl2 : 11; ///< Available
       unsigned long long nx : 1; ///< No Execute
     };
+
+    static_assert(sizeof(PageTableEntry) == 8, "sizeof(PageTableEntry) != 8");
 
     typedef PageTableEntry PageDirectoryEntry;
     typedef PageTableEntry PageDirectoryPointerEntry;
@@ -56,8 +60,10 @@ class Paging
       uint64_t value;
     };
 
+    static_assert(sizeof(CR3) == 8, "sizeof(CR3) != 8");
+
     typedef PageManager<
-      CR3::CR3Bitfield,
+      StaticMemoryPool,
       PageMapLevel4Entry,
       PageDirectoryPointerEntry,
       PageDirectoryEntry,
