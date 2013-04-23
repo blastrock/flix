@@ -1,16 +1,17 @@
+PHYSICAL_BASE = 0x100000;
 VIRTUAL_BASE = 0xffffffff80000000;
-PHYS_BASE = 0x100000;
-HEAP_BASE = 0xffffffffc0000000;
+PHYSICAL_HEAP = 0x400000;
+VIRTUAL_HEAP = 0xffffffffc0000000;
 SHIFT = VIRTUAL_BASE; /* - PHYS_BASE;*/
 
 ENTRY(start)
 SECTIONS
 {
-  . = PHYS_BASE;
+  . = PHYSICAL_BASE;
 
   .bootstrap :
   {
-    _kernelStart = ABSOLUTE(ADDR(.bootstrap));
+    _kernelStart = ABSOLUTE(.);
     *(.mbhdr)
     *(.bootstrap)
     . = ALIGN(0x1000);
@@ -54,7 +55,7 @@ SECTIONS
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
   }
 
-  . = HEAP_BASE;
+  . = VIRTUAL_HEAP;
   _heapBase = .;
 
   /DISCARD/ :

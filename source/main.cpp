@@ -17,7 +17,6 @@ extern "C" int kmain(void* mboot)
 
   KHeap::init();
   Paging::init();
-  return 0;
 
   char* buf = (char*)KHeap::kmalloc(128);
 

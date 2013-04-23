@@ -15,7 +15,7 @@ inline bool isInvalid(void* ptr)
 template <typename T>
 inline T* invalidPtr()
 {
-  return reinterpret_cast<T*>(INVALID_ADDR);
+  return static_cast<T*>(INVALID_ADDR);
 }
 
 template <typename T0, typename... T>
@@ -81,16 +81,15 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
   PageManager<Allocator, CurLevel, Levels...>::getPage(
       uint64_t address, bool create, Allocator& allocator)
 {
-  debug("descending for ", (uint64_t)address);
+  //debug("descending for ", (uint64_t)address);
 
-  //uint16_t index = getIndex(address, create, allocator);
   uint64_t addval = reinterpret_cast<uint64_t>(address);
   uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
   NextLayout*& nextLayout = m_nextLayouts[index];
 
-  debug("index ", (uint64_t)index);
-  debug("add ", (uint64_t)ADD_BITS);
-  debug("total ", (uint64_t)TOTAL_BITS);
+  //debug("index ", (uint64_t)index);
+  //debug("add ", (uint64_t)ADD_BITS);
+  //debug("total ", (uint64_t)TOTAL_BITS);
 
   // if not present
   if (!nextLayout)
@@ -130,9 +129,9 @@ typename PageManager<Allocator, CurLevel>::PageType*
   uint64_t addval = reinterpret_cast<uint64_t>(address);
   uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
 
-  debug("index ", (uint64_t)index);
-  debug("add ", (uint64_t)ADD_BITS);
-  debug("total ", (uint64_t)TOTAL_BITS);
+  //debug("index ", (uint64_t)index);
+  //debug("add ", (uint64_t)ADD_BITS);
+  //debug("total ", (uint64_t)TOTAL_BITS);
 
   return &m_entries[index];
 }

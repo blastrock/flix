@@ -8,14 +8,6 @@ extern "C" uint8_t _kernelStart;
 extern "C" uint8_t _kernelBssEnd;
 extern "C" uint8_t VIRTUAL_BASE;
 
-void Paging::test(void* root)
-{
-  CR3 cr3;
-  cr3.bitfield.base = ((uint64_t)&Pml4) >> 12;
-  //MyPageManager::getPage(cr3.bitfield, 0, false);
-  //MyPageManager::getPage(cr3.bitfield, (void*)0x8000000, false);
-}
-
 void Paging::init()
 {
   void* poolBase = (void*)(((uint64_t)(((char*)KHeap::kmalloc_a(0x100000)) + 0x0FFF)) & ~0x0FFFL);
@@ -35,6 +27,15 @@ void Paging::init()
   g_kernel_directory.bitfield.base =
     (reinterpret_cast<uint64_t>(manager->getDirectory()) - heapShift) >> 12;
 
+  {
+    debug("mapping ", (uint64_t)cur);
+
+    PageTableEntry* page = manager->getPage(0xB8000 >> 12, true, pool);
+    page->p = true;
+    page->rw = true;
+    page->base = 0xB8000 >> 12;
+  }
+
   while (cur < end)
   {
     debug("mapping ", (uint64_t)cur);
@@ -49,44 +50,30 @@ void Paging::init()
 
     cur += 0x1000;
   }
+
+  cur = (uint8_t*)0x800000;
+  end = cur+0x200000;
+
+  while (cur < end)
+  {
+    debug("mapping ", (uint64_t)cur);
+
+    uint8_t* virtualAddress = cur + heapShift;
+
+    PageTableEntry* page =
+      manager->getPage(((uint64_t)virtualAddress) >> 12, true, pool);
+    page->p = true;
+    page->rw = true;
+    page->base = reinterpret_cast<uint64_t>(cur) >> 12;
+
+    cur += 0x1000;
+  }
+
   debug("shift : ", virtualShift);
   debug("heap : ", heapShift);
   debug("lol :", (uint64_t)manager->getDirectory());
 
   debug("stack :", (uint64_t)&cur);
 
-  enablePaging();
-}
-
-//void Paging::initializePaging(void* root)
-//{
-//  CR3* cr3 = reinterpret_cast<CR3*>(root);
-//
-//  PageMapLevel4Entry* pml4 = reinterpret_cast<PageMapLevel4Entry*>(
-//      cr3->base << 12);
-//  PageMapLevel4Entry* pml4End = pml4 + 512;
-//
-//  for (; pml4 < pml4End; ++pml4)
-//    updateFree(pml4);
-//}
-//
-//template <typename T>
-//void Paging::updateFree(T* entry)
-//{
-//  bool free = true;
-//
-//  for (T* e = reinterpret_cast<T*>(
-//        entry->base << 12), end = e + 512;
-//      e < end; ++e)
-//    updateFree();
-//}
-
-void Paging::enablePaging()
-{
-  debug("cr3: ", g_kernel_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(g_kernel_directory.value));
-  //uint64_t cr4;
-  //asm volatile("mov %%cr4, %0": "=r"(cr4));
-  //cr4 |= (1 << 5);
-  //asm volatile("mov %0, %%cr4":: "r"(cr4));
 }
