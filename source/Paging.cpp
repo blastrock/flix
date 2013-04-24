@@ -1,5 +1,6 @@
 #include "Paging.hpp"
 #include "KHeap.hpp"
+#include <new>
 
 Paging::CR3 Paging::g_kernel_directory;
 
@@ -14,9 +15,7 @@ void Paging::init()
   StaticMemoryPool pool(poolBase, 0x100000);
 
   void* memory = pool.allocate(sizeof(MyPageManager));
-  //MyPageManager* manager = new (memory) MyPageManager;
-  MyPageManager* manager = static_cast<MyPageManager*>(memory);
-  manager->init();
+  MyPageManager* manager = new (memory) MyPageManager;
 
   uint8_t* cur = &_kernelStart;
   uint8_t* end = &_kernelBssEnd;
