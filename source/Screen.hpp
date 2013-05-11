@@ -2,6 +2,7 @@
 #define SCREEN_HPP
 
 #include <cstdint>
+#include <sstream>
 #include "IntUtil.hpp"
 #include <cstring>
 #include "io.hpp"
@@ -73,7 +74,9 @@ void Screen::putInt(int value, Color fg, Color bg)
 
 void Screen::putHex(unsigned long value, Color fg, Color bg)
 {
-  putString(IntUtil::ulongToStr(value, 16), fg, bg);
+  std::ostringstream ss;
+  ss << std::hex << value;
+  putString(ss.str(), fg, bg);
 }
 
 void Screen::putChar(char c, Color fg, Color bg)

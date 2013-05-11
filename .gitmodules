@@ -1,0 +1,3 @@
+[submodule "libkcxx"]
+	path = libkcxx
+	url = https://BlastRock@bitbucket.org/BlastRock/libkcxx.git
