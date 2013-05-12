@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project(flix)
 
-add_definitions(-g)
-
 set(LIBKCXX_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/libkcxx/include)
 
 set(LIBCXX_ENABLE_EXCEPTIONS OFF CACHE BOOL "Use exceptions.")

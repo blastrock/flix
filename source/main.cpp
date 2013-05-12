@@ -9,25 +9,26 @@
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
+  Screen::putString("booted");
 
-  DescTables::init();
+  //DescTables::init();
 
   //MultibootLoader mbl;
   //mbl.handle(mboot);
 
-  KHeap::init();
-  Paging::init();
+  //KHeap::init();
+  //Paging::init();
 
-  char* buf = (char*)KHeap::kmalloc(128);
+  //char* buf = (char*)KHeap::kmalloc(128);
 
-  debug("buf", (long)buf);
+  //debug("buf", (long)buf);
 
-  buf[0] = 'H';
-  buf[1] = 'e';
-  buf[2] = 'l';
-  buf[3] = 'l';
-  buf[4] = '\0';
-  Screen::putString(buf);
+  //buf[0] = 'H';
+  //buf[1] = 'e';
+  //buf[2] = 'l';
+  //buf[3] = 'l';
+  //buf[4] = '\0';
+  //Screen::putString(buf);
 
   //Memory::init(mboot);
 
