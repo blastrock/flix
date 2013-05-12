@@ -26,6 +26,7 @@ MB2_HEADER_START:
   ;dw 0 ; not optional
   ;dd 0 ; size
   ; section definition
+ALIGN 8
   dw 2, 1
   dd 8 + 4*4
   dd MB2_HEADER_START
@@ -33,6 +34,7 @@ MB2_HEADER_START:
   dd _kernelDataEnd
   dd _kernelBssEnd
   ; entry address
+ALIGN 8
   dw 3, 1
   dd 8 + 4
   dd start
@@ -41,6 +43,7 @@ MB2_HEADER_START:
   ;dw 0
   ;dd 8
   ; end
+ALIGN 8
   dw 0, 0
   dd 8
 MB2_HEADER_END:
@@ -61,6 +64,9 @@ start:
   jne failure
 
   cli
+
+  ;mov word [0xB8000], 0x0F00 | 'A'
+  ;jmp failure
 
   ; bss section isn't 0-filled with grub2, do it now
   mov eax, _kernelDataEnd
@@ -151,6 +157,7 @@ high64:
 [EXTERN kmain]
 start64:
   mov rdi, rbx
+
   call kmain+0x80000000
 
 failure64:
