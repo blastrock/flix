@@ -154,10 +154,22 @@ high64:
   mov rax, start64 + 0xffffffff80000000
   jmp rax
 
-[EXTERN kmain]
 start64:
-  mov rdi, rbx
+[EXTERN _initArrayBegin]
+[EXTERN _initArrayEnd]
+  mov rax, _initArrayBegin
+  mov rdx, _initArrayEnd
+initLoop:
+  cmp rax, rdx
+  je mainStart
+  mov rcx, QWORD [rax]
+  call rcx
+  add rax, 8
+  jmp initLoop
 
+mainStart:
+[EXTERN kmain]
+  mov rdi, rbx
   call kmain+0x80000000
 
 failure64:

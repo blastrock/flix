@@ -33,6 +33,10 @@ SECTIONS
     AT(ADDR(.text) - SHIFT)
   {
     *(.text*)
+    . = ALIGN(0x8);
+    _initArrayBegin = ABSOLUTE(. - SHIFT);
+    KEEP(*(.init_array))
+    _initArrayEnd = ABSOLUTE(. - SHIFT);
     . = ALIGN(0x1000);
   }
 
@@ -50,7 +54,7 @@ SECTIONS
   .bss ALIGN(0x1000) :
     AT(ADDR(.bss) - SHIFT)
   {
-    *(.bss)
+    *(.bss*)
     . = ALIGN(0x1000);
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
   }
