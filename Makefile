@@ -7,7 +7,7 @@
 #	echo -e "TIMEOUT 1\nDEFAULT mboot.c32 flix" | mcopy -i $@.tmp - ::syslinux.cfg
 #	mv $@.tmp $@
 rebuild:
-	make -C build
+	$(MAKE) -C build
 .PHONY: rebuild
 
 flix.img: rebuild build/source/flix
@@ -21,7 +21,7 @@ run: flix.img
 .PHONY: run
 
 debug: flix.img
-	qemu-system-x86_64 -hda flix.img -m 64 -s -S -daemonize
+	qemu-system-x86_64 -hda flix.img -m 64 -s -daemonize
 	gdb build/source/flix
 .PHONY: debug
 
