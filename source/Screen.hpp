@@ -76,18 +76,12 @@ void Screen::putInt(int value, Color fg, Color bg)
 
 void Screen::putHex(unsigned long value, Color fg, Color bg)
 {
-  putString("before\n");
   char buf[100];
   StaticMemoryPool pool(buf, sizeof(buf));
-  putString("pool\n");
   ForwardAllocator<char, StaticMemoryPool> allocator(&pool);
-  putString("alloc\n");
   std::basic_string<char, std::char_traits<char>, decltype(allocator)> str(allocator);
-  putString("str\n");
   std::basic_ostringstream<decltype(str)::value_type, decltype(str)::traits_type, decltype(str)::allocator_type> ss(str);
-  putString("ss\n");
   ss << std::hex << value;
-  putString("streamed\n");
   putString(ss.str().c_str(), fg, bg);
 }
 
