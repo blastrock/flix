@@ -1,6 +1,7 @@
 #include "Screen.hpp"
 #include "DescTables.hpp"
 #include "Timer.hpp"
+#include "Memory.hpp"
 #include "Multiboot.hpp"
 #include "Debug.hpp"
 #include "KHeap.hpp"
@@ -18,6 +19,8 @@ extern "C" int kmain(void* mboot)
   KHeap::init();
   Paging::init();
 
+  Memory::init();
+
   //char* buf = (char*)KHeap::kmalloc(128);
 
   //debug("buf", (long)buf);
@@ -28,8 +31,6 @@ extern "C" int kmain(void* mboot)
   //buf[3] = 'l';
   //buf[4] = '\0';
   //Screen::putString(buf);
-
-  //Memory::init(mboot);
 
   //Paging::test(0);
 
@@ -42,6 +43,8 @@ extern "C" int kmain(void* mboot)
 
   //asm volatile ("sti");
   //Timer::init(4);
+
+  fInfo() << "End of kernel";
 
   return 0xDEADBEEF;
 }

@@ -12,6 +12,8 @@ class Paging
 
     static void init();
 
+    static void mapPage(void* addr);
+
   private:
     struct PageTableEntry
     {
@@ -27,7 +29,6 @@ class Paging
       unsigned long long d    : 1; ///< Dirty
       unsigned long long pat  : 1; ///< Page-Attribute Table
       unsigned long long g    : 1; ///< Global Page
-      //unsigned long long hasFree : 1; ///< OS-defined: has free pages
       unsigned long long avl  : 3; ///< Available to Software
       unsigned long long base : 40; ///< Page Base Address
       unsigned long long avl2 : 11; ///< Available
@@ -69,6 +70,7 @@ class Paging
         MyPageManager;
 
     static CR3 g_kernel_directory;
+    static MyPageManager* g_manager;
 };
 
 #endif /* PAGING_HPP */

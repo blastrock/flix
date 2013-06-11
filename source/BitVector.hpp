@@ -9,6 +9,8 @@ class BitVector
   public:
     inline void setData(uint64_t size, uint8_t* data);
 
+    inline uint64_t size() const;
+
     inline bool getBit(uint32_t n) const;
     inline void setBit(uint32_t n, bool b);
     inline void fill(bool b);
@@ -22,6 +24,11 @@ void BitVector::setData(uint64_t size, uint8_t* data)
 {
   m_size = size;
   m_data = data;
+}
+
+uint64_t BitVector::size() const
+{
+  return m_size*8;
 }
 
 bool BitVector::getBit(uint32_t n) const

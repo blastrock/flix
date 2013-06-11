@@ -2,11 +2,37 @@
 #include "KHeap.hpp"
 #include "Debug.hpp"
 
-extern "C" void* kernelStartAddress;
-extern "C" void* kernelEndAddress;
-
 BitVector Memory::g_frames;
 
+void Memory::init()
+{
+  // XXX constants (memory size !!)
+  uint8_t* frames = (uint8_t*)KHeap::kmalloc(0x4000000/8);
+  g_frames.setData(0x4000000/8, frames);
+  g_frames.fill(false);
+
+  // set all this as used memory to be safe
+  for (uint64_t page = 0,
+      end = 0x400000 / 0x1000;
+      page < end;
+      ++page)
+    g_frames.setBit(page, true);
+}
+
+uint64_t Memory::getFreePage()
+{
+  for (uint64_t i = 0; i < g_frames.size(); ++i)
+    if (g_frames.getBit(i))
+      return i;
+  return -1;
+}
+
+void Memory::setPageUsed(uint64_t page, bool used)
+{
+  g_frames.setBit(page, used);
+}
+
+#if 0
 void Memory::init(Multiboot const& mboot)
 {
   if (!(mboot.flags & (1 << 6)))
@@ -24,7 +50,7 @@ void Memory::init(Multiboot const& mboot)
         maxAddr = end;
       });
 
-  uint8_t* frames = (uint8_t*)KHeap::kmalloc_a(maxAddr/8);
+  uint8_t* frames = (uint8_t*)KHeap::kmalloc(maxAddr/8);
   g_frames.setData(maxAddr/8, frames);
   g_frames.fill(false);
 
@@ -67,3 +93,4 @@ void Memory::forEachRange(Multiboot const& mboot, T func)
   //  debug("", 0);
   //}
 }
+#endif

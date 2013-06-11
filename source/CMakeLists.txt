@@ -21,7 +21,7 @@ add_executable(flix
   IntUtil.cpp
   KHeap.cpp
   main.cpp
-  #Memory.cpp
+  Memory.cpp
   Multiboot.cpp
   Paging.cpp
   Screen.cpp

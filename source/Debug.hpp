@@ -5,7 +5,8 @@
 #include "Dmesg.hpp"
 
 #define fDeg() \
-  Dmesg() << __FILE__ << ':' << __LINE__ << ": "
+  Dmesg()
+  //Dmesg() << __FILE__ << ':' << __LINE__ << ": "
 
 #define fInfo() \
   Dmesg()
@@ -19,6 +20,6 @@ inline void PANIC(const char* str)
 }
 
 #define debug(str, i) \
-  fDeg() << str << ' ' << std::hex << i;
+  fDeg() << str << ": " << std::hex << i;
 
 #endif /* DEBUG_HPP */

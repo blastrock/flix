@@ -18,11 +18,11 @@ void InterruptHandler::handle(InterruptState* s)
 
   if (s->intNo < 32)
   {
-    fDeg() << "Isr " << s->intNo << '!';
+    fDeg() << "Isr " << (int)s->intNo << '!';
     PANIC("exception");
   }
   else
   {
-    fDeg() << "Isr " << (s->intNo - 32) << '!';
+    fDeg() << "Isr " << (int)(s->intNo - 32) << '!';
   }
 }

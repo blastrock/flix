@@ -16,19 +16,20 @@ uint8_t* KHeap::m_heapEnd;
 void KHeap::init()
 {
   m_heapStart = &_heapBase;
-  m_heapEnd = m_heapStart + 0x200000;
-  std::memset(m_heapStart, 0, 0x200000);
+  m_heapEnd = m_heapStart + 0x1000000;
+  HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
+  block->size = 0x1000000;
 }
 
 void* KHeap::kmalloc(uint32_t size)
 {
   size += 4;
 
+  HeapBlock* block;
   uint8_t* ptr = m_heapStart;
   while (ptr < m_heapEnd)
   {
-    debug("block : ", (uint64_t)ptr);
-    HeapBlock* block = reinterpret_cast<HeapBlock*>(ptr);
+    block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->size & ~0x3;
 
     if (!(block->size & HEAP_USED))
@@ -58,9 +59,13 @@ void* KHeap::kmalloc(uint32_t size)
     ptr += block->size;
   }
 
-  debug("nooo", 0);
-  PANIC("not implemented");
-  // TODO enlarge heap to allocate block
+  fDeg() << "heap enlarge";
+
+  //uint32_t blockSize = block->size;
+  //uint32_t neededPages = (size - blockSize + 0x1000-1) / 0x1000;
+
+  //Paging::mapPage(m_heapEnd);
+
   return nullptr;
 }
 

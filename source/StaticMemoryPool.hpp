@@ -6,7 +6,10 @@
 class StaticMemoryPool
 {
   public:
+    StaticMemoryPool();
     StaticMemoryPool(void* pool, uint64_t size);
+
+    void set(void* pool, uint64_t size);
 
     void* allocate(uint64_t size);
 
