@@ -1,6 +1,5 @@
 #include "StaticMemoryPool.hpp"
 
-
 StaticMemoryPool::StaticMemoryPool(void* pool, uint64_t size) :
   m_start(static_cast<uint8_t*>(pool)),
   m_ptr(m_start),

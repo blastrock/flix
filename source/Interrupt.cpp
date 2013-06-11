@@ -1,4 +1,5 @@
 #include "Interrupt.hpp"
+#include "io.hpp"
 #include "Debug.hpp"
 
 extern "C" void intHandler(InterruptState* s)
@@ -17,15 +18,11 @@ void InterruptHandler::handle(InterruptState* s)
 
   if (s->intNo < 32)
   {
-    Screen::putString("Isr ");
-    Screen::putInt(s->intNo);
-    Screen::putString("!\n");
+    fDeg() << "Isr " << s->intNo << '!';
     PANIC("exception");
   }
   else
   {
-    Screen::putString("Irq ");
-    Screen::putInt(s->intNo - 32);
-    Screen::putString("!\n");
+    fDeg() << "Isr " << (s->intNo - 32) << '!';
   }
 }

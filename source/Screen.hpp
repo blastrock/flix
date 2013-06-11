@@ -1,14 +1,6 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
-#include <cstdint>
-#include <sstream>
-#include "IntUtil.hpp"
-#include "StaticMemoryPool.hpp"
-#include "ForwardAllocator.hpp"
-#include <cstring>
-#include "io.hpp"
-
 struct Position
 {
   int x;
@@ -38,102 +30,16 @@ enum class Color
 class Screen
 {
   public:
-    inline static void clear();
-    inline static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    inline static void putInt(int value, Color fg = Color::LightGrey, Color bg = Color::Black);
-    inline static void putHex(unsigned long value, Color fg = Color::LightGrey, Color bg = Color::Black);
-    inline static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    inline static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    inline static void updateCursor();
-    inline static void scrollOneLine();
+    static void clear();
+    static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
 
   private:
     static Position g_cursor;
+
+    static void updateCursor();
+    static void scrollOneLine();
 };
-
-void Screen::clear()
-{
-  std::memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);
-  g_cursor = {0, 0};
-}
-
-void Screen::putString(const char* c, Color fg, Color bg)
-{
-  while (*c)
-  {
-    putChar(*c, fg, bg);
-
-    ++c;
-  }
-
-  updateCursor();
-}
-
-void Screen::putInt(int value, Color fg, Color bg)
-{
-  putString(IntUtil::intToStr(value, 10), fg, bg);
-}
-
-void Screen::putHex(unsigned long value, Color fg, Color bg)
-{
-  char buf[100];
-  StaticMemoryPool pool(buf, sizeof(buf));
-  ForwardAllocator<char, StaticMemoryPool> allocator(&pool);
-  std::basic_string<char, std::char_traits<char>, decltype(allocator)> str(allocator);
-  std::basic_ostringstream<decltype(str)::value_type, decltype(str)::traits_type, decltype(str)::allocator_type> ss(str);
-  ss << std::hex << value;
-  putString(ss.str().c_str(), fg, bg);
-}
-
-void Screen::putChar(char c, Color fg, Color bg)
-{
-  switch (c)
-  {
-    case '\n':
-      g_cursor.x = 0;
-      ++g_cursor.y;
-      break;
-    case '\r':
-      g_cursor.x = 0;
-      break;
-    default:
-      putChar(g_cursor, c, fg, bg);
-
-      ++g_cursor.x;
-      if (g_cursor.x == 80)
-      {
-        g_cursor.x = 0;
-        ++g_cursor.y;
-      }
-  }
-
-  if (g_cursor.y == 25)
-  {
-    scrollOneLine();
-    --g_cursor.y;
-  }
-}
-
-void Screen::putChar(Position pos, char c, Color fg, Color bg)
-{
-  uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
-  uint16_t* screen = (uint16_t*)0xB8000;
-  screen[pos.y * 80 + pos.x] = val;
-}
-
-void Screen::updateCursor()
-{
-  uint16_t cursorLocation = g_cursor.y * 80 + g_cursor.x;
-  io::outb(0x3D4, 14);                  // Tell the VGA board we are setting the high cursor byte.
-  io::outb(0x3D5, cursorLocation >> 8); // Send the high cursor byte.
-  io::outb(0x3D4, 15);                  // Tell the VGA board we are setting the low cursor byte.
-  io::outb(0x3D5, cursorLocation);      // Send the low cursor byte.
-}
-
-void Screen::scrollOneLine()
-{
-  std::memcpy((void*)0xB8000, (void*)(0xB8000 + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
-  std::memset((void*)(0xB8000 + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
-}
 
 #endif /* SCREEN_HPP */

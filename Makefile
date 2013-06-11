@@ -26,6 +26,7 @@ debug: flix.img
 .PHONY: debug
 
 clean:
+	$(MAKE) -C build clean
 	rm -f flix.img
 .PHONY: clean
 
