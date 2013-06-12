@@ -90,6 +90,9 @@ void* KHeap::kmalloc(uint32_t size)
 
 void KHeap::kfree(void* ptr)
 {
+  if (!ptr)
+    return;
+
   HeapBlock* block = reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -4));
   block->size &= ~HEAP_USED;
   // TODO merge free blocks
@@ -114,4 +117,22 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
   nextBlock->size = fullSize - size;
 
   return {block, nextBlock};
+}
+
+namespace std_impl
+{
+  void free(void* ptr)
+  {
+    if (!ptr)
+      return;
+    fDeg() << "free" << ptr;
+    KHeap::kfree(ptr);
+  }
+
+  void* malloc(size_t size)
+  {
+    void* ptr = KHeap::kmalloc(size);
+    fDeg() << "malloc of " << size << " -> " << ptr;
+    return ptr;
+  }
 }
