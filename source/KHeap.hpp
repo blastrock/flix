@@ -10,7 +10,6 @@ class KHeap
     static void init();
 
     static void* kmalloc(uint32_t size);
-    static void* kmalloc_a(uint32_t sz, void** phys = nullptr);
 
   private:
     static constexpr uint32_t HEAP_USED = 0x1;

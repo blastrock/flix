@@ -1,19 +1,7 @@
 #include "KHeap.hpp"
 #include "Paging.hpp"
+#include "Util.hpp"
 #include "Debug.hpp"
-
-// XXX duplicated from Multiboot
-template <typename T>
-inline T alignSup(T base, uint8_t val)
-{
-  return (base + val-1) & ~(uint64_t)(val-1);
-}
-
-template <typename T>
-inline T* ptrAdd(T* ptr, uint64_t val)
-{
-  return reinterpret_cast<T*>(reinterpret_cast<char*>(ptr)+val);
-}
 
 extern "C" uint8_t _heapBase;
 
@@ -33,7 +21,7 @@ void* KHeap::kmalloc(uint32_t size)
   // count header
   size += 4;
   // ceil to 4 bytes
-  size = alignSup(size, 4);
+  size = intAlignSup(size, 4);
 
   HeapBlock* block;
   uint8_t* ptr = m_heapStart;
@@ -119,12 +107,4 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
   nextBlock->size = fullSize - size;
 
   return {block, nextBlock};
-}
-
-void* KHeap::kmalloc_a(uint32_t sz, void** phys)
-{
-  return kmalloc(sz);
-  //PANIC("not implemented");
-  // TODO
-  return nullptr;
 }
