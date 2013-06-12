@@ -6,7 +6,8 @@
 struct InterruptState
 {
   uint64_t r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi;
-  uint8_t intNo, errCode;
+  uint8_t intNo;
+  uint64_t errCode;
   uint64_t rip, cs, rflags, rsp, ss;
 } __attribute__((packed));
 
