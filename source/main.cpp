@@ -21,22 +21,22 @@ extern "C" int kmain(void* mboot)
 
   Memory::init();
 
-  //char* buf = (char*)KHeap::kmalloc(128);
+  char* buf = (char*)KHeap::kmalloc(128);
 
-  //debug("buf", (long)buf);
+  fDeg() << "buf: " << (void*)buf;
 
-  //buf[0] = 'H';
-  //buf[1] = 'e';
-  //buf[2] = 'l';
-  //buf[3] = 'l';
-  //buf[4] = '\0';
-  //Screen::putString(buf);
+  buf[0] = 'H';
+  buf[1] = 'e';
+  buf[2] = 'l';
+  buf[3] = 'l';
+  buf[4] = '\0';
+  fDeg() << buf;
 
   //Paging::test(0);
 
   //Screen::putString("Hello world!\n\nI'm here!\n");
 
-  //asm volatile ("int $0x3");
+  asm volatile ("int $0x3");
   //asm volatile ("int $0x4");
   //asm volatile ("int $0x10");
   //asm volatile ("int $0x16");

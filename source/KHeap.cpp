@@ -88,6 +88,13 @@ void* KHeap::kmalloc(uint32_t size)
   return &block->data;
 }
 
+void KHeap::kfree(void* ptr)
+{
+  HeapBlock* block = reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -4));
+  block->size &= ~HEAP_USED;
+  // TODO merge free blocks
+}
+
 std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
     HeapBlock* block, uint64_t size)
 {

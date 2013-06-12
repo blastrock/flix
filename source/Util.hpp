@@ -4,7 +4,7 @@
 #include <cstdint>
 
 template <typename T>
-inline T* ptrAdd(T* ptr, uintptr_t val)
+inline T* ptrAdd(T* ptr, intptr_t val)
 {
   return reinterpret_cast<T*>(reinterpret_cast<char*>(ptr)+val);
 }
