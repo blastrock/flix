@@ -2,6 +2,7 @@
 #define K_HEAP_HPP
 
 #include <cstdint>
+#include <utility>
 
 class KHeap
 {
@@ -22,6 +23,9 @@ class KHeap
 
     static uint8_t* m_heapStart;
     static uint8_t* m_heapEnd;
+
+    static std::pair<HeapBlock*, HeapBlock*> splitBlock(HeapBlock* block,
+        uint64_t size);
 };
 
 #endif /* K_HEAP_HPP */
