@@ -26,7 +26,12 @@ add_executable(flix
   Paging.cpp
   Screen.cpp
   StaticMemoryPool.cpp
+  Symbols.cpp
   Timer.cpp
+)
+
+set_source_files_properties(Symbols.cpp
+  PROPERTIES COMPILE_FLAGS -mcmodel=large
 )
 
 # does not work

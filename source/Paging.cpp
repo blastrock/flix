@@ -1,13 +1,9 @@
 #include "Paging.hpp"
 #include "KHeap.hpp"
+#include "Symbols.hpp"
 #include <new>
 
 Paging::CR3 Paging::g_kernel_directory;
-
-extern "C" uint8_t Pml4;
-extern "C" uint8_t _kernelStart;
-extern "C" uint8_t _kernelBssEnd;
-extern "C" uint8_t VIRTUAL_BASE;
 
 StaticMemoryPool g_pool;
 Paging::MyPageManager* Paging::g_manager = nullptr;
@@ -20,8 +16,8 @@ void Paging::init()
   void* memory = g_pool.allocate(sizeof(MyPageManager));
   g_manager = new (memory) MyPageManager;
 
-  uint8_t* cur = &_kernelStart;
-  uint8_t* end = &_kernelBssEnd;
+  uint8_t* cur = static_cast<uint8_t*>(Symbols::getKernelStart());
+  uint8_t* end = static_cast<uint8_t*>(Symbols::getKernelBssEnd());
   uint64_t heapShift = (0xffffffffc0000000l - 0x800000);
   uint64_t virtualShift = (0xffffffff80000000l);
 
