@@ -30,13 +30,15 @@ void* KHeap::kmalloc(uint32_t size)
     block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->size & ~0x3;
 
-    if (!(block->size & HEAP_USED))
+    //assert(blockSize > 8);
+
+    if (!block->state.used)
     {
       // if block has exact needed size or block is non splittable (minimal
       // block size is 8)
-      if (size >= blockSize && size < blockSize - 8)
+      if (size < blockSize && size >= blockSize - 8)
       {
-        block->size |= HEAP_USED;
+        block->state.used = true;
         //assert((block->size & ~0x3) >= size);
         return &block->data;
       }
@@ -44,7 +46,7 @@ void* KHeap::kmalloc(uint32_t size)
       else if (size < blockSize)
       {
         block = splitBlock(block, size).first;
-        block->size |= HEAP_USED;
+        block->state.used = true;
 
         //TODO uncomment when assert is implemented
         //assert(!(nextBlock->size & 0x3));
@@ -54,13 +56,13 @@ void* KHeap::kmalloc(uint32_t size)
       }
     }
 
-    ptr += block->size;
+    ptr += blockSize;
   }
 
   fDeg() << "heap enlarge";
 
   // count last lock size if it's free
-  uint32_t blockSize = block->size & HEAP_USED ? 0 : block->size;
+  uint32_t blockSize = block->state.used ? 0 : block->size;
   // asked size - last block size if it's free -> round up
   uint32_t neededPages = (size - blockSize + 0x1000-1) / 0x1000;
 
@@ -81,7 +83,7 @@ void* KHeap::kmalloc(uint32_t size)
   block->size += neededPages*0x1000;
 
   block = splitBlock(block, size).first;
-  block->size |= HEAP_USED;
+  block->state.used = true;
 
   //assert((block->size & ~0x3) >= size);
 
@@ -94,7 +96,7 @@ void KHeap::kfree(void* ptr)
     return;
 
   HeapBlock* block = reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -4));
-  block->size &= ~HEAP_USED;
+  block->state.used = false;
   // TODO merge free blocks
 }
 
@@ -103,7 +105,7 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
 {
   //assert(!(block->size & HEAP_USED));
 
-  if (size > block->size + 8)
+  if (size > block->size - 8)
   {
     // block is too small to be split!
     // TODO panic is a bit too much, isn't it?
@@ -123,16 +125,11 @@ namespace std_impl
 {
   void free(void* ptr)
   {
-    if (!ptr)
-      return;
-    fDeg() << "free" << ptr;
     KHeap::kfree(ptr);
   }
 
   void* malloc(size_t size)
   {
-    void* ptr = KHeap::kmalloc(size);
-    fDeg() << "malloc of " << size << " -> " << ptr;
-    return ptr;
+    return KHeap::kmalloc(size);
   }
 }

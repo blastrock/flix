@@ -17,7 +17,18 @@ class KHeap
 
     struct HeapBlock
     {
-      uint32_t size;
+      struct State
+      {
+        unsigned used : 1;
+        unsigned avl : 1;
+        unsigned sizeUpper : 30;
+      };
+
+      union
+      {
+        State state;
+        uint32_t size;
+      };
       uint8_t data;
     } __attribute__((packed));
 

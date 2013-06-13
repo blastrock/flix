@@ -11,7 +11,7 @@ Paging::MyPageManager* Paging::g_manager = nullptr;
 void Paging::init()
 {
   void* poolBase = (void*)(((uint64_t)(((char*)KHeap::kmalloc(0x100000)) + 0x0FFF)) & ~0x0FFFL);
-  g_pool.set(poolBase, 0x100000);
+  g_pool.set(poolBase, 0xF0000);
 
   void* memory = g_pool.allocate(sizeof(MyPageManager));
   g_manager = new (memory) MyPageManager;

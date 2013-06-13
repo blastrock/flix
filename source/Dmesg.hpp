@@ -10,30 +10,14 @@
 class Dmesg
 {
   public:
-    Dmesg();
     ~Dmesg();
 
     template <typename T>
     Dmesg& operator<<(const T& value);
 
   private:
-    typedef ForwardAllocator<char, StaticMemoryPool> Allocator;
-    typedef std::basic_string<char, std::char_traits<char>, Allocator> String;
-    typedef std::basic_ostringstream<String::value_type, String::traits_type,
-            String::allocator_type> Stream;
-
-    char m_buf[100];
-    StaticMemoryPool m_pool;
-    String m_str;
-    Stream m_ss;
+    std::ostringstream m_ss;
 };
-
-inline Dmesg::Dmesg() :
-  m_pool(m_buf, sizeof(m_buf)),
-  m_str(Allocator(&m_pool)),
-  m_ss(m_str)
-{
-}
 
 inline Dmesg::~Dmesg()
 {
