@@ -16,7 +16,7 @@ void Paging::init()
   void* memory = g_pool.allocate(sizeof(MyPageManager));
   g_manager = new (memory) MyPageManager;
 
-  uint8_t* cur = static_cast<uint8_t*>(Symbols::getKernelStart());
+  uint8_t* cur = static_cast<uint8_t*>(Symbols::getKernelBootstrapStart());
   uint8_t* end = static_cast<uint8_t*>(Symbols::getKernelBssEnd());
   uint64_t heapShift = (0xffffffffc0000000l - 0x800000);
   uint64_t virtualShift = (0xffffffff80000000l);

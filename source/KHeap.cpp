@@ -1,16 +1,15 @@
 #include "KHeap.hpp"
 #include "Paging.hpp"
 #include "Util.hpp"
+#include "Symbols.hpp"
 #include "Debug.hpp"
-
-extern "C" uint8_t _heapBase;
 
 uint8_t* KHeap::m_heapStart;
 uint8_t* KHeap::m_heapEnd;
 
 void KHeap::init()
 {
-  m_heapStart = &_heapBase;
+  m_heapStart = static_cast<uint8_t*>(Symbols::getHeapBase());
   m_heapEnd = m_heapStart + 0x1000000;
   HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
   block->size = 0x1000000;

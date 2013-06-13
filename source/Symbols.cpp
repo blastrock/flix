@@ -2,18 +2,19 @@
 #include <cstdint>
 
 extern "C" uint8_t Pml4;
-extern "C" uint8_t _kernelStart;
+extern "C" uint8_t _kernelBootstrapStart;
 extern "C" uint8_t _kernelBssEnd;
 extern "C" uint8_t VIRTUAL_BASE;
+extern "C" uint8_t _heapBase;
 
 void* Symbols::getPml4()
 {
   return &Pml4;
 }
 
-void* Symbols::getKernelStart()
+void* Symbols::getKernelBootstrapStart()
 {
-  return &_kernelStart;
+  return &_kernelBootstrapStart;
 }
 
 void* Symbols::getKernelBssEnd()
@@ -24,4 +25,9 @@ void* Symbols::getKernelBssEnd()
 void* Symbols::getVirtualBase()
 {
   return &VIRTUAL_BASE;
+}
+
+void* Symbols::getHeapBase()
+{
+  return &_heapBase;
 }

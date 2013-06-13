@@ -11,7 +11,7 @@ MB2_CHECKSUM       equ -(MB2_HEADER_MAGIC + MB2_ARCHITECTURE + MB2_LENGTH)
 
 [BITS 32]
 [SECTION .mbhdr]
-[EXTERN _kernelStart]
+[EXTERN _kernelBootstrapStart]
 [EXTERN _kernelDataEnd]
 [EXTERN _kernelBssEnd]
 
@@ -30,7 +30,7 @@ ALIGN 8
   dw 2, 1
   dd 8 + 4*4
   dd MB2_HEADER_START
-  dd _kernelStart
+  dd _kernelBootstrapStart
   dd _kernelDataEnd
   dd _kernelBssEnd
   ; entry address
@@ -89,10 +89,7 @@ fillBssEnd:
   jmp 0x08:enableLong
 
 enableLong:
-  mov esp, _stack
-
   ; setup long mode pagination
-  ; identity-map this code and map kernel at 0xffffffff80000000
   mov eax, Pdpt
   bts eax, 0
   mov [Pml4], eax
@@ -100,23 +97,29 @@ enableLong:
 
   mov eax, Pd
   bts eax, 0
+  ; lower memory is identity mapped
   mov [Pdpt], eax
-  mov [Pdpt + 0xFF0], eax
-  ; map heap at 0xffffffffc00000000
+  ; map text, stack and heaps
   add eax, 0x1000
-  mov [Pdpt + 0xFF8], eax
+  mov [Pdpt + 0xFF0], eax
 
   ; this is last level, 2MB pages
+  ; identity map first 2MB
   mov dword [Pd     ], 0x00000083
   mov dword [Pd +  4], 0x0
-  mov dword [Pd +  8], 0x00200083
-  mov dword [Pd + 12], 0x0
-  mov dword [Pd + 16], 0x00400083
-  mov dword [Pd + 20], 0x0
-  mov dword [Pd + 24], 0x00600083
-  mov dword [Pd + 28], 0x0
-  mov dword [Pd + 0x1000], 0x00800083
+  ; map 2MB+ (the part after the bootstrap) to 0xffffffff80000000
+  mov dword [Pd + 0x1000], 0x00200083
   mov dword [Pd + 0x1004], 0x0
+  mov dword [Pd + 0x1008], 0x00400083
+  mov dword [Pd + 0x100C], 0x0
+  ; map stack
+  mov dword [Pd + 0x13F8], 0x00600083
+  mov dword [Pd + 0x13FC], 0x0
+  ; map heaps
+  mov dword [Pd + 0x1400], 0x00800083
+  mov dword [Pd + 0x1404], 0x0
+  mov dword [Pd + 0x1600], 0x00A00083
+  mov dword [Pd + 0x1604], 0x0
 
   ; Load CR3 with PML4
   mov eax, Pml4
@@ -146,15 +149,14 @@ enableLongSeg:
   mov eax, 0x28
   mov ds, ax
   mov ss, ax
-  jmp 0x20:high64
+  jmp 0x20:start64
 
 [BITS 64]
-high64:
-  mov rsp, _stack + 0xffffffff80000000
-  mov rax, start64 + 0xffffffff80000000
-  jmp rax
-
 start64:
+  ; set up stack
+[EXTERN _stackBase]
+  mov rsp, _stackBase
+  ; do static initialization
 [EXTERN _initArrayBegin]
 [EXTERN _initArrayEnd]
   mov rax, _initArrayBegin
@@ -168,9 +170,12 @@ initLoop:
   jmp initLoop
 
 mainStart:
+  ; call kmain(multiboot)
 [EXTERN kmain]
   mov rdi, rbx
-  call kmain+0x80000000
+  push failure64
+  mov rax, kmain
+  jmp rax
 
 failure64:
   hlt

@@ -15,6 +15,8 @@ void write(const char* str)
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
+  Screen::putString("Hello world!\n\nI'm here!\n");
+  return 0;
 
   DescTables::init();
 

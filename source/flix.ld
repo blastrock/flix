@@ -1,17 +1,19 @@
-PHYSICAL_BASE = 0x100000;
+PHYSICAL_BASE = 0x200000;
+BOOTSTRAP_SIZE = 0x10000;
 VIRTUAL_BASE = 0xffffffff80000000;
-PHYSICAL_HEAP = 0x400000;
-VIRTUAL_HEAP = 0xffffffffc0000000;
-SHIFT = VIRTUAL_BASE; /* - PHYS_BASE;*/
+VIRTUAL_STACK = 0xffffffff90000000;
+VIRTUAL_PAGEHEAP = 0xffffffffa0000000;
+VIRTUAL_HEAP = 0xffffffffb0000000;
+SHIFT = VIRTUAL_BASE - PHYSICAL_BASE;
 
 ENTRY(start)
 SECTIONS
 {
-  . = PHYSICAL_BASE;
+  . = PHYSICAL_BASE - BOOTSTRAP_SIZE;
 
   .bootstrap :
   {
-    _kernelStart = ABSOLUTE(.);
+    _kernelBootstrapStart = ABSOLUTE(.);
     *(.mbhdr)
     *(.bootstrap)
     . = ALIGN(0x1000);
@@ -23,20 +25,23 @@ SECTIONS
     . += 0x1000;
     . += 0x1000;
 
-    . += 0x1000;
-    _stack = .;
+    /* force the section to be this large to keep alignment in file */
+    /* this is not absolute, it's relative to the start of the section */
+    . = BOOTSTRAP_SIZE;
   }
 
-  . += SHIFT;
+  . = VIRTUAL_BASE;
+  _kernelTextVirt = .;
 
   .text ALIGN(0x1000) :
     AT(ADDR(.text) - SHIFT)
   {
+    _kernelTextStart = ABSOLUTE(. - SHIFT);
     *(.text*)
     . = ALIGN(0x8);
-    _initArrayBegin = ABSOLUTE(. - SHIFT);
+    _initArrayBegin = .;
     KEEP(*(.init_array))
-    _initArrayEnd = ABSOLUTE(. - SHIFT);
+    _initArrayEnd = .;
     . = ALIGN(0x1000);
   }
 
@@ -58,6 +63,12 @@ SECTIONS
     . = ALIGN(0x1000);
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
   }
+
+  . = VIRTUAL_STACK;
+  _stackBase = .;
+
+  . = VIRTUAL_PAGEHEAP;
+  _pageHeapBase = .;
 
   . = VIRTUAL_HEAP;
   _heapBase = .;
