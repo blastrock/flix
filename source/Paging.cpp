@@ -1,6 +1,7 @@
 #include "Paging.hpp"
 #include "KHeap.hpp"
 #include "Symbols.hpp"
+#include "Memory.hpp"
 #include <new>
 
 Paging::CR3 Paging::g_kernel_directory;
@@ -64,11 +65,33 @@ void Paging::init()
   asm volatile("mov %0, %%cr3":: "r"(g_kernel_directory.value));
 }
 
-void Paging::mapPage(void* addr)
+void Paging::mapPageTo(void* vaddr, uint64_t ipage)
 {
-  uint64_t iaddr = reinterpret_cast<uint64_t>(addr);
-  PageTableEntry* page = g_manager->getPage(iaddr / 0x1000, true, g_pool);
+  uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
+
+  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true, g_pool);
+  // assert(!page->p);
   page->p = true;
   page->rw = true;
-  page->base = 0xB8000 >> 12;
+  page->base = ipage;
+}
+
+void Paging::mapPage(void* vaddr, void** paddr)
+{
+  uint64_t page = Memory::getFreePage();
+
+  //assert(page != -1);
+
+  mapPageTo(vaddr, page);
+  if (paddr)
+    *paddr = reinterpret_cast<void*>(page * 0x1000);
+}
+
+void Paging::unmapPage(void* vaddr)
+{
+  uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
+
+  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true, g_pool);
+  // assert(page->p);
+  page->p = false;
 }

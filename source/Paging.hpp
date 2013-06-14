@@ -12,7 +12,9 @@ class Paging
 
     static void init();
 
-    static void mapPage(void* addr);
+    static void mapPageTo(void* vaddr, uint64_t page);
+    static void mapPage(void* vaddr, void** paddr = nullptr);
+    static void unmapPage(void* vaddr);
 
   private:
     struct PageTableEntry

@@ -11,7 +11,7 @@ class Memory
     //static void init(Multiboot const& mboot);
 
     static uint64_t getFreePage();
-    static void setPageUsed(uint64_t page, bool used = true);
+    static void setPageFree(uint64_t page);
 
   private:
     static BitVector g_frames;

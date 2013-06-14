@@ -23,13 +23,18 @@ uint64_t Memory::getFreePage()
 {
   for (uint64_t i = 0; i < g_frames.size(); ++i)
     if (g_frames.getBit(i))
+    {
+      g_frames.setBit(i, true);
       return i;
+    }
   return -1;
 }
 
-void Memory::setPageUsed(uint64_t page, bool used)
+void Memory::setPageFree(uint64_t page)
 {
-  g_frames.setBit(page, used);
+  //assert(g_frames.getBit(page));
+
+  g_frames.setBit(page, false);
 }
 
 #if 0
