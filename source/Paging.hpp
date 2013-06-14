@@ -2,7 +2,7 @@
 #define PAGING_HPP
 
 #include <cstdint>
-#include "StaticMemoryPool.hpp"
+#include "PageHeap.hpp"
 #include "PageManager.hpp"
 
 class Paging
@@ -64,7 +64,7 @@ class Paging
     static_assert(sizeof(CR3) == 8, "sizeof(CR3) != 8");
 
     typedef PageManager<
-      StaticMemoryPool,
+      PageHeap,
       PageMapLevel4Entry,
       PageDirectoryPointerEntry,
       PageDirectoryEntry,

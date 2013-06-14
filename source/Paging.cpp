@@ -6,16 +6,11 @@
 
 Paging::CR3 Paging::g_kernel_directory;
 
-StaticMemoryPool g_pool;
 Paging::MyPageManager* Paging::g_manager = nullptr;
 
 void Paging::init()
 {
-  void* poolBase = (void*)(((uint64_t)(((char*)KHeap::kmalloc(0x100000)) + 0x0FFF)) & ~0x0FFFL);
-  g_pool.set(poolBase, 0xF0000);
-
-  void* memory = g_pool.allocate(sizeof(MyPageManager));
-  g_manager = new (memory) MyPageManager;
+  g_manager = new MyPageManager;
 
   uint8_t* cur = static_cast<uint8_t*>(Symbols::getKernelBootstrapStart());
   uint8_t* end = static_cast<uint8_t*>(Symbols::getKernelBssEnd());
@@ -27,7 +22,7 @@ void Paging::init()
     (reinterpret_cast<uint64_t>(g_manager->getDirectory()) - heapShift) >> 12;
 
   {
-    PageTableEntry* page = g_manager->getPage(0xB8000 >> 12, true, g_pool);
+    PageTableEntry* page = g_manager->getPage(0xB8000 >> 12, true);
     page->p = true;
     page->rw = true;
     page->base = 0xB8000 >> 12;
@@ -38,7 +33,7 @@ void Paging::init()
     uint8_t* virtualAddress = cur + virtualShift;
 
     PageTableEntry* page =
-      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true, g_pool);
+      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true);
     page->p = true;
     page->rw = true;
     page->base = reinterpret_cast<uint64_t>(cur) >> 12;
@@ -54,7 +49,7 @@ void Paging::init()
     uint8_t* virtualAddress = cur + heapShift;
 
     PageTableEntry* page =
-      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true, g_pool);
+      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true);
     page->p = true;
     page->rw = true;
     page->base = reinterpret_cast<uint64_t>(cur) >> 12;
@@ -69,7 +64,7 @@ void Paging::mapPageTo(void* vaddr, uint64_t ipage)
 {
   uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
 
-  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true, g_pool);
+  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
   // assert(!page->p);
   page->p = true;
   page->rw = true;
@@ -91,7 +86,7 @@ void Paging::unmapPage(void* vaddr)
 {
   uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
 
-  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true, g_pool);
+  PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
   // assert(page->p);
   page->p = false;
 }

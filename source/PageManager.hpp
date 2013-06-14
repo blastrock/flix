@@ -44,7 +44,7 @@ class PageManager
 
     PageManager();
 
-    PageType* getPage(uint64_t address, bool create, Allocator& allocator);
+    PageType* getPage(uint64_t address, bool create);
     Entry* getDirectory();
 
   private:
@@ -64,7 +64,7 @@ class PageManager<Allocator, CurLevel>
 
     PageManager();
 
-    PageType* getPage(uint64_t address, bool create, Allocator& allocator);
+    PageType* getPage(uint64_t address, bool create);
     Entry* getDirectory();
 
   private:
@@ -86,7 +86,7 @@ PageManager<Allocator, CurLevel>::PageManager()
 template <typename Allocator, typename CurLevel, typename... Levels>
 typename PageManager<Allocator, CurLevel, Levels...>::PageType*
   PageManager<Allocator, CurLevel, Levels...>::getPage(
-      uint64_t address, bool create, Allocator& allocator)
+      uint64_t address, bool create)
 {
   //debug("descending for ", (uint64_t)address);
 
@@ -105,23 +105,22 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
       return invalidPtr<PageType>();
 
     // create it
-    void* memory = allocator.allocate(sizeof(NextLayout));
-    nextLayout = new (memory) NextLayout();
+    std::pair<void*, void*> memory = Allocator::kmalloc();
+    nextLayout = new (memory.second) NextLayout();
     //nextLayout = (NextLayout*)memory;
     //nextLayout->init();
     m_entries[index].p = true;
     m_entries[index].base =
-      (reinterpret_cast<uint64_t>(nextLayout->getDirectory()) - (0xffffffffc0000000 - 0x800000))
-      >> CurLevel::BASE_SHIFT;
+      reinterpret_cast<uint64_t>(memory.first) >> CurLevel::BASE_SHIFT;
   }
 
-  return m_nextLayouts[index]->getPage(address, create, allocator);
+  return m_nextLayouts[index]->getPage(address, create);
 }
 
 template <typename Allocator, typename CurLevel>
 typename PageManager<Allocator, CurLevel>::PageType*
   PageManager<Allocator, CurLevel>::getPage(
-      uint64_t address, bool, Allocator&)
+      uint64_t address, bool)
 {
   //debug("descending for ", (uint64_t)address);
   //debug("in ", (uint64_t)&prevEntry);
