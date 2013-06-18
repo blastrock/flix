@@ -2,39 +2,41 @@
 #include "KHeap.hpp"
 #include "Debug.hpp"
 
-BitVector Memory::g_frames;
+//BitVector Memory::g_frames;
+std::vector<bool> Memory::g_frames;
 
 void Memory::init()
 {
-  // XXX constants (memory size !!)
-  uint8_t* frames = (uint8_t*)KHeap::kmalloc(0x4000000/8);
-  g_frames.setData(0x4000000/8, frames);
-  g_frames.fill(false);
-
-  // set all this as used memory to be safe
-  for (uint64_t page = 0,
-      end = 0x400000 / 0x1000;
-      page < end;
-      ++page)
-    g_frames.setBit(page, true);
+  //// set all this as used memory to be safe
+  //for (uint64_t page = 0,
+  //    end = 0x400000 / 0x1000;
+  //    page < end;
+  //    ++page)
+  //  g_frames.setBit(page, true);
 }
 
 uint64_t Memory::getFreePage()
 {
   for (uint64_t i = 0; i < g_frames.size(); ++i)
-    if (!g_frames.getBit(i))
+    if (!g_frames[i])
     {
-      g_frames.setBit(i, true);
-      return i;
+      g_frames[i] = true;
+      return i + 0x1000000 / 0x1000;
     }
-  return -1;
+  uint64_t i = g_frames.size();
+  g_frames.resize(i+16, false);
+  g_frames[i] = true;
+  return i + 0x1000000 / 0x1000;
 }
 
 void Memory::setPageFree(uint64_t page)
 {
-  assert(g_frames.getBit(page));
+  page -= 0x1000000 / 0x1000;
 
-  g_frames.setBit(page, false);
+  assert(g_frames.size() > page);
+  assert(g_frames[page]);
+
+  g_frames[page] = false;
 }
 
 #if 0

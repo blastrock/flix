@@ -1,8 +1,9 @@
 #ifndef MEMORY_HPP
 #define MEMORY_HPP
 
-#include "BitVector.hpp"
+//#include "BitVector.hpp"
 //#include "Multiboot.hpp"
+#include <vector>
 
 class Memory
 {
@@ -14,7 +15,7 @@ class Memory
     static void setPageFree(uint64_t page);
 
   private:
-    static BitVector g_frames;
+    static std::vector<bool> g_frames;
 
     //template <typename T>
     //static void forEachRange(Multiboot const& mboot, T func);
