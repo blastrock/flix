@@ -29,7 +29,7 @@ void* KHeap::kmalloc(uint32_t size)
     block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->size & ~0x3;
 
-    //assert(blockSize > 8);
+    assert(blockSize > 8);
 
     if (!block->state.used)
     {
@@ -38,18 +38,18 @@ void* KHeap::kmalloc(uint32_t size)
       if (size < blockSize && size >= blockSize - 8)
       {
         block->state.used = true;
-        //assert((block->size & ~0x3) >= size);
+        assert((block->size & ~0x3) >= size);
         return &block->data;
       }
       // if block is larger and must be splitted
       else if (size < blockSize)
       {
-        block = splitBlock(block, size).first;
+        std::pair<HeapBlock*, HeapBlock*> blocks = splitBlock(block, size);
+        block = blocks.first;
         block->state.used = true;
 
-        //TODO uncomment when assert is implemented
-        //assert(!(nextBlock->size & 0x3));
-        //assert((block->size & ~0x3) >= size);
+        assert(!(blocks.second->size & 0x3));
+        assert((block->size & ~0x3) >= size);
 
         return &block->data;
       }
@@ -84,7 +84,7 @@ void* KHeap::kmalloc(uint32_t size)
   block = splitBlock(block, size).first;
   block->state.used = true;
 
-  //assert((block->size & ~0x3) >= size);
+  assert((block->size & ~0x3) >= size);
 
   return &block->data;
 }
@@ -102,7 +102,7 @@ void KHeap::kfree(void* ptr)
 std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
     HeapBlock* block, uint64_t size)
 {
-  //assert(!(block->size & HEAP_USED));
+  assert(!(block->size & HEAP_USED));
 
   if (size > block->size - 8)
   {

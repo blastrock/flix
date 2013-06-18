@@ -32,7 +32,7 @@ uint64_t Memory::getFreePage()
 
 void Memory::setPageFree(uint64_t page)
 {
-  //assert(g_frames.getBit(page));
+  assert(g_frames.getBit(page));
 
   g_frames.setBit(page, false);
 }

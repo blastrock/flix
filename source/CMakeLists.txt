@@ -14,6 +14,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 include_directories(${LIBKCXX_INCLUDE_DIRS})
 
 add_executable(flix
+  Assert.cpp
   boot.asm
   DescTables.cpp
   interrupt.asm

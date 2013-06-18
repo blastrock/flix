@@ -65,7 +65,7 @@ void Paging::mapPageTo(void* vaddr, uint64_t ipage)
   uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
 
   PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
-  // assert(!page->p);
+  assert(!page->p);
   page->p = true;
   page->rw = true;
   page->base = ipage;
@@ -75,7 +75,7 @@ void Paging::mapPage(void* vaddr, void** paddr)
 {
   uint64_t page = Memory::getFreePage();
 
-  //assert(page != -1);
+  assert(page != (uint64_t)-1);
 
   mapPageTo(vaddr, page);
   if (paddr)
@@ -87,6 +87,6 @@ void Paging::unmapPage(void* vaddr)
   uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
 
   PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
-  // assert(page->p);
+  assert(page->p);
   page->p = false;
 }
