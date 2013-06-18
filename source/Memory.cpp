@@ -22,7 +22,7 @@ void Memory::init()
 uint64_t Memory::getFreePage()
 {
   for (uint64_t i = 0; i < g_frames.size(); ++i)
-    if (g_frames.getBit(i))
+    if (!g_frames.getBit(i))
     {
       g_frames.setBit(i, true);
       return i;
