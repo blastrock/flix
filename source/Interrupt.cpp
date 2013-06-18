@@ -19,7 +19,7 @@ void InterruptHandler::handle(InterruptState* s)
   if (s->intNo < 32)
   {
     fDeg() << "Isr " << (int)s->intNo << '!';
-PANIC("no");
+
     switch (s->intNo)
     {
       case 14:
@@ -39,7 +39,6 @@ PANIC("no");
         }
     }
 
-    fDeg() << "stack: " << &s->rip;
     fDeg() << "RIP: " << std::hex << s->rip;
     fDeg() << "RSP: " << std::hex << s->rsp;
     PANIC("exception");
