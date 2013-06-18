@@ -114,14 +114,14 @@ enableLong:
   mov dword [Pd + 0x100C], 0x0
   mov dword [Pd + 0x1010], 0x00600083
   mov dword [Pd + 0x1014], 0x0
-  ; map stack
+  ; map stack to 0xffffffff90000000
   mov dword [Pd + 0x13F8], 0x00800083
   mov dword [Pd + 0x13FC], 0x0
-  ; map heaps
-  mov dword [Pd + 0x1400], 0x00A00083
-  mov dword [Pd + 0x1404], 0x0
-  mov dword [Pd + 0x1600], 0x00C00083
-  mov dword [Pd + 0x1604], 0x0
+  ; map heaps to 0xffffffffa0000000 and 0xffffffffb0000000
+  mov dword [Pd + 0x1800], 0x00A00083
+  mov dword [Pd + 0x1804], 0x0
+  mov dword [Pd + 0x1C00], 0x00C00083
+  mov dword [Pd + 0x1C04], 0x0
 
   ; Load CR3 with PML4
   mov eax, Pml4
@@ -180,6 +180,7 @@ mainStart:
   mov rax, kmain
   jmp rax
 
+  cli
 failure64:
   hlt
   jmp failure64
