@@ -112,13 +112,15 @@ enableLong:
   mov dword [Pd + 0x1004], 0x0
   mov dword [Pd + 0x1008], 0x00400083
   mov dword [Pd + 0x100C], 0x0
+  mov dword [Pd + 0x1010], 0x00600083
+  mov dword [Pd + 0x1014], 0x0
   ; map stack
-  mov dword [Pd + 0x13F8], 0x00600083
+  mov dword [Pd + 0x13F8], 0x00800083
   mov dword [Pd + 0x13FC], 0x0
   ; map heaps
-  mov dword [Pd + 0x1400], 0x00800083
+  mov dword [Pd + 0x1400], 0x00A00083
   mov dword [Pd + 0x1404], 0x0
-  mov dword [Pd + 0x1600], 0x00A00083
+  mov dword [Pd + 0x1600], 0x00C00083
   mov dword [Pd + 0x1604], 0x0
 
   ; Load CR3 with PML4
@@ -159,14 +161,15 @@ start64:
   ; do static initialization
 [EXTERN _initArrayBegin]
 [EXTERN _initArrayEnd]
-  mov rax, _initArrayBegin
-  mov rdx, _initArrayEnd
+  ; r14 and r15 are callee-saved (rsi and rdi are too, but they do not work ><)
+  mov r14, _initArrayBegin
+  mov r15, _initArrayEnd
 initLoop:
-  cmp rax, rdx
+  cmp r14, r15
   je mainStart
-  mov rcx, QWORD [rax]
-  call rcx
-  add rax, 8
+  mov rax, QWORD [r14]
+  call rax
+  add r14, 8
   jmp initLoop
 
 mainStart:
