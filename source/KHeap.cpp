@@ -10,9 +10,9 @@ uint8_t* KHeap::m_heapEnd;
 void KHeap::init()
 {
   m_heapStart = static_cast<uint8_t*>(Symbols::getHeapBase());
-  m_heapEnd = m_heapStart + 0x1000000;
+  m_heapEnd = m_heapStart + 0x200000;
   HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
-  block->size = 0x1000000;
+  block->size = 0x200000;
 }
 
 void* KHeap::kmalloc(uint32_t size)

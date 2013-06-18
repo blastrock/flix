@@ -5,6 +5,7 @@
 #include "Multiboot.hpp"
 #include "Debug.hpp"
 #include "KHeap.hpp"
+#include "PageHeap.hpp"
 #include "Paging.hpp"
 
 void write(const char* str)
@@ -16,17 +17,29 @@ extern "C" int kmain(void* mboot)
 {
   Screen::clear();
   Screen::putString("Hello world!\n\nI'm here!\n");
-  return 0;
 
   DescTables::init();
 
   //MultibootLoader mbl;
   //mbl.handle(mboot);
 
+  // first we need a heap (which is preallocated)
+  fDeg() << "Heap init";
   KHeap::init();
+
+  // second we need to keep track of used pages to be able to get new pages
+  fDeg() << "Memory init";
+  Memory::init();
+
+  // third we need to prepare the heap which will be used for pagination
+  fDeg() << "PageHeap init";
+  PageHeap::init();
+
+  // finally we need pagination
+  fDeg() << "Paging init";
   Paging::init();
 
-  Memory::init();
+  return 0;
 
   {
     std::string str =

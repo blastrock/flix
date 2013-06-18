@@ -15,8 +15,9 @@ inline void PANIC(const char* str)
 {
   Screen::putString("kernel panic:\n");
   Screen::putString(str);
-  asm("cli");
-  while (true);
+  asm volatile ("cli");
+  while (true)
+    asm volatile ("hlt");
 }
 
 #define debug(str, i) \
