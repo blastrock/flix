@@ -39,7 +39,7 @@ extern "C" int kmain(void* mboot)
   fDeg() << "Paging init";
   Paging::init();
 
-  return 0;
+  fDeg() << "Started!";
 
   {
     std::string str =
@@ -47,6 +47,8 @@ extern "C" int kmain(void* mboot)
 
     fDeg() << str;
   }
+
+  return 0;
 
   //Paging::test(0);
 

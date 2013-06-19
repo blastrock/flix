@@ -36,11 +36,14 @@ class PageManager
 {
   public:
     typedef CurLevel Entry;
+    typedef PageManager<Allocator, CurLevel, Levels...> ThisLayout;
     typedef PageManager<Allocator, Levels...> NextLayout;
     typedef typename LastType<CurLevel, Levels...>::type PageType;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS + NextLayout::TOTAL_BITS;
+
+    static std::pair<ThisLayout*, void*> makeNew();
 
     PageManager();
 
@@ -77,6 +80,14 @@ PageManager<Allocator, CurLevel, Levels...>::PageManager()
   std::memset(this, 0, sizeof(*this));
 }
 
+template <typename Allocator, typename CurLevel, typename... Levels>
+std::pair<PageManager<Allocator, CurLevel, Levels...>*, void*> PageManager<Allocator, CurLevel, Levels...>::makeNew()
+{
+  std::vector<std::pair<void*, void*>> memory =
+    Allocator::kmalloc(sizeof(ThisLayout));
+  return {new (memory[0].first) ThisLayout(), memory[0].second};
+}
+
 template <typename Allocator, typename CurLevel>
 PageManager<Allocator, CurLevel>::PageManager()
 {
@@ -88,15 +99,9 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
   PageManager<Allocator, CurLevel, Levels...>::getPage(
       uint64_t address, bool create)
 {
-  //debug("descending for ", (uint64_t)address);
-
   uint64_t addval = reinterpret_cast<uint64_t>(address);
   uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
   NextLayout*& nextLayout = m_nextLayouts[index];
-
-  //debug("index ", (uint64_t)index);
-  //debug("add ", (uint64_t)ADD_BITS);
-  //debug("total ", (uint64_t)TOTAL_BITS);
 
   // if not present
   if (!nextLayout)
@@ -105,13 +110,12 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
       return invalidPtr<PageType>();
 
     // create it
-    std::pair<void*, void*> memory = Allocator::kmalloc();
-    nextLayout = new (memory.second) NextLayout();
-    //nextLayout = (NextLayout*)memory;
-    //nextLayout->init();
+    std::vector<std::pair<void*, void*>> memory =
+      Allocator::kmalloc(sizeof(NextLayout));
+    nextLayout = new (memory[0].first) NextLayout();
     m_entries[index].p = true;
     m_entries[index].base =
-      reinterpret_cast<uint64_t>(memory.first) >> CurLevel::BASE_SHIFT;
+      reinterpret_cast<uint64_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
   }
 
   return m_nextLayouts[index]->getPage(address, create);
@@ -122,15 +126,8 @@ typename PageManager<Allocator, CurLevel>::PageType*
   PageManager<Allocator, CurLevel>::getPage(
       uint64_t address, bool)
 {
-  //debug("descending for ", (uint64_t)address);
-  //debug("in ", (uint64_t)&prevEntry);
-
   uint64_t addval = reinterpret_cast<uint64_t>(address);
   uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
-
-  //debug("index ", (uint64_t)index);
-  //debug("add ", (uint64_t)ADD_BITS);
-  //debug("total ", (uint64_t)TOTAL_BITS);
 
   return &m_entries[index];
 }

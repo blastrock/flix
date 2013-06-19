@@ -15,50 +15,112 @@ void PageHeap::init()
 {
   m_heapStart = &_pageHeapBase;
 
-  m_pool.reserve(8);
+  m_pool.reserve(16);
   // TODO constants
-  for (unsigned char i = 0; i < 8; ++i)
+  for (unsigned char i = 0; i < 16; ++i)
     m_pool.push_back({i, reinterpret_cast<uint8_t*>(0x800000) + i*0x1000});
-  m_map.resize(8, true);
+  m_map.resize(16, true);
 }
 
-std::pair<void*, void*> PageHeap::kmalloc()
+std::vector<std::pair<void*, void*>> PageHeap::kmalloc(uint64_t size)
 {
-  std::pair<uint64_t, void*> item = allocPage();
-  return {pageToPtr(item.first), item.second};
+  std::vector<std::pair<uint64_t, void*>> items = allocPages(size/0x1000);
+  std::vector<std::pair<void*, void*>> ret;
+  ret.reserve(items.size());
+  std::transform(items.begin(), items.end(), std::back_inserter(ret),
+      [](const std::pair<uint64_t, void*>& item) ->
+          std::pair<void*, void*> {
+        return {pageToPtr(item.first), item.second};
+      });
+  return ret;
 }
 
-std::pair<uint64_t, void*> PageHeap::allocPage()
+std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
 {
-  for (unsigned int i = 0; i < m_map.size(); ++i)
-    if (!m_map[i])
-      return allocPage(i);
+  std::vector<std::pair<uint64_t, void*>> ret;
+  unsigned int lastEmpty = -1;
+  // if we are reentering, use pool
+  if (m_allocating)
+  {
+    fDeg() << "reentrance, pool: " << m_pool.size();
+    assert(!m_pool.empty());
 
-  return allocPage(m_map.size());
+    for (unsigned int i = 0; i < m_pool.size(); )
+    {
+      bool ok = true;
+      for (unsigned int j = 0; j < nbPages && i+j < m_pool.size(); ++j)
+        // if pages are not contiguous
+        if (m_pool[i+j].first != m_pool[i].first + j)
+        {
+          ok = false;
+          break;
+        }
+        else
+          lastEmpty = i+j;
+
+      if (ok)
+      {
+        for (unsigned int j = 0; j < nbPages && i+j < m_pool.size(); ++j)
+          ret.push_back(m_pool[i+j]);
+        m_pool.erase(m_pool.begin()+i, m_pool.begin()+i+nbPages);
+        return ret;
+      }
+      else
+        i = lastEmpty + 1;
+    }
+
+    assert(!"no free page for reentrant allocation");
+    return ret;
+  }
+
+  for (unsigned int i = 0; i < m_map.size(); )
+  {
+    bool ok = true;
+    for (unsigned int j = 0; j < nbPages && i+j < m_map.size(); ++j)
+      if (m_map[i+j])
+      {
+        ok = false;
+        break;
+      }
+      else
+        lastEmpty = i+j;
+
+    if (ok)
+    {
+      for (unsigned int j = 0; j < nbPages && i+j < m_map.size(); ++j)
+        ret.push_back(allocPage(i+j));
+      return ret;
+    }
+    else
+      if (lastEmpty == (unsigned int)-1)
+        ++i;
+      else
+        // start next iteration at first potentially unused page
+        // lastEmpty is unused, lastEmpty + 1 is used (or is out of range), so we
+        // take lastEmpty + 2
+        i = lastEmpty + 2;
+  }
+
+  if (lastEmpty == (unsigned int)-1)
+    lastEmpty = m_map.size();
+  m_map.resize(lastEmpty + nbPages);
+  for (unsigned int j = lastEmpty; j < m_map.size(); ++j)
+    ret.push_back(allocPage(j));
+  return ret;
 }
 
 std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 {
-  // if we are reentering, use pool
-  if (m_allocating)
-  {
-    //assert(!m_pool.empty());
-
-    std::pair<uint64_t, void*> item = m_pool.back();
-    m_pool.pop_back();
-    return item;
-  }
-
   m_allocating = true;
 
   // assert page is not used yet
-  //assert(m_map.size() <= index || !m_map[index]);
+  assert(index >= m_map.size() || !m_map[index]);
 
   // resize vector if page is too far
   if (index >= m_map.size())
   {
     // for now, there should be no reason we ask a page too far appart
-    //assert(index == m_map.size());
+    assert(index == m_map.size());
     m_map.resize(index+1, false);
   }
 
@@ -82,8 +144,11 @@ void* PageHeap::pageToPtr(uint64_t index)
 void PageHeap::refillPool()
 {
   // the pool may be used while we replenish it
-  while (m_pool.size() < 8)
-    m_pool.push_back(allocPage());
+  while (m_pool.size() < 16)
+  {
+    auto pages = allocPages(2);
+    m_pool.insert(m_pool.end(), pages.begin(), pages.end());
+  }
 }
 
 void PageHeap::kfree(void* ptr)
@@ -94,7 +159,7 @@ void PageHeap::kfree(void* ptr)
   uint8_t* bptr = static_cast<uint8_t*>(ptr);
   uint64_t index = bptr - m_heapStart;
 
-  //assert(m_map[index]);
+  assert(m_map[index]);
 
   Paging::unmapPage(ptr);
   m_map[index] = false;
