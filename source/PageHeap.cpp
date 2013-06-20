@@ -15,11 +15,11 @@ void PageHeap::init()
 {
   m_heapStart = &_pageHeapBase;
 
-  m_pool.reserve(16);
-  // TODO constants
-  for (unsigned char i = 0; i < 16; ++i)
-    m_pool.push_back({i, reinterpret_cast<uint8_t*>(0x800000) + i*0x1000});
-  m_map.resize(16, true);
+  //m_pool.reserve(16);
+  //// TODO constants
+  //for (unsigned char i = 0; i < 16; ++i)
+  //  m_pool.push_back({i, reinterpret_cast<uint8_t*>(0x800000) + i*0x1000});
+  //m_map.resize(16, true);
 }
 
 std::vector<std::pair<void*, void*>> PageHeap::kmalloc(uint64_t size)
@@ -42,7 +42,6 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
   // if we are reentering, use pool
   if (m_allocating)
   {
-    fDeg() << "reentrance, pool: " << m_pool.size();
     assert(!m_pool.empty());
 
     for (unsigned int i = 0; i < m_pool.size(); )
@@ -127,11 +126,15 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
   m_map[index] = true;
 
   void* phys;
-  Paging::mapPage(pageToPtr(index), &phys);
+  // first 32 pages are always mapped
+  if (index > 32)
+    Paging::mapPage(pageToPtr(index), &phys);
+  else
+    phys = reinterpret_cast<void*>(0xa00000 + index * 0x1000);
 
   m_allocating = false;
 
-  refillPool();
+  //refillPool();
 
   return {index, phys};
 }
@@ -161,6 +164,8 @@ void PageHeap::kfree(void* ptr)
 
   assert(m_map[index]);
 
-  Paging::unmapPage(ptr);
+  // first 32 pages are always mapped
+  if (index > 32)
+    Paging::unmapPage(ptr);
   m_map[index] = false;
 }

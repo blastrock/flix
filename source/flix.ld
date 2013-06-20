@@ -37,6 +37,7 @@ SECTIONS
     AT(ADDR(.text) - SHIFT)
   {
     _kernelTextStart = ABSOLUTE(. - SHIFT);
+    _kernelVTextStart = ABSOLUTE(.);
     *(.text*)
     . = ALIGN(0x8);
     _initArrayBegin = .;

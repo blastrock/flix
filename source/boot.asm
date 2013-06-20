@@ -114,7 +114,7 @@ enableLong:
   mov dword [Pd + 0x100C], 0x0
   mov dword [Pd + 0x1010], 0x00600083
   mov dword [Pd + 0x1014], 0x0
-  ; map stack to 0xffffffff90000000
+  ; map stack to 0xffffffff90000000 (and lower)
   mov dword [Pd + 0x13F8], 0x00800083
   mov dword [Pd + 0x13FC], 0x0
   ; map heaps to 0xffffffffa0000000 and 0xffffffffb0000000

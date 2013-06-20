@@ -10,17 +10,15 @@ Paging::MyPageManager* Paging::g_manager = nullptr;
 
 void Paging::init()
 {
-  g_manager = new MyPageManager;
-
-  uint8_t* cur = static_cast<uint8_t*>(Symbols::getKernelBootstrapStart());
-  uint8_t* end = static_cast<uint8_t*>(Symbols::getKernelBssEnd());
-  uint64_t heapShift = (0xffffffffc0000000l - 0x800000);
-  uint64_t virtualShift = (0xffffffff80000000l);
+  fDeg() << "creating pml4";
+  std::pair<MyPageManager*, void*> pm = MyPageManager::makeNew();
+  g_manager = pm.first;
 
   g_kernel_directory.value = 0;
   g_kernel_directory.bitfield.base =
-    (reinterpret_cast<uint64_t>(g_manager->getDirectory()) - heapShift) >> 12;
+    reinterpret_cast<uint64_t>(pm.second) >> 12;
 
+  fDeg() << "mapping vga";
   {
     PageTableEntry* page = g_manager->getPage(0xB8000 >> 12, true);
     page->p = true;
@@ -28,35 +26,66 @@ void Paging::init()
     page->base = 0xB8000 >> 12;
   }
 
+  // mapping .text
+  fDeg() << "mapping .text";
+  uint64_t vcur = reinterpret_cast<uint64_t>(Symbols::getKernelVTextStart());
+  uint64_t cur = reinterpret_cast<uint64_t>(Symbols::getKernelTextStart());
+  uint64_t end = reinterpret_cast<uint64_t>(Symbols::getKernelBssEnd());
   while (cur < end)
   {
-    uint8_t* virtualAddress = cur + virtualShift;
-
-    PageTableEntry* page =
-      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true);
+    PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
     page->p = true;
     page->rw = true;
-    page->base = reinterpret_cast<uint64_t>(cur) >> 12;
+    page->base = cur >> 12;
 
     cur += 0x1000;
+    vcur += 0x1000;
   }
 
-  cur = (uint8_t*)0x800000;
-  end = cur+0x1000000;
+  // mapping stack
+  fDeg() << "mapping stack";
+  {
+    cur = 0x800000 + 0x200000 - 0x1000;
+    vcur = 0xffffffff90000000 - 0x1000;
+    PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
+    page->p = true;
+    page->rw = true;
+    page->base = cur >> 12;
+  }
 
+  // mapping page heap
+  fDeg() << "mapping page heap";
+  vcur = 0xffffffffa0000000;
+  cur = 0xa00000;
+  end = cur + 0x200000;
   while (cur < end)
   {
-    uint8_t* virtualAddress = cur + heapShift;
-
-    PageTableEntry* page =
-      g_manager->getPage(((uint64_t)virtualAddress) >> 12, true);
+    PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
     page->p = true;
     page->rw = true;
-    page->base = reinterpret_cast<uint64_t>(cur) >> 12;
+    page->base = cur >> 12;
 
     cur += 0x1000;
+    vcur += 0x1000;
   }
 
+  // mapping heap
+  fDeg() << "mapping heap";
+  vcur = 0xffffffffb0000000;
+  cur = 0xc00000;
+  end = cur + 0x200000;
+  while (cur < end)
+  {
+    PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
+    page->p = true;
+    page->rw = true;
+    page->base = cur >> 12;
+
+    cur += 0x1000;
+    vcur += 0x1000;
+  }
+
+  fDeg() << "changing pagetable to " << std::hex << g_kernel_directory.value;
   asm volatile("mov %0, %%cr3":: "r"(g_kernel_directory.value));
 }
 
