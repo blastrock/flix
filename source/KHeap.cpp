@@ -76,12 +76,15 @@ void* KHeap::kmalloc(uint32_t size)
   if (!blockSize)
   {
     block = reinterpret_cast<HeapBlock*>(ptr);
+    // set size to 0, it will be updated below
     block->size = 0;
   }
 
   block->size += neededPages*0x1000;
 
-  block = splitBlock(block, size).first;
+  if (size <= block->size - 8)
+    block = splitBlock(block, size).first;
+
   block->state.used = true;
 
   assert((block->size & ~0x3) >= size);
@@ -104,12 +107,8 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
 {
   assert(!(block->size & HEAP_USED));
 
-  if (size > block->size - 8)
-  {
-    // block is too small to be split!
-    // TODO panic is a bit too much, isn't it?
-    PANIC("block too small");
-  }
+  // block is too small to be split!
+  assert(size <= block->size - 8);
 
   uint32_t fullSize = block->size;
   HeapBlock* nextBlock = ptrAdd(block, size);
