@@ -44,13 +44,18 @@ void Paging::init()
 
   // mapping stack
   fDeg() << "mapping stack";
+  cur = 0x800000 + 0x200000 - 0x4000;
+  end = cur + 0x4000;
+  vcur = 0xffffffff90000000 - 0x4000;
+  while (cur < end)
   {
-    cur = 0x800000 + 0x200000 - 0x1000;
-    vcur = 0xffffffff90000000 - 0x1000;
     PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
     page->p = true;
     page->rw = true;
     page->base = cur >> 12;
+
+    cur += 0x1000;
+    vcur += 0x1000;
   }
 
   // mapping page heap

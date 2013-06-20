@@ -48,8 +48,6 @@ extern "C" int kmain(void* mboot)
     fDeg() << str;
   }
 
-  return 0;
-
   //Paging::test(0);
 
   //Screen::putString("Hello world!\n\nI'm here!\n");
@@ -64,5 +62,8 @@ extern "C" int kmain(void* mboot)
 
   fInfo() << "End of kernel";
 
-  return 0xDEADBEEF;
+  // the kernel should never return since the code which called kmain is not
+  // mapped anymore in memory
+  while (true)
+    asm volatile ("hlt");
 }

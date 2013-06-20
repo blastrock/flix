@@ -3,6 +3,7 @@
 
 extern "C" uint8_t Pml4;
 extern "C" uint8_t _kernelBootstrapStart;
+extern "C" uint8_t _kernelTextStart;
 extern "C" uint8_t _kernelVTextStart;
 extern "C" uint8_t _kernelBssEnd;
 extern "C" uint8_t VIRTUAL_BASE;
@@ -20,7 +21,7 @@ void* Symbols::getKernelBootstrapStart()
 
 void* Symbols::getKernelTextStart()
 {
-  return &_kernelVTextStart;
+  return &_kernelTextStart;
 }
 
 void* Symbols::getKernelVTextStart()
