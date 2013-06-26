@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project(flix)
 
+set(CXX_COMPILER_INCLUDE "" CACHE PATH "Compiler-provided headers, like stdint.h, stddef.h")
+
+if("${CXX_COMPILER_INCLUDE}" STREQUAL "")
+  message(FATAL_ERROR "Could not find stddef.h, fix CXX_COMPILER_INCLUDE")
+endif("${CXX_COMPILER_INCLUDE}" STREQUAL "")
+
 set(LIBKCXX_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/libkcxx/include)
 
 set(LIBCXX_ENABLE_EXCEPTIONS OFF CACHE BOOL "Use exceptions.")
