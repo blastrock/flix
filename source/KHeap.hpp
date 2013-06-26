@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <utility>
+#include <cassert>
 
 class KHeap
 {
@@ -15,21 +16,47 @@ class KHeap
   private:
     static constexpr uint32_t HEAP_USED = 0x1;
 
-    struct HeapBlock
+    class HeapBlock
     {
-      struct State
-      {
-        unsigned used : 1;
-        unsigned avl : 1;
-        unsigned sizeUpper : 30;
-      };
+      public:
+        uint8_t* getData()
+        {
+          return &data;
+        }
 
-      union
-      {
-        State state;
-        uint32_t size;
-      };
-      uint8_t data;
+        uint32_t getSize()
+        {
+          return state.sizeUpper << 2;
+        }
+        void setSize(uint32_t asize)
+        {
+          assert(asize % 4 == 0);
+          state.sizeUpper = asize >> 2;
+        }
+
+        bool getUsed()
+        {
+          return state.used;
+        }
+        void setUsed(bool used)
+        {
+          state.used = used;
+        }
+
+      private:
+        struct State
+        {
+          unsigned used : 1;
+          unsigned avl : 1;
+          unsigned sizeUpper : 30;
+        };
+
+        union
+        {
+          State state;
+          uint32_t size;
+        };
+        uint8_t data;
     } __attribute__((packed));
 
     static uint8_t* m_heapStart;
