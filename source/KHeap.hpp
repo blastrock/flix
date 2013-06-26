@@ -34,6 +34,7 @@ class KHeap
 
     static uint8_t* m_heapStart;
     static uint8_t* m_heapEnd;
+    static HeapBlock* m_lastBlock;
 
     static std::pair<HeapBlock*, HeapBlock*> splitBlock(HeapBlock* block,
         uint64_t size);

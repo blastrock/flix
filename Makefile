@@ -17,11 +17,11 @@ flix.img: rebuild build/source/flix
 	grub-mkrescue -o flix.img img
 
 run: flix.img
-	qemu-system-x86_64 -hda flix.img -m 64 -monitor stdio -enable-kvm
+	qemu-system-x86_64 -hda flix.img -m 128 -monitor stdio -enable-kvm
 .PHONY: run
 
 debug: flix.img
-	qemu-system-x86_64 -hda flix.img -m 64 -s -daemonize
+	qemu-system-x86_64 -hda flix.img -m 128 -s -daemonize
 	gdb build/source/flix
 .PHONY: debug
 

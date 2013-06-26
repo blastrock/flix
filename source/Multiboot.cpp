@@ -31,6 +31,8 @@ MultibootLoader::Tag* MultibootLoader::handleTag(Tag* tag)
 
 void MultibootLoader::handleMemoryMap(MemoryMap* map)
 {
+  fDeg() << "handling memory tag";
+
   MemoryMapEntry* entry = reinterpret_cast<MemoryMapEntry*>(
       reinterpret_cast<char*>(map)+sizeof(MemoryMap));
   MemoryMapEntry* end = ptrAdd(entry, map->size);
@@ -45,6 +47,4 @@ void MultibootLoader::handleMemoryMap(MemoryMap* map)
 
 void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
 {
-  debug("base", entry->base_addr);
-  debug("length", entry->length);
 }

@@ -49,6 +49,7 @@ ALIGN 8
 MB2_HEADER_END:
 
 [SECTION .bootstrap]
+[GLOBAL start]
 [EXTERN Pml4]
 [EXTERN Pdpt]
 [EXTERN Pd]
@@ -63,6 +64,21 @@ start:
   cmp eax, $MB2_RESPONSE_MAGIC
   jne failure
 
+  ; copy multiboot header at beginning of heap
+.LMBCopyF:
+  mov ecx, DWORD [ebx]
+  add ecx, ebx
+  mov edx, 0xc00008
+.LMBCopyFLoop:
+  cmp ebx, ecx
+  jge .LMBCopyEnd
+  mov al, [ebx]
+  mov [edx], al
+  inc ebx
+  inc edx
+  jmp .LMBCopyFLoop
+
+.LMBCopyEnd:
   ; bss section isn't 0-filled with grub2, do it now
   mov eax, _kernelDataEnd
   cmp eax, _kernelBssEnd
@@ -170,7 +186,7 @@ start:
 .LmainStart:
   ; call kmain(multiboot)
 [EXTERN kmain]
-  mov rdi, rbx
+  mov rdi, 0xffffffffb0000008
   push .Lfailure64
   mov rax, kmain
   jmp rax

@@ -20,8 +20,8 @@ extern "C" int kmain(void* mboot)
 
   DescTables::init();
 
-  //MultibootLoader mbl;
-  //mbl.handle(mboot);
+  MultibootLoader mbl;
+  mbl.handle(mboot);
 
   // first we need a heap (which is preallocated)
   fDeg() << "Heap init";
@@ -47,6 +47,11 @@ extern "C" int kmain(void* mboot)
 
     fDeg() << str;
   }
+
+  char* aa = new char[0x300000];
+  for (int i = 0; i < 0x300000; ++i)
+    aa[i] = 0xaa;
+  delete [] aa;
 
   //Paging::test(0);
 

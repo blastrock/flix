@@ -6,13 +6,30 @@
 
 uint8_t* KHeap::m_heapStart;
 uint8_t* KHeap::m_heapEnd;
+KHeap::HeapBlock* KHeap::m_lastBlock;
 
 void KHeap::init()
 {
+  uint32_t initialSize = 0x200000;
+
   m_heapStart = static_cast<uint8_t*>(Symbols::getHeapBase());
-  m_heapEnd = m_heapStart + 0x200000;
+  m_heapEnd = m_heapStart + initialSize;
   HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
-  block->size = 0x200000;
+
+  // multiboot header is at heap + 4, treat it as a block
+  {
+    uint32_t mbSize = *reinterpret_cast<uint32_t*>(m_heapStart + 8);
+    mbSize = intAlignSup(mbSize, 4) + 8;
+    block->size = mbSize;
+    block->state.used = true;
+
+    block = reinterpret_cast<HeapBlock*>(m_heapStart + mbSize);
+
+    initialSize -= mbSize;
+  }
+
+  block->size = initialSize;
+  m_lastBlock = block;
 }
 
 void* KHeap::kmalloc(uint32_t size)
@@ -45,6 +62,11 @@ void* KHeap::kmalloc(uint32_t size)
       else if (size < blockSize)
       {
         std::pair<HeapBlock*, HeapBlock*> blocks = splitBlock(block, size);
+
+        // if this was the last block, there is a new last block
+        if (block == m_lastBlock)
+          m_lastBlock = blocks.second;
+
         block = blocks.first;
         block->state.used = true;
 
@@ -67,20 +89,28 @@ void* KHeap::kmalloc(uint32_t size)
 
   for (uint32_t i = 0; i < neededPages; ++i)
   {
-    // check for error!
+    // kmalloc may be reentered here!
     Paging::mapPage(m_heapEnd);
     m_heapEnd += 0x1000;
+
+    // if block is used, go to next block
+    if (!m_lastBlock->state.used)
+      block = m_lastBlock;
+    else
+    {
+      block = ptrAdd(m_lastBlock, m_lastBlock->size & ~0x3);
+
+      assert(reinterpret_cast<uint64_t>(block) % 0x1000 == 0);
+      assert(reinterpret_cast<uint8_t*>(block) < m_heapEnd);
+
+      // set size to 0, it will be updated below
+      block->size = 0;
+    }
+
+    block->size += 0x1000;
   }
 
-  // if block is used, go to next block
-  if (!blockSize)
-  {
-    block = reinterpret_cast<HeapBlock*>(ptr);
-    // set size to 0, it will be updated below
-    block->size = 0;
-  }
-
-  block->size += neededPages*0x1000;
+  assert(size <= block->size);
 
   if (size <= block->size - 8)
     block = splitBlock(block, size).first;
