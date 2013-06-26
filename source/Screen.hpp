@@ -34,11 +34,11 @@ class Screen
     static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
     static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
     static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void updateCursor();
 
   private:
     static Position g_cursor;
 
-    static void updateCursor();
     static void scrollOneLine();
 };
 

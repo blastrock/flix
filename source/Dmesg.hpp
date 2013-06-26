@@ -28,6 +28,7 @@ inline Dmesg::Dmesg() :
 inline Dmesg::~Dmesg()
 {
   Screen::putChar('\n');
+  Screen::updateCursor();
 }
 
 template <typename T>
