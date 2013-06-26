@@ -47,7 +47,7 @@ class PageManager
 
     PageManager();
 
-    PageType* getPage(uint64_t address, bool create);
+    PageType* getPage(uintptr_t address, bool create);
     Entry* getDirectory();
 
   private:
@@ -67,7 +67,7 @@ class PageManager<Allocator, CurLevel>
 
     PageManager();
 
-    PageType* getPage(uint64_t address, bool create);
+    PageType* getPage(uintptr_t address, bool create);
     Entry* getDirectory();
 
   private:
@@ -97,10 +97,10 @@ PageManager<Allocator, CurLevel>::PageManager()
 template <typename Allocator, typename CurLevel, typename... Levels>
 typename PageManager<Allocator, CurLevel, Levels...>::PageType*
   PageManager<Allocator, CurLevel, Levels...>::getPage(
-      uint64_t address, bool create)
+      uintptr_t address, bool create)
 {
-  uint64_t addval = reinterpret_cast<uint64_t>(address);
-  uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
+  uintptr_t addval = reinterpret_cast<uintptr_t>(address);
+  uintptr_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
   NextLayout*& nextLayout = m_nextLayouts[index];
 
   // if not present
@@ -115,7 +115,7 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
     nextLayout = new (memory[0].first) NextLayout();
     m_entries[index].p = true;
     m_entries[index].base =
-      reinterpret_cast<uint64_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
+      reinterpret_cast<uintptr_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
   }
 
   return m_nextLayouts[index]->getPage(address, create);
@@ -124,10 +124,10 @@ typename PageManager<Allocator, CurLevel, Levels...>::PageType*
 template <typename Allocator, typename CurLevel>
 typename PageManager<Allocator, CurLevel>::PageType*
   PageManager<Allocator, CurLevel>::getPage(
-      uint64_t address, bool)
+      uintptr_t address, bool)
 {
-  uint64_t addval = reinterpret_cast<uint64_t>(address);
-  uint16_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
+  uintptr_t addval = reinterpret_cast<uintptr_t>(address);
+  uintptr_t index = (addval >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
 
   return &m_entries[index];
 }

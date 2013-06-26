@@ -16,7 +16,7 @@ void Paging::init()
 
   g_kernel_directory.value = 0;
   g_kernel_directory.bitfield.base =
-    reinterpret_cast<uint64_t>(pm.second) >> 12;
+    reinterpret_cast<uintptr_t>(pm.second) >> 12;
 
   fDeg() << "mapping vga";
   {
@@ -28,9 +28,9 @@ void Paging::init()
 
   // mapping .text
   fDeg() << "mapping .text";
-  uint64_t vcur = reinterpret_cast<uint64_t>(Symbols::getKernelVTextStart());
-  uint64_t cur = reinterpret_cast<uint64_t>(Symbols::getKernelTextStart());
-  uint64_t end = reinterpret_cast<uint64_t>(Symbols::getKernelBssEnd());
+  uintptr_t vcur = reinterpret_cast<uintptr_t>(Symbols::getKernelVTextStart());
+  uintptr_t cur = reinterpret_cast<uintptr_t>(Symbols::getKernelTextStart());
+  uintptr_t end = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
   while (cur < end)
   {
     PageTableEntry* page = g_manager->getPage(vcur >> 12, true);
@@ -94,9 +94,9 @@ void Paging::init()
   asm volatile("mov %0, %%cr3":: "r"(g_kernel_directory.value));
 }
 
-void Paging::mapPageTo(void* vaddr, uint64_t ipage)
+void Paging::mapPageTo(void* vaddr, uintptr_t ipage)
 {
-  uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
+  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
   assert(!page->p);
@@ -107,9 +107,9 @@ void Paging::mapPageTo(void* vaddr, uint64_t ipage)
 
 void Paging::mapPage(void* vaddr, void** paddr)
 {
-  uint64_t page = Memory::getFreePage();
+  uintptr_t page = Memory::getFreePage();
 
-  assert(page != (uint64_t)-1);
+  assert(page != static_cast<uintptr_t>(-1));
 
   mapPageTo(vaddr, page);
   if (paddr)
@@ -118,7 +118,7 @@ void Paging::mapPage(void* vaddr, void** paddr)
 
 void Paging::unmapPage(void* vaddr)
 {
-  uint64_t ivaddr = reinterpret_cast<uint64_t>(vaddr);
+  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = g_manager->getPage(ivaddr / 0x1000, true);
   assert(page->p);

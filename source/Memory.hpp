@@ -6,9 +6,9 @@
 class Memory
 {
   public:
-    static uint64_t getFreePage();
-    static void setPageFree(uint64_t page);
-    static void setPageUsed(uint64_t page);
+    static uintptr_t getFreePage();
+    static void setPageFree(uintptr_t page);
+    static void setPageUsed(uintptr_t page);
 
   private:
     static std::vector<bool> g_frames;
