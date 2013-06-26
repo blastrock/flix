@@ -12,7 +12,8 @@ rebuild:
 
 flix.img: rebuild build/source/flix
 	mkdir -p img/boot/grub
-	echo -e "set timeout=0\nset default=0\nmenuentry "flix" { multiboot2 /flix }" > img/boot/grub/grub.cfg
+	which echo
+	/bin/echo -e "set timeout=0\nset default=0\nmenuentry "flix" { multiboot2 /flix }" > img/boot/grub/grub.cfg
 	cp -f build/source/flix img/flix
 	grub-mkrescue -o flix.img img
 
