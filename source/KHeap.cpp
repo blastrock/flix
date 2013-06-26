@@ -35,7 +35,6 @@ void KHeap::init()
 
 void* KHeap::kmalloc(uint32_t size)
 {
-  fDeg() << "kmalloc " << size;
   // count header
   size += 4;
   // ceil to 4 bytes
