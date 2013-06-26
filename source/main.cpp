@@ -20,24 +20,22 @@ extern "C" int kmain(void* mboot)
 
   DescTables::init();
 
-  MultibootLoader mbl;
-  mbl.handle(mboot);
-
   // first we need a heap (which is preallocated)
   fDeg() << "Heap init";
   KHeap::init();
 
-  // second we need to keep track of used pages to be able to get new pages
-  fDeg() << "Memory init";
-  Memory::init();
-
-  // third we need to prepare the heap which will be used for pagination
+  // second we need to prepare the heap which will be used for pagination
   fDeg() << "PageHeap init";
   PageHeap::init();
 
-  // finally we need pagination
+  // third we need pagination
   fDeg() << "Paging init";
   Paging::init();
+
+  // finally we need to keep track of used pages to be able to get new pages
+  fDeg() << "Memory init";
+  MultibootLoader mbl;
+  mbl.handle(mboot);
 
   fDeg() << "Started!";
 
@@ -48,10 +46,10 @@ extern "C" int kmain(void* mboot)
     fDeg() << str;
   }
 
-  char* aa = new char[0x300000];
-  for (int i = 0; i < 0x300000; ++i)
-    aa[i] = 0xaa;
-  delete [] aa;
+  //char* aa = new char[0x300000];
+  //for (int i = 0; i < 0x300000; ++i)
+  //  aa[i] = 0xaa;
+  //delete [] aa;
 
   //Paging::test(0);
 

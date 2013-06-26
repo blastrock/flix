@@ -1,37 +1,29 @@
 #include "Memory.hpp"
-#include "KHeap.hpp"
+#include "Util.hpp"
 #include "Debug.hpp"
 
-//BitVector Memory::g_frames;
 std::vector<bool> Memory::g_frames;
-
-void Memory::init()
-{
-  //// set all this as used memory to be safe
-  //for (uint64_t page = 0,
-  //    end = 0x400000 / 0x1000;
-  //    page < end;
-  //    ++page)
-  //  g_frames.setBit(page, true);
-}
 
 uint64_t Memory::getFreePage()
 {
+  fDeg() << "free page";
+
   for (uint64_t i = 0; i < g_frames.size(); ++i)
     if (!g_frames[i])
     {
       g_frames[i] = true;
-      return i + 0x1000000 / 0x1000;
+      return i;
     }
   uint64_t i = g_frames.size();
   g_frames.resize(i+16, false);
   g_frames[i] = true;
-  return i + 0x1000000 / 0x1000;
+  return i;
 }
 
 void Memory::setPageFree(uint64_t page)
 {
-  page -= 0x1000000 / 0x1000;
+  //if (g_frames.size() <= page)
+  //  g_frames.resize(intAlignSup(page+1, 16));
 
   assert(g_frames.size() > page);
   assert(g_frames[page]);
@@ -39,65 +31,12 @@ void Memory::setPageFree(uint64_t page)
   g_frames[page] = false;
 }
 
-#if 0
-void Memory::init(Multiboot const& mboot)
+void Memory::setPageUsed(uint64_t page)
 {
-  if (!(mboot.flags & (1 << 6)))
-  {
-    debug("no memory info", 0);
-    return;
-  }
+  if (g_frames.size() <= page)
+    g_frames.resize(intAlignSup(page+1, 16));
 
-  uint64_t maxAddr = 0;
-  forEachRange(mboot, [&maxAddr](uint64_t baseAddr, uint64_t length){
-      //debug("base_addr", baseAddr);
-      //debug("length", length);
-      uint64_t end = baseAddr + length;
-      if (end > maxAddr)
-        maxAddr = end;
-      });
+  assert(g_frames.size() > page);
 
-  uint8_t* frames = (uint8_t*)KHeap::kmalloc(maxAddr/8);
-  g_frames.setData(maxAddr/8, frames);
-  g_frames.fill(false);
-
-  // TODO optimize lawl...
-  // TODO mark other used pages, by bios and all
-  // XXX constants
-  forEachRange(mboot, [](uint64_t baseAddr, uint64_t length){
-      for (uint64_t page = (baseAddr + 0x1000 - 1) / 0x1000,
-          end = (baseAddr + length) / 0x1000;
-          page < end;
-          ++page)
-        g_frames.setBit(page, true);
-      });
-
-  // XXX constants
-  for (uint64_t page = reinterpret_cast<uint64_t>(kernelStartAddress) / 0x1000,
-      end = reinterpret_cast<uint64_t>(KHeap::kmalloc_a(0)) / 0x1000;
-      page < end;
-      ++page)
-    g_frames.setBit(page, false);
+  g_frames[page] = true;
 }
-
-template <typename T>
-void Memory::forEachRange(Multiboot const& mboot, T func)
-{
-  MapRange const* range = reinterpret_cast<MapRange const*>(mboot.mmap_addr);
-  MapRange const* const endRange = reinterpret_cast<MapRange const*>(
-    reinterpret_cast<char const*>(range) + mboot.mmap_length);
-  for (;
-      range < endRange;
-      range = reinterpret_cast<MapRange const*>(
-        reinterpret_cast<char const*>(range) + range->size + 4))
-    if (range->type == 1)
-      func(range->base_addr, range->length);
-  //{
-  //  debug("size", range->size);
-  //  debug("base", range->base_addr);
-  //  debug("len", range->length);
-  //  debug("type", range->type);
-  //  debug("", 0);
-  //}
-}
-#endif
