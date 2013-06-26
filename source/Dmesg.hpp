@@ -4,20 +4,26 @@
 #include <sstream>
 #include <cstring>
 #include "Screen.hpp"
-#include "StaticMemoryPool.hpp"
-#include "ForwardAllocator.hpp"
+#include "ConsoleStreamBuf.hpp"
 
 class Dmesg
 {
   public:
+    Dmesg();
     ~Dmesg();
 
     template <typename T>
     Dmesg& operator<<(const T& value);
 
   private:
-    std::ostringstream m_ss;
+    ConsoleStreamBuf m_sb;
+    std::ostream m_stream;
 };
+
+inline Dmesg::Dmesg() :
+  m_stream(&m_sb)
+{
+}
 
 inline Dmesg::~Dmesg()
 {
@@ -27,9 +33,7 @@ inline Dmesg::~Dmesg()
 template <typename T>
 Dmesg& Dmesg::operator<<(const T& value)
 {
-  m_ss << value;
-  Screen::putString(m_ss.str().c_str());
-  m_ss.str("");
+  m_stream << value;
   return *this;
 }
 
