@@ -49,8 +49,6 @@ ALIGN 8
 MB2_HEADER_END:
 
 [SECTION .bootstrap]
-[GLOBAL start]
-[EXTERN _stack]
 [EXTERN Pml4]
 [EXTERN Pdpt]
 [EXTERN Pd]
@@ -60,35 +58,32 @@ failure:
   jmp failure
 
 start:
-  cmp eax, $MB2_RESPONSE_MAGIC
-  jne failure
-
   cli
 
-  ;mov word [0xB8000], 0x0F00 | 'A'
-  ;jmp failure
+  cmp eax, $MB2_RESPONSE_MAGIC
+  jne failure
 
   ; bss section isn't 0-filled with grub2, do it now
   mov eax, _kernelDataEnd
   cmp eax, _kernelBssEnd
-  jge fillBssEnd
-fillBssLoop:
+  jge .LfillBssEnd
+.LfillBssLoop:
   mov [eax], BYTE 0
   inc eax
   cmp eax, _kernelBssEnd
-  jl fillBssLoop
-fillBssEnd:
+  jl .LfillBssLoop
+.LfillBssEnd:
 
   ; setup 32 bit segmentation
-  mov eax, GdtR
+  mov eax, .LGdtR
   lgdt [eax]
 
   mov eax, 0x10
   mov ds, ax
   mov ss, ax
-  jmp 0x08:enableLong
+  jmp 0x08:.LenableLong
 
-enableLong:
+.LenableLong:
   ; setup long mode pagination
   mov eax, Pdpt
   bts eax, 0
@@ -143,18 +138,18 @@ enableLong:
   bts eax, 31
   mov cr0, eax
 
-  jmp 0x08:enableLongSeg
+  jmp 0x08:.LenableLongSeg
 
-enableLongSeg:
-  mov eax, GdtRLong
+.LenableLongSeg:
+  mov eax, .LGdtRLong
 
   mov eax, 0x28
   mov ds, ax
   mov ss, ax
-  jmp 0x20:start64
+  jmp 0x20:.Lstart64
 
 [BITS 64]
-start64:
+.Lstart64:
   ; set up stack
 [EXTERN _stackBase]
   mov rsp, _stackBase
@@ -164,41 +159,41 @@ start64:
   ; r14 and r15 are callee-saved (rsi and rdi are too, but they do not work ><)
   mov r14, _initArrayBegin
   mov r15, _initArrayEnd
-initLoop:
+.LinitLoop:
   cmp r14, r15
-  je mainStart
+  je .LmainStart
   mov rax, QWORD [r14]
   call rax
   add r14, 8
-  jmp initLoop
+  jmp .LinitLoop
 
-mainStart:
+.LmainStart:
   ; call kmain(multiboot)
 [EXTERN kmain]
   mov rdi, rbx
-  push failure64
+  push .Lfailure64
   mov rax, kmain
   jmp rax
 
   cli
-failure64:
+.Lfailure64:
   hlt
-  jmp failure64
+  jmp .Lfailure64
 
-Gdt:
+.LGdt:
   dq	0x0000000000000000
   dq	0x00CF9A000000FFFF
   dq	0x00CF92000000FFFF
-GdtLong:
+.LGdtLong:
   dq	0x0000000000000000
   dq	0x0020980000000000
   dq	0x0000920000000000
-GdtEnd:
+.LGdtEnd:
 
-GdtR:
-  dw GdtEnd - Gdt - 1
-  dd Gdt
+.LGdtR:
+  dw .LGdtEnd - .LGdt - 1
+  dd .LGdt
 
-GdtRLong:
-  dw GdtEnd - GdtLong - 1
-  dq GdtLong + 0xffffffff8000000
+.LGdtRLong:
+  dw .LGdtEnd - .LGdtLong - 1
+  dq .LGdtLong + 0xffffffff8000000
