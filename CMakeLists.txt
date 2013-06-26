@@ -21,3 +21,4 @@ set(LIBCXX_LIBCXXABI_INCLUDE_PATHS "${PROJECT_SOURCE_DIR}/libkcxx/libcxxabi/incl
 
 add_subdirectory(libkcxx)
 add_subdirectory(source)
+add_subdirectory(debug)
