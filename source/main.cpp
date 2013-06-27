@@ -13,6 +13,11 @@ void write(const char* str)
   fDeg() << str;
 }
 
+void segfault()
+{
+  *(int*)0 = 0;
+}
+
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
@@ -48,6 +53,8 @@ extern "C" int kmain(void* mboot)
 
     fDeg() << typeid(*&str).name();
   }
+
+  segfault();
 
   //char* aa = new char[0x300000];
   //for (int i = 0; i < 0x300000; ++i)

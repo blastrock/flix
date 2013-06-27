@@ -23,4 +23,6 @@ inline void PANIC(const char* str)
 #define debug(str, i) \
   fDeg() << str << ": " << std::hex << i;
 
+void printStackTrace(uint64_t stackPointer);
+
 #endif /* DEBUG_HPP */

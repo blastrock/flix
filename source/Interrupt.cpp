@@ -41,6 +41,12 @@ void InterruptHandler::handle(InterruptState* s)
 
     fDeg() << "RIP: " << std::hex << s->rip;
     fDeg() << "RSP: " << std::hex << s->rsp;
+
+    uint64_t rbp;
+    asm volatile ("mov %%rbp, %0":"=r"(rbp)::);
+
+    printStackTrace(rbp);
+
     PANIC("exception");
   }
   else

@@ -187,7 +187,7 @@ start:
   ; call kmain(multiboot)
 [EXTERN kmain]
   mov rdi, 0xffffffffb0000008
-  push .Lfailure64
+  push QWORD 0x0
   mov rax, kmain
   jmp rax
 
