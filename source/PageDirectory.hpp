@@ -102,7 +102,7 @@ inline PageDirectory::PageDirectory(PageDirectory&& pd) :
   pd.m_manager = nullptr;
 }
 
-PageDirectory* PageDirectory::getKernelDirectory()
+inline PageDirectory* PageDirectory::getKernelDirectory()
 {
   return g_kernelDirectory;
 }
