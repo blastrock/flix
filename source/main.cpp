@@ -54,7 +54,7 @@ extern "C" int kmain(void* mboot)
     fDeg() << typeid(*&str).name();
   }
 
-  segfault();
+  //segfault();
 
   //char* aa = new char[0x300000];
   //for (int i = 0; i < 0x300000; ++i)
