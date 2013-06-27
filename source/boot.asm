@@ -6,8 +6,8 @@
 MB2_HEADER_MAGIC   equ 0xE85250D6
 MB2_ARCHITECTURE   equ 0
 MB2_LENGTH         equ MB2_HEADER_END - MB2_HEADER_START
-MB2_RESPONSE_MAGIC equ 0X36D76289
-MB2_CHECKSUM       equ -(MB2_HEADER_MAGIC + MB2_ARCHITECTURE + MB2_LENGTH)
+MB2_RESPONSE_MAGIC equ 0x36D76289
+MB2_CHECKSUM       equ -(MB2_HEADER_MAGIC + MB2_ARCHITECTURE + MB2_LENGTH) & 0xFFFFFFFF
 
 [BITS 32]
 [SECTION .mbhdr]
@@ -21,27 +21,29 @@ MB2_HEADER_START:
   dd MB2_ARCHITECTURE
   dd MB2_LENGTH
   dd MB2_CHECKSUM
-  ; info request
-  ;dw 1 ; type
-  ;dw 0 ; not optional
-  ;dd 0 ; size
-  ; section definition
-ALIGN 8
-  dw 2, 1
-  dd 8 + 4*4
-  dd MB2_HEADER_START
-  dd _kernelBootstrapStart
-  dd _kernelDataEnd
-  dd _kernelBssEnd
-  ; entry address
-ALIGN 8
-  dw 3, 1
-  dd 8 + 4
-  dd start
-  ; page align
-  ;dw 6
-  ;dw 0
-  ;dd 8
+;  ; info request
+;ALIGN 8
+;  dw 1 ; type
+;  dw 0 ; not optional
+;  dd 0 ; size
+;  ; section definition
+;ALIGN 8
+;  dw 2, 1
+;  dd 8 + 4*4
+;  dd MB2_HEADER_START
+;  dd _kernelBootstrapStart
+;  dd _kernelDataEnd
+;  dd _kernelBssEnd
+;  ; entry address
+;ALIGN 8
+;  dw 3, 1
+;  dd 8 + 4
+;  dd start
+;  ; page align
+;ALIGN 8
+;  dw 6
+;  dw 0
+;  dd 8
   ; end
 ALIGN 8
   dw 0, 0

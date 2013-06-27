@@ -47,11 +47,11 @@ void MultibootLoader::handleMemoryMap(MemoryMap* map)
 
 void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
 {
-  fDeg() << std::hex <<
-    "[" << std::setw(16) << std::setfill('0') << entry->base_addr << "-" <<
-    std::setw(16) << std::setfill('0') <<
-    entry->base_addr + entry->length << "] length " <<
-    entry->length << " type " << entry->type;
+  //fDeg() << std::hex <<
+  //  "[" << std::setw(16) << std::setfill('0') << entry->base_addr << "-" <<
+  //  std::setw(16) << std::setfill('0') <<
+  //  entry->base_addr + entry->length << "] length " <<
+  //  entry->length << " type " << entry->type;
 
   // if the segment is free to use, skip it
   if (entry->type == 1)
