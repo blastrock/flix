@@ -1,5 +1,5 @@
 #include "KHeap.hpp"
-#include "Paging.hpp"
+#include "PageDirectory.hpp"
 #include "Util.hpp"
 #include "Symbols.hpp"
 #include "Debug.hpp"
@@ -91,7 +91,7 @@ void* KHeap::kmalloc(uint32_t size)
   for (uint32_t i = 0; i < neededPages; ++i)
   {
     // kmalloc may be reentered here!
-    Paging::mapPage(m_heapEnd);
+    PageDirectory::getKernelDirectory()->mapPage(m_heapEnd);
     m_heapEnd += 0x1000;
 
     // if block is used, go to next block

@@ -1,5 +1,5 @@
 #include "PageHeap.hpp"
-#include "Paging.hpp"
+#include "PageDirectory.hpp"
 #include "Util.hpp"
 #include "Debug.hpp"
 
@@ -14,12 +14,6 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::m_pool;
 void PageHeap::init()
 {
   m_heapStart = &_pageHeapBase;
-
-  //m_pool.reserve(16);
-  //// TODO constants
-  //for (unsigned char i = 0; i < 16; ++i)
-  //  m_pool.push_back({i, reinterpret_cast<uint8_t*>(0x800000) + i*0x1000});
-  //m_map.resize(16, true);
 }
 
 std::vector<std::pair<void*, void*>> PageHeap::kmalloc(uint64_t size)
@@ -128,7 +122,7 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
   void* phys;
   // first 32 pages are always mapped
   if (index > 32)
-    Paging::mapPage(pageToPtr(index), &phys);
+    PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index), &phys);
   else
     phys = reinterpret_cast<void*>(0xa00000 + index * 0x1000);
 
@@ -166,6 +160,6 @@ void PageHeap::kfree(void* ptr)
 
   // first 32 pages are always mapped
   if (index > 32)
-    Paging::unmapPage(ptr);
+    PageDirectory::getKernelDirectory()->unmapPage(ptr);
   m_map[index] = false;
 }

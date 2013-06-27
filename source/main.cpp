@@ -6,7 +6,7 @@
 #include "Debug.hpp"
 #include "KHeap.hpp"
 #include "PageHeap.hpp"
-#include "Paging.hpp"
+#include "PageDirectory.hpp"
 
 void write(const char* str)
 {
@@ -30,7 +30,8 @@ extern "C" int kmain(void* mboot)
 
   // third we need pagination
   fDeg() << "Paging init";
-  Paging::init();
+  PageDirectory* pd = PageDirectory::initKernelDirectory();
+  pd->use();
 
   // finally we need to keep track of used pages to be able to get new pages
   fDeg() << "Memory init";

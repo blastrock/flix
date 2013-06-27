@@ -25,7 +25,7 @@ add_executable(flix
   Memory.cpp
   Multiboot.cpp
   PageHeap.cpp
-  Paging.cpp
+  PageDirectory.cpp
   Screen.cpp
   StaticMemoryPool.cpp
   Symbols.cpp

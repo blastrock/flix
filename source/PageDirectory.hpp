@@ -1,22 +1,33 @@
-#ifndef PAGING_HPP
-#define PAGING_HPP
+#ifndef PAGE_DIRECTORY_HPP
+#define PAGE_DIRECTORY_HPP
 
 #include <cstdint>
 #include "PageHeap.hpp"
 #include "PageManager.hpp"
 
-class Paging
+class PageDirectory
 {
   public:
     static constexpr uint8_t ADDRESSING_BITS = 52;
 
-    static void init();
+    PageDirectory();
+    PageDirectory(const PageDirectory& pd) = delete;
+    PageDirectory(PageDirectory&& pd);
 
-    static void mapPageTo(void* vaddr, uintptr_t page);
-    static void mapPage(void* vaddr, void** paddr = nullptr);
-    static void unmapPage(void* vaddr);
+    PageDirectory& operator=(const PageDirectory& pd) = delete;
+    PageDirectory& operator=(PageDirectory&& pd) = delete;
+
+    static PageDirectory* initKernelDirectory();
+    static PageDirectory* getKernelDirectory();
+
+    void mapPageTo(void* vaddr, uintptr_t page);
+    void mapPage(void* vaddr, void** paddr = nullptr);
+    void unmapPage(void* vaddr);
+    void use();
 
   private:
+    static PageDirectory* g_kernelDirectory;
+
     struct PageTableEntry
     {
       static constexpr uint8_t ADD_BITS = 9;
@@ -69,10 +80,31 @@ class Paging
       PageDirectoryPointerEntry,
       PageDirectoryEntry,
       PageTableEntry>
-        MyPageManager;
+        X86_64PageManager;
 
-    static CR3 g_kernel_directory;
-    static MyPageManager* g_manager;
+    CR3 m_directory;
+    X86_64PageManager* m_manager;
+
+    void initWithDefaultPaging();
 };
 
-#endif /* PAGING_HPP */
+inline PageDirectory::PageDirectory() :
+  m_manager(nullptr)
+{
+  m_directory.value = 0;
+}
+
+inline PageDirectory::PageDirectory(PageDirectory&& pd) :
+  m_directory(pd.m_directory),
+  m_manager(pd.m_manager)
+{
+  pd.m_directory.value = 0;
+  pd.m_manager = nullptr;
+}
+
+PageDirectory* PageDirectory::getKernelDirectory()
+{
+  return g_kernelDirectory;
+}
+
+#endif
