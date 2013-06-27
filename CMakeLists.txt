@@ -10,7 +10,7 @@ endif("${CXX_COMPILER_INCLUDE}" STREQUAL "")
 set(LIBKCXX_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/libkcxx/include)
 
 set(LIBCXX_ENABLE_EXCEPTIONS OFF CACHE BOOL "Use exceptions.")
-set(LIBCXX_ENABLE_RTTI OFF CACHE BOOL "Use run time type information.")
+set(LIBCXX_ENABLE_RTTI ON CACHE BOOL "Use run time type information.")
 set(LIBCXX_ENABLE_ASSERTIONS OFF CACHE BOOL "Enable assertions independent of build mode.")
 set(LIBCXX_ENABLE_PEDANTIC ON CACHE BOOL "Compile with pedantic enabled.")
 set(LIBCXX_ENABLE_WERROR OFF CACHE BOOL "Fail and stop if a warning is triggered.")

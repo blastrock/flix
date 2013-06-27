@@ -44,6 +44,8 @@ extern "C" int kmain(void* mboot)
       "This is a very long string which will require a malloc.";
 
     fDeg() << str;
+
+    fDeg() << typeid(*&str).name();
   }
 
   //char* aa = new char[0x300000];
