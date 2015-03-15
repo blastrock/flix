@@ -87,6 +87,13 @@ isr_common_stub:
   push r10
   push r11
 
+  push rbp
+  push rbx
+  push r12
+  push r13
+  push r14
+  push r15
+
   ;mov ax, ds               ; Lower 16-bits of eax = ds.
   ;push eax                 ; save the data segment descriptor
 
@@ -109,6 +116,7 @@ isr_common_stub:
   ;mov fs, ax
   ;mov gs, ax
 
+  add rsp, 6*8
   pop r11
   pop r10
   pop r9

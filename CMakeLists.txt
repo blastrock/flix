@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8)
 project(flix)
 
+# clang doesn't print colored diagnostics when invoked from Ninja
+if(UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_GENERATOR STREQUAL
+"Ninja")
+    list (APPEND CMAKE_C_FLAGS "-fcolor-diagnostics")
+    list (APPEND CMAKE_CXX_FLAGS "-fcolor-diagnostics")
+endif()
+
 set(CXX_COMPILER_INCLUDE "" CACHE PATH "Compiler-provided headers, like stdint.h, stddef.h")
 
 if("${CXX_COMPILER_INCLUDE}" STREQUAL "")

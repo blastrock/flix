@@ -16,6 +16,7 @@ include_directories(${LIBKCXX_INCLUDE_DIRS})
 add_executable(flix
   Assert.cpp
   boot.asm
+  Cpu.cpp
   Debug.cpp
   DescTables.cpp
   interrupt.asm
@@ -30,6 +31,8 @@ add_executable(flix
   Screen.cpp
   StaticMemoryPool.cpp
   Symbols.cpp
+  Task.cpp
+  task.asm
   Timer.cpp
 )
 

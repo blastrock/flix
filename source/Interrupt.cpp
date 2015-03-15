@@ -1,6 +1,7 @@
 #include "Interrupt.hpp"
 #include "io.hpp"
 #include "Debug.hpp"
+#include "Task.hpp"
 
 extern "C" void intHandler(InterruptState* s)
 {
@@ -9,6 +10,7 @@ extern "C" void intHandler(InterruptState* s)
 
 void InterruptHandler::handle(InterruptState* s)
 {
+  // acknowledge interrupt
   if (s->intNo <= 47)
   {
     if (s->intNo >= 40)
@@ -16,6 +18,7 @@ void InterruptHandler::handle(InterruptState* s)
     io::outb(0x20, 0x20);
   }
 
+  fDeg() << "INTERRUPT";
   if (s->intNo < 32)
   {
     fDeg() << "Isr " << (int)s->intNo << '!';
@@ -51,6 +54,39 @@ void InterruptHandler::handle(InterruptState* s)
   }
   else
   {
-    fDeg() << "Isr " << (int)(s->intNo - 32) << '!';
+    uint8_t intNo = s->intNo - 32;
+    fDeg() << "Int " << (int)intNo << '!';
+    if (intNo == 0)
+    {
+      static int i = 0;
+      if (i)
+      {
+        Task task;
+        task.r15 = s->r15;
+        task.r14 = s->r14;
+        task.r13 = s->r13;
+        task.r12 = s->r12;
+        task.rbx = s->rbx;
+        task.rbp = s->rbp;
+        task.r11 = s->r11;
+        task.r10 = s->r10;
+        task.r9 = s->r9;
+        task.r8 = s->r8;
+        task.rax = s->rax;
+        task.rcx = s->rcx;
+        task.rdx = s->rdx;
+        task.rsi = s->rsi;
+        task.rdi = s->rdi;
+        task.rip = s->rip;
+        task.cs = s->cs;
+        task.rflags = s->rflags;
+        task.rsp = s->rsp;
+        task.ss = s->ss;
+        TaskManager::get()->saveCurrentTask(task);
+      }
+      else
+        i = 1;
+      TaskManager::get()->scheduleNext();
+    }
   }
 }

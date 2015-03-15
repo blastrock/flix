@@ -7,6 +7,8 @@
 #include "KHeap.hpp"
 #include "PageHeap.hpp"
 #include "PageDirectory.hpp"
+#include "Task.hpp"
+#include "Cpu.hpp"
 
 void write(const char* str)
 {
@@ -16,6 +18,20 @@ void write(const char* str)
 void segfault()
 {
   *(volatile int*)0 = 0;
+}
+
+void loop()
+{
+  unsigned int i = 0;
+  while (true)
+    fDeg() << "stuff " << i++;
+}
+
+void loop2()
+{
+  unsigned int i = 0;
+  while (true)
+    fDeg() << "different stuff " << i++;
 }
 
 extern "C" int kmain(void* mboot)
@@ -70,8 +86,31 @@ extern "C" int kmain(void* mboot)
   //asm volatile ("int $0x10");
   //asm volatile ("int $0x16");
 
-  //asm volatile ("sti");
-  //Timer::init(4);
+  auto tm = TaskManager::get();
+
+  {
+    Task task;
+    std::memset(&task, 0, sizeof(task));
+    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000]);
+    task.rip = reinterpret_cast<uint64_t>(&loop);
+    task.cs = 0x08;
+    task.ss = 0x10;
+    task.rflags = Cpu::rflags();
+    tm->addTask(task);
+  }
+  {
+    Task task;
+    std::memset(&task, 0, sizeof(task));
+    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000]);
+    task.rip = reinterpret_cast<uint64_t>(&loop2);
+    task.cs = 0x08;
+    task.ss = 0x10;
+    task.rflags = Cpu::rflags();
+    tm->addTask(task);
+  }
+
+  Timer::init(4);
+  asm volatile ("sti");
 
   fInfo() << "End of kernel";
 
