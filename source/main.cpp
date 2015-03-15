@@ -15,7 +15,7 @@ void write(const char* str)
 
 void segfault()
 {
-  *(int*)0 = 0;
+  *(volatile int*)0 = 0;
 }
 
 extern "C" int kmain(void* mboot)

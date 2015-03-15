@@ -37,10 +37,9 @@ set_source_files_properties(Symbols.cpp
   PROPERTIES COMPILE_FLAGS -mcmodel=large
 )
 
-# does not work
-add_dependencies(flix
-  ${FLIX_LINKER_SCRIPT}
-)
+add_custom_target(flixlinkerscript DEPENDS ${FLIX_LINKER_SCRIPT})
+
+add_dependencies(flix flixlinkerscript)
 
 target_link_libraries(flix
   cxx
