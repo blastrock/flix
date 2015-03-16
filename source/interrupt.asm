@@ -1,15 +1,13 @@
 %macro ISR_NOERRCODE 1  ; define a macro, taking one parameter
   isr%1:
-    cli
-    sub rsp, 2
-    mov byte [rsp+1], 0
+    sub rsp, 9
+    mov qword [rsp+1], 0
     mov byte [rsp], %1
     jmp isr_common_stub
 %endmacro
 
 %macro ISR_ERRCODE 1
   isr%1:
-    cli
     sub rsp, 1
     mov byte [rsp], %1
     jmp isr_common_stub
@@ -120,6 +118,5 @@ isr_common_stub:
   pop rdx
   pop rsi
   pop rdi
-  add rsp, 2     ; Cleans up the pushed error code and pushed ISR number
-  sti
+  add rsp, 9     ; Cleans up the pushed error code and pushed ISR number
   iretq           ; pops 5 things at once: CS, EIP, EFLAGS, SS, and ESP
