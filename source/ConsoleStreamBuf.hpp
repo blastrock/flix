@@ -2,6 +2,7 @@
 #define CONSOLE_STREAM_BUF_HPP
 
 #include <streambuf>
+#include "Serial.hpp"
 
 class ConsoleStreamBuf : public std::streambuf
 {
@@ -11,7 +12,8 @@ class ConsoleStreamBuf : public std::streambuf
       if (!traits_type::eq_int_type(ch, traits_type::eof()))
       {
         sync();
-        Screen::putChar(ch);
+        getCom1()->write(ch);
+        //Screen::putChar(ch);
         return ch;
       }
       return traits_type::eof();
@@ -20,7 +22,8 @@ class ConsoleStreamBuf : public std::streambuf
     int sync()
     {
       for (char_type* ptr = pbase(); ptr < pptr(); ++ptr)
-        Screen::putChar(*ptr);
+        getCom1()->write(*ptr);
+        //Screen::putChar(*ptr);
       pbump(pptr() - pbase());
 
       return 0;

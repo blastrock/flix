@@ -20,15 +20,14 @@ class Dmesg
     std::ostream m_stream;
 };
 
-inline Dmesg::Dmesg() :
-  m_stream(&m_sb)
+inline Dmesg::Dmesg()
+  : m_stream(&m_sb)
 {
 }
 
 inline Dmesg::~Dmesg()
 {
-  Screen::putChar('\n');
-  Screen::updateCursor();
+  m_stream << "\r\n";
 }
 
 template <typename T>

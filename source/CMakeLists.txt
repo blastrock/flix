@@ -29,6 +29,7 @@ add_executable(flix
   PageHeap.cpp
   PageDirectory.cpp
   Screen.cpp
+  Serial.cpp
   StaticMemoryPool.cpp
   Symbols.cpp
   Task.cpp
