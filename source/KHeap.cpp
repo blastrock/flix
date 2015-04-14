@@ -81,7 +81,7 @@ void* KHeap::kmalloc(uint32_t size)
     ptr += blockSize;
   }
 
-  fDeg() << "heap enlarge";
+  Degf("heap enlarge");
 
   // count last lock size if it's free
   uint32_t blockSize = block->getUsed() ? 0 : block->getSize();

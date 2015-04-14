@@ -12,7 +12,7 @@
 
 void write(const char* str)
 {
-  fDeg() << str;
+  Degf(str);
 }
 
 void segfault()
@@ -24,14 +24,14 @@ void loop()
 {
   unsigned int i = 0;
   while (true)
-    fDeg() << "stuff " << i++;
+    Degf("stuff %d", i++);
 }
 
 void loop2()
 {
   unsigned int i = 0;
   while (true)
-    fDeg() << "different stuff " << i++;
+    Degf("different stuff %d", i++);
 }
 
 extern "C" int kmain(void* mboot)
@@ -42,32 +42,32 @@ extern "C" int kmain(void* mboot)
   DescTables::init();
 
   // first we need a heap (which is preallocated)
-  fDeg() << "Heap init";
+  Degf("Heap init");
   KHeap::init();
 
   // second we need to prepare the heap which will be used for pagination
-  fDeg() << "PageHeap init";
+  Degf("PageHeap init");
   PageHeap::init();
 
   // third we need pagination
-  fDeg() << "Paging init";
+  Degf("Paging init");
   PageDirectory* pd = PageDirectory::initKernelDirectory();
   pd->use();
 
   // finally we need to keep track of used pages to be able to get new pages
-  fDeg() << "Memory init";
+  Degf("Memory init");
   MultibootLoader mbl;
   mbl.handle(mboot);
 
-  fDeg() << "Started!";
+  Degf("Started!");
 
   {
     std::string str =
       "This is a very long string which will require a malloc.";
 
-    fDeg() << str;
+    Degf(str.c_str());
 
-    fDeg() << typeid(*&str).name();
+    Degf(typeid(*&str).name());
   }
 
   //segfault();
@@ -112,7 +112,7 @@ extern "C" int kmain(void* mboot)
   Timer::init(4);
   asm volatile ("sti");
 
-  fInfo() << "End of kernel";
+  Degf("End of kernel");
 
   // the kernel should never return since the code which called kmain is not
   // mapped anymore in memory

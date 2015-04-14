@@ -3,38 +3,15 @@
 
 #include <sstream>
 #include <cstring>
-#include "Screen.hpp"
 #include "ConsoleStreamBuf.hpp"
+#include "pnt.hpp"
 
-class Dmesg
+template <typename... Args>
+void Degf(const char* fmt, const Args&... args)
 {
-  public:
-    Dmesg();
-    ~Dmesg();
-
-    template <typename T>
-    Dmesg& operator<<(const T& value);
-
-  private:
-    ConsoleStreamBuf m_sb;
-    std::ostream m_stream;
-};
-
-inline Dmesg::Dmesg()
-  : m_stream(&m_sb)
-{
-}
-
-inline Dmesg::~Dmesg()
-{
-  m_stream << "\r\n";
-}
-
-template <typename T>
-Dmesg& Dmesg::operator<<(const T& value)
-{
-  m_stream << value;
-  return *this;
+  ConsoleStreamBuf st;
+  pnt::writef(st, fmt, args...);
+  st.sputc('\n');
 }
 
 #endif /* DMESG_HPP */

@@ -6,7 +6,7 @@ std::vector<bool> Memory::g_frames;
 
 uintptr_t Memory::getFreePage()
 {
-  fDeg() << "free page";
+  Degf("free page");
 
   for (uintptr_t i = 0; i < g_frames.size(); ++i)
     if (!g_frames[i])

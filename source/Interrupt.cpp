@@ -18,32 +18,31 @@ void InterruptHandler::handle(InterruptState* s)
     io::outb(0x20, 0x20);
   }
 
-  fDeg() << "INTERRUPT";
   if (s->intNo < 32)
   {
-    fDeg() << "Isr " << (int)s->intNo << '!';
+    Degf("Isr %d!", s->intNo);
 
     switch (s->intNo)
     {
       case 14:
-        fDeg() << "Page fault";
-        fDeg() << "Page was " << (s->errCode & 1 ? "present" : "not present");
-        fDeg() << "Fault on " << (s->errCode & 2 ? "write" : "read");
+        Degf("Page fault");
+        Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
+        Degf("Fault on %s", s->errCode & 2 ? "write" : "read");
         if (s->errCode & 4)
-          fDeg() << "Invalid reserved field!";
-        fDeg() << "Fault on " << (s->errCode & 8 ? "fetch" : "execute");
+          Degf("Invalid reserved field!");
+        Degf("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
         {
           uint64_t address;
           asm volatile(
               "movq %%cr2, %0"
               :"=r"(address)
               );
-          fDeg() << "Fault on " << std::hex << address;
+          Degf("Fault on %x", address);
         }
     }
 
-    fDeg() << "RIP: " << std::hex << s->rip;
-    fDeg() << "RSP: " << std::hex << s->rsp;
+    Degf("RIP: %x", s->rip);
+    Degf("RSP: %x", s->rsp);
 
     uint64_t rbp;
     asm volatile ("mov %%rbp, %0":"=r"(rbp)::);
@@ -55,7 +54,7 @@ void InterruptHandler::handle(InterruptState* s)
   else
   {
     uint8_t intNo = s->intNo - 32;
-    fDeg() << "Int " << (int)intNo << '!';
+    Degf("Int %d!", (int)intNo);
     if (intNo == 0)
     {
       static int i = 0;

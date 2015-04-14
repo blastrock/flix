@@ -93,7 +93,7 @@ void PageDirectory::initWithDefaultPaging()
 
 void PageDirectory::use()
 {
-  fDeg() << "changing pagetable to " << std::hex << m_directory.value;
+  Degf("changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
 }
 

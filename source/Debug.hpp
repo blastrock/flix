@@ -4,12 +4,6 @@
 #include "Screen.hpp"
 #include "Dmesg.hpp"
 
-#define fDeg() \
-  Dmesg()
-  //Dmesg() << __FILE__ << ':' << __LINE__ << ": "
-
-#define fInfo() \
-  Dmesg()
 
 inline void PANIC(const char* str)
 {
@@ -19,9 +13,6 @@ inline void PANIC(const char* str)
   while (true)
     asm volatile ("hlt");
 }
-
-#define debug(str, i) \
-  fDeg() << str << ": " << std::hex << i;
 
 void printStackTrace(uint64_t stackPointer);
 
