@@ -54,7 +54,7 @@ void InterruptHandler::handle(InterruptState* s)
   else
   {
     uint8_t intNo = s->intNo - 32;
-    Degf("Int %d!", (int)intNo);
+    Degf("Int %x!", intNo);
     if (intNo == 0)
     {
       static int i = 0;
@@ -82,10 +82,13 @@ void InterruptHandler::handle(InterruptState* s)
         task.rsp = s->rsp;
         task.ss = s->ss;
         TaskManager::get()->saveCurrentTask(task);
+        TaskManager::get()->scheduleNext();
       }
       else
+      {
         i = 1;
-      TaskManager::get()->scheduleNext();
+        TaskManager::get()->scheduleNext();
+      }
     }
   }
 }

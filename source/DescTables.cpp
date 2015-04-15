@@ -4,9 +4,16 @@
 #include "Debug.hpp"
 
 uint64_t DescTables::g_gdtEntries[] = {
+  // null descriptor
   0x0000000000000000,
+  // code segment
   0x0020980000000000,
-  0x0000920000000000
+  // data segment
+  0x0000920000000000,
+  // task segment (128bits, LE)
+  // points to the bottom of the kernel stack (0xffffffff90000000 - 0x4000)
+  0x8F0089FFC0000067,
+  0x00000000FFFFFFFF,
 };
 DescTables::GdtPtr DescTables::g_gdtPtr = {
   sizeof(g_gdtEntries) - 1,
@@ -90,6 +97,11 @@ void DescTables::initIdt()
   commitIdt(&g_idtPtr);
 }
 
+void DescTables::initTr()
+{
+  asm("ltr %0" : :"r"(static_cast<uint16_t>(0x18)));
+}
+
 DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)
 {
   uint64_t ioff = reinterpret_cast<uint64_t>(offset);
@@ -99,7 +111,7 @@ DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)
   entry.targetMid = (ioff >> 16) & 0xFFFF;
   entry.targetHigh = (ioff >> 32) & 0xFFFFFFFF;
   entry.targetSelector = selector;
-  entry.flags = 0x8E00;
+  entry.flags = 0x8E01;
 
   return entry;
 }

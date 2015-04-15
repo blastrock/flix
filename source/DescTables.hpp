@@ -7,6 +7,7 @@ class DescTables
 {
   public:
     static void init();
+    static void initTr();
 
   private:
     struct GdtPtr

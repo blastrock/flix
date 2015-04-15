@@ -91,7 +91,7 @@ extern "C" int kmain(void* mboot)
   {
     Task task;
     std::memset(&task, 0, sizeof(task));
-    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000]);
+    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
     task.rip = reinterpret_cast<uint64_t>(&loop);
     task.cs = 0x08;
     task.ss = 0x10;
@@ -101,7 +101,7 @@ extern "C" int kmain(void* mboot)
   {
     Task task;
     std::memset(&task, 0, sizeof(task));
-    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000]);
+    task.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
     task.rip = reinterpret_cast<uint64_t>(&loop2);
     task.cs = 0x08;
     task.ss = 0x10;
@@ -109,7 +109,11 @@ extern "C" int kmain(void* mboot)
     tm->addTask(task);
   }
 
-  Timer::init(4);
+  TaskManager::setUpTss();
+
+  DescTables::initTr();
+
+  Timer::init(1);
   asm volatile ("sti");
 
   Degf("End of kernel");
