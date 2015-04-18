@@ -3,6 +3,7 @@
 
 #include <streambuf>
 #include "Serial.hpp"
+#include "io.hpp"
 
 class ConsoleStreamBuf : public std::streambuf
 {
@@ -12,7 +13,8 @@ class ConsoleStreamBuf : public std::streambuf
       if (!traits_type::eq_int_type(ch, traits_type::eof()))
       {
         sync();
-        getCom1()->write(ch);
+        io::outb(0xe9, ch);
+        //getCom1()->write(ch);
         //Screen::putChar(ch);
         return ch;
       }
@@ -22,7 +24,8 @@ class ConsoleStreamBuf : public std::streambuf
     int sync()
     {
       for (char_type* ptr = pbase(); ptr < pptr(); ++ptr)
-        getCom1()->write(*ptr);
+        io::outb(0xe9, *ptr);
+        //getCom1()->write(*ptr);
         //Screen::putChar(*ptr);
       pbump(pptr() - pbase());
 

@@ -1,5 +1,6 @@
 #include "Serial.hpp"
 #include <new>
+#include <sstream>
 #include "io.hpp"
 #include "Screen.hpp"
 
@@ -43,10 +44,18 @@ void Serial::init()
 
 void Serial::write(char c)
 {
-   while ((io::inb(_port + REG_LINE_STATUS) & 0x20) == 0)
-     ;
+  int i = 0;
+  while ((io::inb(_port + REG_LINE_STATUS) & 0x20) == 0)
+    ++i;
 
-   io::outb(_port + REG_DATA, c);
+  if (i)
+  {
+  std::ostringstream ss;
+  ss << "looped for " << i << "time\n";
+  Screen::putString(ss.str().c_str());
+      }
+
+  io::outb(_port + REG_DATA, c);
 }
 
 Serial* getCom1()
