@@ -123,7 +123,10 @@ void PageDirectory::unmapPage(void* vaddr)
 {
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
-  PageTableEntry* page = m_manager->getPage(ivaddr / 0x1000, true);
+  uintptr_t pageId = ivaddr / 0x1000;
+  PageTableEntry* page = m_manager->getPage(pageId, true);
   assert(page->p);
   page->p = false;
+
+  Memory::setPageFree(pageId);
 }

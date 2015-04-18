@@ -1,5 +1,5 @@
-#ifndef GENERIC_PAGING_HPP
-#define GENERIC_PAGING_HPP
+#ifndef PAGE_MANAGER_HPP
+#define PAGE_MANAGER_HPP
 
 #include <cstdint>
 #include <cstring>
@@ -19,6 +19,9 @@ inline T* invalidPtr()
   return static_cast<T*>(INVALID_ADDR);
 }
 
+namespace detail
+{
+
 template <typename T0, typename... T>
 struct LastType
 {
@@ -31,6 +34,8 @@ struct LastType<T0>
   typedef T0 type;
 };
 
+}
+
 template <typename Allocator, typename CurLevel, typename... Levels>
 class PageManager
 {
@@ -38,7 +43,7 @@ class PageManager
     typedef CurLevel Entry;
     typedef PageManager<Allocator, CurLevel, Levels...> ThisLayout;
     typedef PageManager<Allocator, Levels...> NextLayout;
-    typedef typename LastType<CurLevel, Levels...>::type PageType;
+    typedef typename detail::LastType<CurLevel, Levels...>::type PageType;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS + NextLayout::TOTAL_BITS;
@@ -146,4 +151,4 @@ typename PageManager<Allocator, CurLevel>::Entry*
   return m_entries;
 }
 
-#endif /* GENERIC_PAGING_HPP */
+#endif
