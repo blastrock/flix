@@ -114,9 +114,13 @@ extern "C" int kmain(void* mboot)
   DescTables::initTr();
 
   Timer::init(1);
-  asm volatile ("sti");
 
   Degf("End of kernel");
+
+  TaskManager::get()->scheduleNext();
+
+  asm volatile ("cli");
+  Degf("Fatal: reached end of main!");
 
   // the kernel should never return since the code which called kmain is not
   // mapped anymore in memory

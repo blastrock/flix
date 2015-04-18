@@ -57,38 +57,29 @@ void InterruptHandler::handle(InterruptState* s)
     Degf("Int %x!", intNo);
     if (intNo == 0)
     {
-      static int i = 0;
-      if (i)
-      {
-        Task task;
-        task.r15 = s->r15;
-        task.r14 = s->r14;
-        task.r13 = s->r13;
-        task.r12 = s->r12;
-        task.rbx = s->rbx;
-        task.rbp = s->rbp;
-        task.r11 = s->r11;
-        task.r10 = s->r10;
-        task.r9 = s->r9;
-        task.r8 = s->r8;
-        task.rax = s->rax;
-        task.rcx = s->rcx;
-        task.rdx = s->rdx;
-        task.rsi = s->rsi;
-        task.rdi = s->rdi;
-        task.rip = s->rip;
-        task.cs = s->cs;
-        task.rflags = s->rflags;
-        task.rsp = s->rsp;
-        task.ss = s->ss;
-        TaskManager::get()->saveCurrentTask(task);
-        TaskManager::get()->scheduleNext();
-      }
-      else
-      {
-        i = 1;
-        TaskManager::get()->scheduleNext();
-      }
+      Task task;
+      task.r15 = s->r15;
+      task.r14 = s->r14;
+      task.r13 = s->r13;
+      task.r12 = s->r12;
+      task.rbx = s->rbx;
+      task.rbp = s->rbp;
+      task.r11 = s->r11;
+      task.r10 = s->r10;
+      task.r9 = s->r9;
+      task.r8 = s->r8;
+      task.rax = s->rax;
+      task.rcx = s->rcx;
+      task.rdx = s->rdx;
+      task.rsi = s->rsi;
+      task.rdi = s->rdi;
+      task.rip = s->rip;
+      task.cs = s->cs;
+      task.rflags = s->rflags;
+      task.rsp = s->rsp;
+      task.ss = s->ss;
+      TaskManager::get()->saveCurrentTask(task);
+      TaskManager::get()->scheduleNext();
     }
   }
 }
