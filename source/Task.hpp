@@ -36,6 +36,7 @@ public:
   static void setUpTss();
 
   void addTask(const Task& t);
+  Task newKernelTask();
 
   void saveCurrentTask(const Task& t);
   void scheduleNext();

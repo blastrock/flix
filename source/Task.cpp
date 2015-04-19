@@ -33,6 +33,15 @@ void TaskManager::addTask(const Task& t)
   _tasks.push_back(t);
 }
 
+Task TaskManager::newKernelTask()
+{
+  Task task{};
+  task.cs = 0x08;
+  task.ss = 0x10;
+  task.rflags = 0x0200; // enable IRQ
+  return task;
+}
+
 void TaskManager::saveCurrentTask(const Task& t)
 {
   Degf("Saving task %d with rip %x and rsp %x", _currentTask, t.rip, t.rsp);
