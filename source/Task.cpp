@@ -5,7 +5,7 @@
 
 TaskManager* TaskManager::instance;
 
-extern "C" void jump(Task* task);
+extern "C" void jump(Task::Context* task);
 
 TaskManager* TaskManager::get()
 {
@@ -36,15 +36,15 @@ void TaskManager::addTask(const Task& t)
 Task TaskManager::newKernelTask()
 {
   Task task{};
-  task.cs = 0x08;
-  task.ss = 0x10;
-  task.rflags = 0x0200; // enable IRQ
+  task.context.cs = 0x08;
+  task.context.ss = 0x10;
+  task.context.rflags = 0x0200; // enable IRQ
   return task;
 }
 
 void TaskManager::saveCurrentTask(const Task& t)
 {
-  Degf("Saving task %d with rip %x and rsp %x", _currentTask, t.rip, t.rsp);
+  Degf("Saving task %d with rip %x and rsp %x", _currentTask, t.context.rip, t.context.rsp);
   _tasks[_currentTask] = t;
 }
 
@@ -58,7 +58,7 @@ void TaskManager::scheduleNext()
     _currentTask = 0;
 
   Task& t = _tasks[_currentTask];
-  t.rflags |= 1 << 9;
-  Degf("Restoring task %d with rip %x and rsp %x", _currentTask, t.rip, t.rsp);
-  jump(&t);
+  assert(t.context.rflags & (1 << 9));
+  Degf("Restoring task %d with rip %x and rsp %x", _currentTask, t.context.rip, t.context.rsp);
+  jump(&t.context);
 }

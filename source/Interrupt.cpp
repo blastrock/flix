@@ -58,26 +58,26 @@ void InterruptHandler::handle(InterruptState* s)
     if (intNo == 0)
     {
       Task task;
-      task.r15 = s->r15;
-      task.r14 = s->r14;
-      task.r13 = s->r13;
-      task.r12 = s->r12;
-      task.rbx = s->rbx;
-      task.rbp = s->rbp;
-      task.r11 = s->r11;
-      task.r10 = s->r10;
-      task.r9 = s->r9;
-      task.r8 = s->r8;
-      task.rax = s->rax;
-      task.rcx = s->rcx;
-      task.rdx = s->rdx;
-      task.rsi = s->rsi;
-      task.rdi = s->rdi;
-      task.rip = s->rip;
-      task.cs = s->cs;
-      task.rflags = s->rflags;
-      task.rsp = s->rsp;
-      task.ss = s->ss;
+      task.context.r15 = s->r15;
+      task.context.r14 = s->r14;
+      task.context.r13 = s->r13;
+      task.context.r12 = s->r12;
+      task.context.rbx = s->rbx;
+      task.context.rbp = s->rbp;
+      task.context.r11 = s->r11;
+      task.context.r10 = s->r10;
+      task.context.r9 = s->r9;
+      task.context.r8 = s->r8;
+      task.context.rax = s->rax;
+      task.context.rcx = s->rcx;
+      task.context.rdx = s->rdx;
+      task.context.rsi = s->rsi;
+      task.context.rdi = s->rdi;
+      task.context.rip = s->rip;
+      task.context.cs = s->cs;
+      task.context.rflags = s->rflags;
+      task.context.rsp = s->rsp;
+      task.context.ss = s->ss;
       TaskManager::get()->saveCurrentTask(task);
       TaskManager::get()->scheduleNext();
     }

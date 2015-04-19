@@ -6,12 +6,17 @@
 
 struct Task
 {
-  // callee saved
-  uint64_t r15, r14, r13, r12, rbx, rbp;
-  // caller saved
-  uint64_t r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi;
-  uint64_t rip, cs, rflags, rsp, ss;
-} __attribute__((packed));
+  struct Context
+  {
+    // callee saved
+    uint64_t r15, r14, r13, r12, rbx, rbp;
+    // caller saved
+    uint64_t r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi;
+    uint64_t rip, cs, rflags, rsp, ss;
+  } __attribute__((packed));
+
+  Context context;
+};
 
 struct TaskStateSegment
 {
