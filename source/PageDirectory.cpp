@@ -48,7 +48,7 @@ void PageDirectory::initWithDefaultPaging()
   // mapping stack
   cur = 0x800000 + 0x200000 - 0x4000;
   end = cur + 0x4000;
-  vcur = 0xffffffff90000000 - 0x4000;
+  vcur = reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000;
   while (cur < end)
   {
     PageTableEntry* page = m_manager->getPage(vcur >> 12, true);
@@ -61,7 +61,7 @@ void PageDirectory::initWithDefaultPaging()
   }
 
   // mapping page heap
-  vcur = 0xffffffffa0000000;
+  vcur = reinterpret_cast<uintptr_t>(Symbols::getPageHeapBase());
   cur = 0xa00000;
   end = cur + 0x200000;
   while (cur < end)
@@ -76,7 +76,7 @@ void PageDirectory::initWithDefaultPaging()
   }
 
   // mapping heap
-  vcur = 0xffffffffb0000000;
+  vcur = reinterpret_cast<uintptr_t>(Symbols::getHeapBase());
   cur = 0xc00000;
   end = cur + 0x200000;
   while (cur < end)

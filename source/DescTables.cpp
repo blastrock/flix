@@ -11,8 +11,8 @@ uint64_t DescTables::g_gdtEntries[] = {
   // data segment
   0x0000920000000000,
   // task segment (128bits, LE)
-  // points to the bottom of the kernel stack (0xffffffff90000000 - 0x4000)
-  0x8F0089FFC0000067,
+  // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
+  0xCF0089FFC0000067,
   0x00000000FFFFFFFF,
 };
 DescTables::GdtPtr DescTables::g_gdtPtr = {

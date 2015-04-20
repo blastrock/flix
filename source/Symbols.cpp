@@ -7,6 +7,8 @@ extern "C" uint8_t _kernelTextStart;
 extern "C" uint8_t _kernelVTextStart;
 extern "C" uint8_t _kernelBssEnd;
 extern "C" uint8_t VIRTUAL_BASE;
+extern "C" uint8_t _stackBase;
+extern "C" uint8_t _pageHeapBase;
 extern "C" uint8_t _heapBase;
 
 void* Symbols::getPml4()
@@ -37,6 +39,16 @@ void* Symbols::getKernelBssEnd()
 void* Symbols::getVirtualBase()
 {
   return &VIRTUAL_BASE;
+}
+
+void* Symbols::getStackBase()
+{
+  return &_stackBase;
+}
+
+void* Symbols::getPageHeapBase()
+{
+  return &_pageHeapBase;
 }
 
 void* Symbols::getHeapBase()

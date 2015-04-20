@@ -114,23 +114,23 @@ start:
   mov [Pdpt], eax
   ; map text, stack and heaps
   add eax, 0x1000
-  mov [Pdpt + 0xFF0], eax
+  mov [Pdpt + 0xFF8], eax
 
   ; this is last level, 2MB pages
   ; identity map first 2MB
   mov dword [Pd     ], 0x00000083
   mov dword [Pd +  4], 0x0
-  ; map 2MB+ (the part after the bootstrap) to 0xffffffff80000000
+  ; map 2MB+ (the part after the bootstrap) to 0xffffffffc0000000
   mov dword [Pd + 0x1000], 0x00200083
   mov dword [Pd + 0x1004], 0x0
   mov dword [Pd + 0x1008], 0x00400083
   mov dword [Pd + 0x100C], 0x0
   mov dword [Pd + 0x1010], 0x00600083
   mov dword [Pd + 0x1014], 0x0
-  ; map stack to 0xffffffff90000000 (and lower)
+  ; map stack to 0xffffffffd0000000 (and lower)
   mov dword [Pd + 0x13F8], 0x00800083
   mov dword [Pd + 0x13FC], 0x0
-  ; map heaps to 0xffffffffa0000000 and 0xffffffffb0000000
+  ; map heaps to 0xffffffffe0000000 and 0xfffffffff0000000
   mov dword [Pd + 0x1800], 0x00A00083
   mov dword [Pd + 0x1804], 0x0
   mov dword [Pd + 0x1C00], 0x00C00083
@@ -159,8 +159,6 @@ start:
   jmp 0x08:.LenableLongSeg
 
 .LenableLongSeg:
-  mov eax, .LGdtRLong
-
   mov eax, 0x28
   mov ds, ax
   mov ss, ax
@@ -188,7 +186,7 @@ start:
 .LmainStart:
   ; call kmain(multiboot)
 [EXTERN kmain]
-  mov rdi, 0xffffffffb0000008
+  mov rdi, 0xfffffffff0000008
   push QWORD 0x0
   mov rax, kmain
   jmp rax
@@ -211,7 +209,3 @@ start:
 .LGdtR:
   dw .LGdtEnd - .LGdt - 1
   dd .LGdt
-
-.LGdtRLong:
-  dw .LGdtEnd - .LGdtLong - 1
-  dq .LGdtLong + 0xffffffff8000000

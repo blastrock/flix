@@ -2,6 +2,7 @@
 #include "Cpu.hpp"
 #include "Interrupt.hpp"
 #include "Debug.hpp"
+#include "Symbols.hpp"
 
 TaskManager* TaskManager::instance;
 
@@ -21,7 +22,8 @@ TaskManager::TaskManager()
 
 void TaskManager::setUpTss()
 {
-  auto* tss = reinterpret_cast<TaskStateSegment*>(0xffffffff90000000 - 0x4000);
+  auto* tss = reinterpret_cast<TaskStateSegment*>(
+      reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000);
   std::memset(tss, 0, sizeof(tss));
   const int SIZE = 0x1000 * 4;
   auto* kernelStack = new char[SIZE];

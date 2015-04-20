@@ -102,8 +102,10 @@ extern "C" int kmain(void* mboot)
     tm->addTask(task);
   }
 
+  Degf("Setting up TSS");
   TaskManager::setUpTss();
 
+  Degf("Initializing TR");
   DescTables::initTr();
 
   Timer::init(1);

@@ -10,6 +10,8 @@ class Symbols
     static void* getKernelVTextStart();
     static void* getKernelBssEnd();
     static void* getVirtualBase();
+    static void* getStackBase();
+    static void* getPageHeapBase();
     static void* getHeapBase();
 };
 
