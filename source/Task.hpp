@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <vector>
+#include "PageDirectory.hpp"
 
 struct Task
 {
@@ -16,6 +17,7 @@ struct Task
   } __attribute__((packed));
 
   Context context;
+  PageDirectory pd;
 };
 
 struct TaskStateSegment
@@ -40,10 +42,10 @@ public:
 
   static void setUpTss();
 
-  void addTask(const Task& t);
+  void addTask(Task&& t);
   Task newKernelTask();
 
-  void saveCurrentTask(const Task& t);
+  void saveCurrentTask(const Task::Context& t);
   void scheduleNext();
 
 private:

@@ -12,13 +12,15 @@ class PageDirectory
 
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;
-    PageDirectory(PageDirectory&& pd);
+    PageDirectory(PageDirectory&& pd) noexcept;
 
     PageDirectory& operator=(const PageDirectory& pd) = delete;
     PageDirectory& operator=(PageDirectory&& pd) = delete;
 
     static PageDirectory* initKernelDirectory();
     static PageDirectory* getKernelDirectory();
+
+    void mapKernel();
 
     void mapPageTo(void* vaddr, uintptr_t page);
     void mapPage(void* vaddr, void** paddr = nullptr);

@@ -93,13 +93,13 @@ extern "C" int kmain(void* mboot)
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop);
-    tm->addTask(task);
+    tm->addTask(std::move(task));
   }
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
-    tm->addTask(task);
+    tm->addTask(std::move(task));
   }
 
   Degf("Setting up TSS");

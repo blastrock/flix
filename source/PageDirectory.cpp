@@ -15,6 +15,22 @@ PageDirectory* PageDirectory::initKernelDirectory()
   return g_kernelDirectory;
 }
 
+void PageDirectory::mapKernel()
+{
+  std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
+  m_manager = pm.first;
+
+  m_directory.value = 0;
+  m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
+
+  auto* kern =
+    getKernelDirectory()->m_manager->getEntry<2>(0xffffffffc0000000 >> 12, false);
+
+  assert(!isInvalid(kern));
+
+  *m_manager->getEntry<2>(0xffffffffc0000000 >> 12, true) = *kern;
+}
+
 void PageDirectory::initWithDefaultPaging()
 {
   std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
@@ -23,6 +39,7 @@ void PageDirectory::initWithDefaultPaging()
   m_directory.value = 0;
   m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
 
+  // map VGA
   {
     PageTableEntry* page = m_manager->getPage(0xB8000 >> 12, true);
     page->p = true;
