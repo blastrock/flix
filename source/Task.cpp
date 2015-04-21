@@ -45,6 +45,16 @@ Task TaskManager::newKernelTask()
   return task;
 }
 
+Task TaskManager::newUserTask()
+{
+  Task task{};
+  task.context.cs = 0x1B;
+  task.context.ss = 0x23;
+  task.context.rflags = 0x0200; // enable IRQ
+  task.pd.mapKernel();
+  return task;
+}
+
 void TaskManager::saveCurrentTask(const Task::Context& ctx)
 {
   Degf("Saving task %d with rip %x and rsp %x", _currentTask, ctx.rip, ctx.rsp);

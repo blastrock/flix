@@ -44,6 +44,7 @@ public:
 
   void addTask(Task&& t);
   Task newKernelTask();
+  Task newUserTask();
 
   void saveCurrentTask(const Task::Context& t);
   void scheduleNext();

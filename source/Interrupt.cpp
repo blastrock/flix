@@ -24,6 +24,9 @@ void InterruptHandler::handle(InterruptState* s)
 
     switch (s->intNo)
     {
+      case 13:
+        Degf("General-Protection Exception (%d)", s->errCode);
+        break;
       case 14:
         Degf("Page fault");
         Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
@@ -39,6 +42,7 @@ void InterruptHandler::handle(InterruptState* s)
               );
           Degf("Fault on %x", address);
         }
+        break;
     }
 
     Degf("RIP: %x", s->rip);

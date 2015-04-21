@@ -6,10 +6,14 @@
 uint64_t DescTables::g_gdtEntries[] = {
   // null descriptor
   0x0000000000000000,
-  // code segment
+  // code segment (ring0)
   0x0020980000000000,
   // data segment
   0x0000920000000000,
+  // code segment (ring3)
+  0x0020F80000000000,
+  // data segment (ring3)
+  0x0000F20000000000,
   // task segment (128bits, LE)
   // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
   0xCF0089FFC0000067,
@@ -99,7 +103,7 @@ void DescTables::initIdt()
 
 void DescTables::initTr()
 {
-  asm("ltr %0" : :"r"(static_cast<uint16_t>(0x18)));
+  asm("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
 }
 
 DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)

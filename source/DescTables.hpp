@@ -26,7 +26,7 @@ class DescTables
       uint32_t reserved;
     } __attribute__((packed));
 
-    static uint64_t g_gdtEntries[5];
+    static uint64_t g_gdtEntries[7];
     static GdtPtr g_gdtPtr;
     static IdtEntry g_idtEntries[256];
     static GdtPtr g_idtPtr;

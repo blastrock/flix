@@ -20,11 +20,22 @@ void segfault()
   *(volatile int*)0 = 0;
 }
 
+uint8_t getCpl()
+{
+  uint16_t var;
+  asm volatile(
+      "movw %%cs, %0"
+      :"=r"(var)
+      );
+  Degf("lv %d", var);
+  return var & 0x3;
+}
+
 void loop()
 {
   unsigned int i = 0;
   while (true)
-    Degf("stuff %d", i++);
+    Degf("stuff %d %d", getCpl(), i++);
 }
 
 void loop2()
@@ -32,6 +43,15 @@ void loop2()
   unsigned int i = 0;
   while (true)
     Degf("different stuff %d", i++);
+}
+
+void loop3()
+{
+  unsigned int i = 0;
+  while (true)
+  {
+    Degf("lower %d %d", getCpl(), i++);
+  }
 }
 
 extern "C" int kmain(void* mboot)
@@ -99,6 +119,12 @@ extern "C" int kmain(void* mboot)
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
+    tm->addTask(std::move(task));
+  }
+  {
+    Task task = tm->newUserTask();
+    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
+    task.context.rip = reinterpret_cast<uint64_t>(&loop3);
     tm->addTask(std::move(task));
   }
 
