@@ -94,7 +94,7 @@ class PageManager<Allocator, CurLevel>
     typedef CurLevel PageType;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
-    static constexpr uint8_t TOTAL_BITS = ADD_BITS;
+    static constexpr uint8_t TOTAL_BITS = ADD_BITS + CurLevel::BASE_SHIFT;
 
     static constexpr uint8_t Levels = 1;
 

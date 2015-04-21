@@ -24,11 +24,11 @@ void PageDirectory::mapKernel()
   m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
 
   auto* kern =
-    getKernelDirectory()->m_manager->getEntry<2>(0xffffffffc0000000 >> 12, false);
+    getKernelDirectory()->m_manager->getEntry<2>(0xffffffffc0000000, false);
 
   assert(!isInvalid(kern));
 
-  *m_manager->getEntry<2>(0xffffffffc0000000 >> 12, true) = *kern;
+  *m_manager->getEntry<2>(0xffffffffc0000000, true) = *kern;
 }
 
 void PageDirectory::initWithDefaultPaging()
@@ -41,7 +41,7 @@ void PageDirectory::initWithDefaultPaging()
 
   // map VGA
   {
-    PageTableEntry* page = m_manager->getPage(0xB8000 >> 12, true);
+    PageTableEntry* page = m_manager->getPage(0xB8000, true);
     page->p = true;
     page->rw = true;
     page->base = 0xB8000 >> 12;
@@ -53,7 +53,7 @@ void PageDirectory::initWithDefaultPaging()
   uintptr_t end = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
   while (cur < end)
   {
-    PageTableEntry* page = m_manager->getPage(vcur >> 12, true);
+    PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
     page->rw = true;
     page->base = cur >> 12;
@@ -68,7 +68,7 @@ void PageDirectory::initWithDefaultPaging()
   vcur = reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000;
   while (cur < end)
   {
-    PageTableEntry* page = m_manager->getPage(vcur >> 12, true);
+    PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
     page->rw = true;
     page->base = cur >> 12;
@@ -83,7 +83,7 @@ void PageDirectory::initWithDefaultPaging()
   end = cur + 0x200000;
   while (cur < end)
   {
-    PageTableEntry* page = m_manager->getPage(vcur >> 12, true);
+    PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
     page->rw = true;
     page->base = cur >> 12;
@@ -98,7 +98,7 @@ void PageDirectory::initWithDefaultPaging()
   end = cur + 0x200000;
   while (cur < end)
   {
-    PageTableEntry* page = m_manager->getPage(vcur >> 12, true);
+    PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
     page->rw = true;
     page->base = cur >> 12;
