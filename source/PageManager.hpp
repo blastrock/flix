@@ -156,6 +156,8 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
       Allocator::kmalloc(sizeof(NextLayout));
     nextLayout = new (memory[0].first) NextLayout();
     m_entries[index].p = true;
+    m_entries[index].rw = true;
+    m_entries[index].us = true;
     m_entries[index].base =
       reinterpret_cast<uintptr_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
   }

@@ -43,6 +43,7 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(0xB8000, true);
     page->p = true;
+    page->us = true;
     page->rw = true;
     page->base = 0xB8000 >> 12;
   }
@@ -55,6 +56,7 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
+    page->us = true;
     page->rw = true;
     page->base = cur >> 12;
 
@@ -70,6 +72,7 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
+    page->us = true;
     page->rw = true;
     page->base = cur >> 12;
 
@@ -85,6 +88,7 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
+    page->us = true;
     page->rw = true;
     page->base = cur >> 12;
 
@@ -100,6 +104,7 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, true);
     page->p = true;
+    page->us = true;
     page->rw = true;
     page->base = cur >> 12;
 
@@ -121,6 +126,7 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
   PageTableEntry* page = m_manager->getPage(ivaddr / 0x1000, true);
   assert(!page->p);
   page->p = true;
+  page->us = true;
   page->rw = true;
   page->base = ipage;
 }
