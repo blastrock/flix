@@ -88,7 +88,7 @@ void InterruptHandler::handle(InterruptState* s)
   }
   else
   {
-    Degf("SYSCALL %d %d", s->intNo, s->rax);
-    PANIC("end");
+    Degf("SYSCALL %d", s->intNo, s->rax);
+    Degf("%s", reinterpret_cast<const char*>(s->rax));
   }
 }

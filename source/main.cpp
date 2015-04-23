@@ -9,6 +9,7 @@
 #include "PageDirectory.hpp"
 #include "Task.hpp"
 #include "Cpu.hpp"
+#include "Syscall.hpp"
 
 void write(const char* str)
 {
@@ -46,10 +47,8 @@ void loop2()
 
 void loop3()
 {
-  unsigned int i = 0;
-  asm volatile ("int $0x80");
-  while (true)
-    Degf("lower %d %d", getCpl(), i++);
+  sys::print("Test test");
+  segfault();
 }
 
 extern "C" int kmain(void* mboot)
