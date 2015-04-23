@@ -27,7 +27,6 @@ uint8_t getCpl()
       "movw %%cs, %0"
       :"=r"(var)
       );
-  Degf("lv %d", var);
   return var & 0x3;
 }
 
@@ -48,10 +47,9 @@ void loop2()
 void loop3()
 {
   unsigned int i = 0;
+  asm volatile ("int $0x80");
   while (true)
-  {
     Degf("lower %d %d", getCpl(), i++);
-  }
 }
 
 extern "C" int kmain(void* mboot)

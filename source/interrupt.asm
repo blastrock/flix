@@ -62,6 +62,7 @@ ISR_NOERRCODE 44
 ISR_NOERRCODE 45
 ISR_NOERRCODE 46
 ISR_NOERRCODE 47
+ISR_NOERRCODE 128
 
 [GLOBAL intVectors]
 intVectors:
@@ -70,6 +71,7 @@ intVectors:
   dq isr%[$i]
 %assign $i $i+1
 %endrep
+  dq isr128
 
 [EXTERN intHandler]
 

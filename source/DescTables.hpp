@@ -35,7 +35,7 @@ class DescTables
     static void initIdt();
     static void commitGdt(void* gdt);
     static void commitIdt(void* idt);
-    static IdtEntry makeIdtGate(void* offset, uint16_t selector);
+    static IdtEntry makeIdtGate(void* offset, uint16_t selector, bool pub);
 };
 
 #endif /* DESC_TABLES_HPP */

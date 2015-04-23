@@ -31,8 +31,8 @@ void InterruptHandler::handle(InterruptState* s)
         Degf("Page fault");
         Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
         Degf("Fault on %s", s->errCode & 2 ? "write" : "read");
-        if (s->errCode & 4)
-          Degf("Invalid reserved field!");
+        Degf("Access was %s",
+            s->errCode & 4 ? "unpriviledged" : "priviledged");
         Degf("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
         {
           uint64_t address;
@@ -55,7 +55,7 @@ void InterruptHandler::handle(InterruptState* s)
 
     PANIC("exception");
   }
-  else
+  else if (s->intNo < 48)
   {
     uint8_t intNo = s->intNo - 32;
     Degf("Int %x!", intNo);
@@ -85,5 +85,10 @@ void InterruptHandler::handle(InterruptState* s)
       TaskManager::get()->saveCurrentTask(context);
       TaskManager::get()->scheduleNext();
     }
+  }
+  else
+  {
+    Degf("SYSCALL %d %d", s->intNo, s->rax);
+    PANIC("end");
   }
 }

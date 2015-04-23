@@ -93,7 +93,9 @@ void DescTables::initIdt()
   io::outb(0xA1, 0x0);
 
   for (short i = 0; i < 48; ++i)
-    g_idtEntries[i] = makeIdtGate(intVectors[i], 0x08);
+    g_idtEntries[i] = makeIdtGate(intVectors[i], 0x08, false);
+
+  g_idtEntries[0x80] = makeIdtGate(intVectors[48], 0x08, true);
 
   g_idtPtr.limit = sizeof(IdtEntry) * 256 - 1;
   g_idtPtr.base  = &g_idtEntries;
@@ -106,7 +108,8 @@ void DescTables::initTr()
   asm("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
 }
 
-DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)
+DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector,
+    bool pub)
 {
   uint64_t ioff = reinterpret_cast<uint64_t>(offset);
 
@@ -116,6 +119,8 @@ DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector)
   entry.targetHigh = (ioff >> 32) & 0xFFFFFFFF;
   entry.targetSelector = selector;
   entry.flags = 0x8E01;
+  if (pub)
+    entry.flags |= 0x6000;
 
   return entry;
 }
