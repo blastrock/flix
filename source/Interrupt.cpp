@@ -8,6 +8,24 @@ extern "C" void intHandler(InterruptState* s)
   InterruptHandler::handle(s);
 }
 
+struct ScopedExceptionHandling
+{
+  static bool busy;
+
+  ScopedExceptionHandling()
+  {
+    if (busy)
+      PANIC("Nested exception");
+    busy = true;
+  }
+  ~ScopedExceptionHandling()
+  {
+    busy = false;
+  }
+};
+
+bool ScopedExceptionHandling::busy = false;
+
 void InterruptHandler::handle(InterruptState* s)
 {
   // acknowledge interrupt
@@ -20,6 +38,8 @@ void InterruptHandler::handle(InterruptState* s)
 
   if (s->intNo < 32)
   {
+    ScopedExceptionHandling scope;
+
     Degf("Isr %d!", s->intNo);
 
     switch (s->intNo)
