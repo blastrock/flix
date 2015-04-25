@@ -1,7 +1,10 @@
 #include "Debug.hpp"
+#include "PageDirectory.hpp"
 
 void printStackTrace(uint64_t stackPointer)
 {
+  // stackFrame[0] is the return stack pointer and stackFrame[1] is the return
+  // instraction pointer
   void** stackFrame = reinterpret_cast<void**>(stackPointer);
 
   Degf("Stack trace:");
@@ -13,6 +16,13 @@ void printStackTrace(uint64_t stackPointer)
       Degf("stack fail");
       return;
     }
+
     stackFrame = static_cast<void**>(stackFrame[0]);
+
+    if (!PageDirectory::getCurrent()->isPageMapped(stackFrame))
+    {
+      Degf("Invalid stack pointer");
+      return;
+    }
   }
 }

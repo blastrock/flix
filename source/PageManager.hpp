@@ -8,9 +8,14 @@
 
 static void* const INVALID_ADDR = reinterpret_cast<void*>(-1L);
 
+inline bool isValid(void* ptr)
+{
+  return ptr != INVALID_ADDR;
+}
+
 inline bool isInvalid(void* ptr)
 {
-  return ptr == INVALID_ADDR;
+  return !isValid(ptr);
 }
 
 template <typename T>

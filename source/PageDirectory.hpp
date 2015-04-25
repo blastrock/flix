@@ -20,11 +20,16 @@ class PageDirectory
     static PageDirectory* initKernelDirectory();
     static PageDirectory* getKernelDirectory();
 
+    static PageDirectory* getCurrent();
+
     void mapKernel();
 
     void mapPageTo(void* vaddr, uintptr_t page);
     void mapPage(void* vaddr, void** paddr = nullptr);
     void unmapPage(void* vaddr);
+
+    bool isPageMapped(void* vaddr);
+
     void use();
 
   private:

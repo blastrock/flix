@@ -113,17 +113,25 @@ void PageDirectory::initWithDefaultPaging()
   }
 }
 
+static PageDirectory* g_currentPageDirectory = 0;
+
 void PageDirectory::use()
 {
   Degf("changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
+  g_currentPageDirectory = this;
+}
+
+PageDirectory* PageDirectory::getCurrent()
+{
+  return g_currentPageDirectory;
 }
 
 void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 {
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
-  PageTableEntry* page = m_manager->getPage(ivaddr / 0x1000, true);
+  PageTableEntry* page = m_manager->getPage(ivaddr, true);
   assert(!page->p);
   page->p = true;
   page->us = true;
@@ -146,10 +154,16 @@ void PageDirectory::unmapPage(void* vaddr)
 {
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
-  uintptr_t pageId = ivaddr / 0x1000;
-  PageTableEntry* page = m_manager->getPage(pageId, true);
+  PageTableEntry* page = m_manager->getPage(ivaddr, true);
   assert(page->p);
   page->p = false;
 
-  Memory::setPageFree(pageId);
+  Memory::setPageFree(ivaddr / 0x1000);
+}
+
+bool PageDirectory::isPageMapped(void* vaddr)
+{
+  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
+  PageTableEntry* page = m_manager->getPage(ivaddr, false);
+  return isValid(page) && page->p;
 }
