@@ -45,9 +45,10 @@ public:
   void addTask(Task&& t);
   Task newKernelTask();
   Task newUserTask();
+  void terminateCurrentTask();
 
   void saveCurrentTask(const Task::Context& t);
-  void scheduleNext();
+  [[noreturn]] void scheduleNext();
 
 private:
   static TaskManager* instance;

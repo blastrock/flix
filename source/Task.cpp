@@ -6,7 +6,7 @@
 
 TaskManager* TaskManager::instance;
 
-extern "C" void jump(Task::Context* task);
+[[noreturn]] extern "C" void jump(Task::Context* task);
 
 TaskManager* TaskManager::get()
 {
@@ -33,6 +33,11 @@ void TaskManager::setUpTss()
 void TaskManager::addTask(Task&& t)
 {
   _tasks.push_back(std::move(t));
+}
+
+void TaskManager::terminateCurrentTask()
+{
+  _tasks.erase(_tasks.begin() + _currentTask);
 }
 
 Task TaskManager::newKernelTask()
@@ -67,7 +72,7 @@ void TaskManager::scheduleNext()
     PANIC("Nothing to schedule!");
 
   ++_currentTask;
-  if (_currentTask == _tasks.size())
+  if (_currentTask >= _tasks.size())
     _currentTask = 0;
 
   Task& t = _tasks[_currentTask];

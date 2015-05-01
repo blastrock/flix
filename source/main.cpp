@@ -33,16 +33,16 @@ uint8_t getCpl()
 
 void loop()
 {
-  unsigned int i = 0;
-  while (true)
+  for (unsigned int i = 0; i < 2000; ++i)
     Degf("stuff %d %d", getCpl(), i++);
+  segfault();
 }
 
 void loop2()
 {
-  unsigned int i = 0;
-  while (true)
+  for (unsigned int i = 0; i < 2000; ++i)
     Degf("different stuff %d", i++);
+  segfault();
 }
 
 void loop3()
@@ -108,19 +108,19 @@ extern "C" int kmain(void* mboot)
   Degf("rflags %x", Cpu::rflags());
   {
     Task task = tm->newKernelTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
+    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop);
     tm->addTask(std::move(task));
   }
   {
     Task task = tm->newKernelTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
+    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
     tm->addTask(std::move(task));
   }
   {
     Task task = tm->newUserTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x10000])+0x9000;
+    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop3);
     tm->addTask(std::move(task));
   }

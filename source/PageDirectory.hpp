@@ -15,7 +15,7 @@ class PageDirectory
     PageDirectory(PageDirectory&& pd) noexcept;
 
     PageDirectory& operator=(const PageDirectory& pd) = delete;
-    PageDirectory& operator=(PageDirectory&& pd) = delete;
+    PageDirectory& operator=(PageDirectory&& pd) noexcept;
 
     static PageDirectory* initKernelDirectory();
     static PageDirectory* getKernelDirectory();
@@ -107,6 +107,17 @@ inline PageDirectory::PageDirectory(PageDirectory&& pd) :
 {
   pd.m_directory.value = 0;
   pd.m_manager = nullptr;
+}
+
+inline PageDirectory& PageDirectory::operator=(PageDirectory&& pd)
+{
+  m_directory = pd.m_directory;
+  m_manager = pd.m_manager;
+
+  pd.m_directory.value = 0;
+  pd.m_manager = nullptr;
+
+  return *this;
 }
 
 inline PageDirectory* PageDirectory::getKernelDirectory()

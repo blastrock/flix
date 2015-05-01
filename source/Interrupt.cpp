@@ -38,8 +38,6 @@ void InterruptHandler::handle(InterruptState* s)
 
   if (s->intNo < 32)
   {
-    ScopedExceptionHandling scope;
-
     Degf("Isr %d!", s->intNo);
 
     switch (s->intNo)
@@ -68,12 +66,20 @@ void InterruptHandler::handle(InterruptState* s)
     Degf("RIP: %x", s->rip);
     Degf("RSP: %x", s->rsp);
 
-    uint64_t rbp;
-    asm volatile ("mov %%rbp, %0":"=r"(rbp)::);
+    {
+      ScopedExceptionHandling scope;
 
-    printStackTrace(rbp);
+      uint64_t rbp;
+      asm volatile ("mov %%rbp, %0":"=r"(rbp)::);
 
-    PANIC("exception");
+      printStackTrace(rbp);
+
+      PageDirectory::getKernelDirectory()->use();
+
+      TaskManager::get()->terminateCurrentTask();
+    }
+
+    TaskManager::get()->scheduleNext();
   }
   else if (s->intNo < 48)
   {
