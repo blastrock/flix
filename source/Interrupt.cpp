@@ -2,6 +2,7 @@
 #include "io.hpp"
 #include "Debug.hpp"
 #include "Task.hpp"
+#include "Syscall.hpp"
 
 extern "C" void intHandler(InterruptState* s)
 {
@@ -115,6 +116,17 @@ void InterruptHandler::handle(InterruptState* s)
   else
   {
     Degf("SYSCALL %d", s->intNo, s->rax);
-    Degf("%s", reinterpret_cast<const char*>(s->rax));
+
+    switch (s->rax)
+    {
+    case sys::exit:
+      PageDirectory::getKernelDirectory()->use();
+      TaskManager::get()->terminateCurrentTask();
+      TaskManager::get()->scheduleNext();
+      break;
+    default:
+      Degf("Unknown syscall");
+      break;
+    }
   }
 }

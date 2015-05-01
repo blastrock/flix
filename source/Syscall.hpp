@@ -4,12 +4,17 @@
 namespace sys
 {
 
-inline void print(const char* str)
+enum ScId
+{
+  exit = 1
+};
+
+inline void call(ScId sc)
 {
   asm volatile (
       "int $0x80"
       :
-      :"a"(str));
+      :"a"(static_cast<uint64_t>(sc)));
 }
 
 }

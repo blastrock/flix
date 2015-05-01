@@ -56,6 +56,7 @@ inline void PANIC(const char* str)
 {
   asm volatile ("cli");
   Degf("Kernel panic: %s", str);
+  asm volatile ("xchgw %bx, %bx");
   while (true)
     asm volatile ("hlt");
 }

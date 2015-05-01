@@ -33,22 +33,21 @@ uint8_t getCpl()
 
 void loop()
 {
-  for (unsigned int i = 0; i < 2000; ++i)
+  for (unsigned int i = 0; i < 800; ++i)
     Degf("stuff %d %d", getCpl(), i++);
-  segfault();
+  sys::call(sys::exit);
 }
 
 void loop2()
 {
-  for (unsigned int i = 0; i < 2000; ++i)
+  for (unsigned int i = 0; i < 800; ++i)
     Degf("different stuff %d", i++);
-  segfault();
+  sys::call(sys::exit);
 }
 
 void loop3()
 {
-  sys::print("Test test");
-  segfault();
+  sys::call(sys::exit);
 }
 
 extern "C" int kmain(void* mboot)
