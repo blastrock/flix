@@ -8,7 +8,7 @@ uint64_t DescTables::g_gdtEntries[] = {
   0x0000000000000000,
   // code segment (ring0)
   0x0020980000000000,
-  // data segment
+  // data segment (ring0)
   0x0000920000000000,
   // code segment (ring3)
   0x0020F80000000000,
@@ -108,6 +108,9 @@ void DescTables::initTr()
   asm("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
 }
 
+// Make gate that points to code at offset. If pub is true, the gate is
+// accessible from unpriviledged code
+// TODO is the selector argument useful? it's always equal to 0x08
 DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector,
     bool pub)
 {

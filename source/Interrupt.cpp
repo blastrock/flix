@@ -37,7 +37,7 @@ void InterruptHandler::handle(InterruptState* s)
     io::outb(0x20, 0x20);
   }
 
-  if (s->intNo < 32)
+  if (s->intNo < 32) // CPU exception
   {
     Degf("Isr %d!", s->intNo);
 
@@ -70,10 +70,7 @@ void InterruptHandler::handle(InterruptState* s)
     {
       ScopedExceptionHandling scope;
 
-      uint64_t rbp;
-      asm volatile ("mov %%rbp, %0":"=r"(rbp)::);
-
-      printStackTrace(rbp);
+      printStackTrace(s->rbp);
 
       PageDirectory::getKernelDirectory()->use();
 
@@ -82,12 +79,13 @@ void InterruptHandler::handle(InterruptState* s)
 
     TaskManager::get()->scheduleNext();
   }
-  else if (s->intNo < 48)
+  else if (s->intNo < 48) // PIC interrupt
   {
     uint8_t intNo = s->intNo - 32;
     Degf("Int %x!", intNo);
-    if (intNo == 0)
+    if (intNo == 0) // timer interrupt
     {
+      // for the moment, only switch task
       Task::Context context;
       context.r15 = s->r15;
       context.r14 = s->r14;
@@ -113,13 +111,15 @@ void InterruptHandler::handle(InterruptState* s)
       TaskManager::get()->scheduleNext();
     }
   }
-  else
+  else // syscall
   {
     Degf("SYSCALL %d", s->intNo, s->rax);
 
     switch (s->rax)
     {
     case sys::exit:
+      // terminating a task will free its page directory, so we need to switch
+      // to the kernel one before we do that
       PageDirectory::getKernelDirectory()->use();
       TaskManager::get()->terminateCurrentTask();
       TaskManager::get()->scheduleNext();

@@ -104,7 +104,6 @@ extern "C" int kmain(void* mboot)
 
   auto tm = TaskManager::get();
 
-  Degf("rflags %x", Cpu::rflags());
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
@@ -134,13 +133,9 @@ extern "C" int kmain(void* mboot)
 
   Degf("End of kernel");
 
-  TaskManager::get()->scheduleNext();
+  TaskManager::get()->scheduleNext(); // start a task, never returns
 
-  asm volatile ("cli");
-  Degf("Fatal: reached end of main!");
+  // TODO this "task"'s stack now becomes useless, can we recycle it someway?
 
-  // the kernel should never return since the code which called kmain is not
-  // mapped anymore in memory
-  while (true)
-    asm volatile ("hlt");
+  PANIC("Reached end of main!");
 }

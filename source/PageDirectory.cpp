@@ -15,8 +15,11 @@ PageDirectory* PageDirectory::initKernelDirectory()
   return g_kernelDirectory;
 }
 
+// This function reuses the kernel's page directory for the upper adresses
 void PageDirectory::mapKernel()
 {
+  // TODO this function should not initialize, or its name should be changed
+  // TODO this code is copy pasted from below
   std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
   m_manager = pm.first;
 
@@ -132,7 +135,8 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr, true);
-  assert(!page->p);
+  assert(!page->p && "Page already mapped");
+  // TODO move this, only system pages may be mapped like this, which is bad
   page->p = true;
   page->us = true;
   page->rw = true;

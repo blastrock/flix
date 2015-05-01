@@ -52,7 +52,7 @@
   Degf("r15 = %x\nr14 = %x\nr13 = %x\nr12 = %x\nrbx = %x\nrbp = %x\nr11 = %x\nr10 = %x\nr9 = %x\nr8 = %x\nrax = %x\nrcx = %x\nrdx = %x\nrsi = %x\nrdi = %x\nrflags = %x\nrsp = %x\n", r15, r14, r13, r12, rbx, rbp, r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi, rflags, rsp); \
 }
 
-inline void PANIC(const char* str)
+[[noreturn]] inline void PANIC(const char* str)
 {
   asm volatile ("cli");
   Degf("Kernel panic: %s", str);

@@ -22,12 +22,16 @@ TaskManager::TaskManager()
 
 void TaskManager::setUpTss()
 {
+  // allocate a stack for interrupt handling
+  const int SIZE = 0x1000 * 4;
+  auto* kernelStack = new char[SIZE];
+
+  // initialize the TSS (which is at the bottom of the current stack)
   auto* tss = reinterpret_cast<TaskStateSegment*>(
       reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000);
   std::memset(tss, 0, sizeof(tss));
-  const int SIZE = 0x1000 * 4;
-  auto* kernelStack = new char[SIZE];
-  tss->ist1 = kernelStack + SIZE - 0x40;
+  // make it point to the top of the stack
+  tss->ist1 = kernelStack + SIZE;
 }
 
 void TaskManager::addTask(Task&& t)
@@ -43,20 +47,22 @@ void TaskManager::terminateCurrentTask()
 Task TaskManager::newKernelTask()
 {
   Task task{};
+  // see DescTables.cpp
   task.context.cs = 0x08;
   task.context.ss = 0x10;
   task.context.rflags = 0x0200; // enable IRQ
-  task.pd.mapKernel();
+  task.pageDirectory.mapKernel();
   return task;
 }
 
 Task TaskManager::newUserTask()
 {
   Task task{};
+  // see DescTables.cpp
   task.context.cs = 0x1B;
   task.context.ss = 0x23;
   task.context.rflags = 0x0200; // enable IRQ
-  task.pd.mapKernel();
+  task.pageDirectory.mapKernel();
   return task;
 }
 
@@ -75,9 +81,10 @@ void TaskManager::scheduleNext()
   if (_currentTask >= _tasks.size())
     _currentTask = 0;
 
-  Task& t = _tasks[_currentTask];
-  assert(t.context.rflags & (1 << 9));
-  Degf("Restoring task %d with rip %x and rsp %x", _currentTask, t.context.rip, t.context.rsp);
-  t.pd.use();
-  jump(&t.context);
+  Task& nextTask = _tasks[_currentTask];
+  assert(nextTask.context.rflags & (1 << 9) && "Interrupts were disabled in a task");
+  Degf("Restoring task %d with rip %x and rsp %x", _currentTask,
+      nextTask.context.rip, nextTask.context.rsp);
+  nextTask.pageDirectory.use();
+  jump(&nextTask.context);
 }

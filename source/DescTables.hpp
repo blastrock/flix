@@ -10,6 +10,7 @@ class DescTables
     static void initTr();
 
   private:
+    // TODO move this stuff in the cpp file
     struct GdtPtr
     {
       uint16_t limit;

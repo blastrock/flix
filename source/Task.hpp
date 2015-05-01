@@ -17,7 +17,7 @@ struct Task
   } __attribute__((packed));
 
   Context context;
-  PageDirectory pd;
+  PageDirectory pageDirectory;
 };
 
 struct TaskStateSegment
