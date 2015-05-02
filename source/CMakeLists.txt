@@ -17,6 +17,7 @@ add_executable(flix
   Assert.cpp
   boot.asm
   Cpu.cpp
+  Cpio.cpp
   Debug.cpp
   DescTables.cpp
   interrupt.asm

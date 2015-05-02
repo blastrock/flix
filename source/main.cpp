@@ -11,6 +11,12 @@
 #include "Cpu.hpp"
 #include "Syscall.hpp"
 
+// needed by libkcxx
+extern "C" void panic_message(const char* msg)
+{
+  PANIC(msg);
+}
+
 void write(const char* str)
 {
   Degf(str);
@@ -53,7 +59,9 @@ void loop3()
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
-  Screen::putString("Hello world!\n\nI'm here!\n");
+  Screen::putString("Booting Flix");
+
+  Degf("Booting Flix");
 
   DescTables::init();
 
@@ -73,38 +81,15 @@ extern "C" int kmain(void* mboot)
   // finally we need to keep track of used pages to be able to get new pages
   Degf("Memory init");
   MultibootLoader mbl;
+  mbl.prepareMemory(mboot);
+
+  // then we load our module to have a file system
+  Degf("Loading module");
   mbl.handle(mboot);
 
-  Degf("Started!");
-
-  {
-    std::string str =
-      "This is a very long string which will require a malloc.";
-
-    Degf(str.c_str());
-
-    Degf(typeid(*&str).name());
-  }
-
-  //segfault();
-
-  //char* aa = new char[0x300000];
-  //for (int i = 0; i < 0x300000; ++i)
-  //  aa[i] = 0xaa;
-  //delete [] aa;
-
-  //Paging::test(0);
-
-  //Screen::putString("Hello world!\n\nI'm here!\n");
-
-  //asm volatile ("int $0x3");
-  //asm volatile ("int $0x4");
-  //asm volatile ("int $0x10");
-  //asm volatile ("int $0x16");
-
+#if 0
   auto tm = TaskManager::get();
 
-#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
@@ -134,9 +119,6 @@ extern "C" int kmain(void* mboot)
   Timer::init(1);
 
   Degf("End of kernel");
-
-  std::string s(reinterpret_cast<char*>(0xffffffffd0000000), 4);
-  Degf("str %s", s);
 
   TaskManager::get()->scheduleNext(); // start a task, never returns
 

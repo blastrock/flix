@@ -4,47 +4,68 @@
 #include "Debug.hpp"
 #include "Symbols.hpp"
 #include "PageDirectory.hpp"
+#include "Cpio.hpp"
 
-void MultibootLoader::handle(void* vmboot)
+// memory tag must be handled very early during boot and it's hard to handle
+// other tags without making memory allocations, so memory tag handling is a
+// special case
+
+void MultibootLoader::handle(void* vmboot, bool mem)
 {
   //TagsHeader* header = reinterpret_cast<TagsHeader*>(vmboot);
 
   char* mboot = reinterpret_cast<char*>(vmboot);
-  Tag* ptr = reinterpret_cast<Tag*>(mboot + sizeof(TagsHeader));
 
-  while (ptr)
+  for (Tag* tag = reinterpret_cast<Tag*>(mboot + sizeof(TagsHeader));
+      tag->type != 0;
+      tag = ptrAlignSup(ptrAdd(tag, tag->size), 8))
   {
-    ptr = handleTag(reinterpret_cast<Tag*>(ptr));
+    if (mem)
+    {
+      if (tag->type != 6)
+        continue;
+      else
+      {
+        handleMemoryMap(reinterpret_cast<MemoryMap*>(tag));
+        return;
+      }
+    }
+    else
+      handleTag(tag);
   }
+
+  if (mem)
+    PANIC("Memory tag not found in multiboot information");
 }
 
-MultibootLoader::Tag* MultibootLoader::handleTag(Tag* tag)
+void MultibootLoader::handleTag(Tag* tag)
 {
   switch (tag->type)
   {
-    case 0:
-      return nullptr;
-    case 6: // memory map
-      handleMemoryMap(reinterpret_cast<MemoryMap*>(tag));
-      break;
     case 3:
       handleModule(reinterpret_cast<Module*>(tag));
       break;
   }
-
-  return ptrAlignSup(ptrAdd(tag, tag->size), 8);
 }
 
 void MultibootLoader::handleModule(Module* mod)
 {
-  const char* name = reinterpret_cast<char*>(mod) + sizeof(Module);
+  if (moduleRead)
+    PANIC("More than one module specified on boot");
 
-  char* curPtr = static_cast<char*>(Symbols::getStackBase());
+  //const char* name = reinterpret_cast<char*>(mod) + sizeof(Module);
+
+  char* basePtr = static_cast<char*>(Symbols::getStackBase());
+  char* curPtr = basePtr;
   for (uint64_t page = mod->mod_start / 0x1000,
       lastPage = page + (mod->mod_end + 0xFFF) / 0x1000;
       page < lastPage;
       ++page, curPtr += 0x1000)
     PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page);
+
+  readArchive(basePtr);
+
+  moduleRead = true;
 }
 
 void MultibootLoader::handleMemoryMap(MemoryMap* map)

@@ -7,18 +7,6 @@
 
 Position Screen::g_cursor = {0, 0};
 
-extern "C"
-{
-
-void panic_message(const char* msg)
-{
-  Screen::putString(msg);
-  Screen::putChar('\n');
-  asm("ud2\n");
-}
-
-}
-
 void Screen::clear()
 {
   std::memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);

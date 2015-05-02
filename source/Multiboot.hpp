@@ -6,7 +6,14 @@
 class MultibootLoader
 {
   public:
-    void handle(void* vmboot);
+    void handle(void* mboot)
+    {
+      handle(mboot, false);
+    }
+    void prepareMemory(void* mboot)
+    {
+      handle(mboot, true);
+    }
 
   private:
     struct TagsHeader
@@ -49,10 +56,14 @@ class MultibootLoader
       uint32_t mod_end;
     } __attribute__((packed));
 
-    Tag* handleTag(Tag* tag);
+    void handle(void* vmboot, bool mem);
+
+    void handleTag(Tag* tag);
     void handleModule(Module* mod);
     void handleMemoryMap(MemoryMap* map);
     void handleMemoryMapEntry(MemoryMapEntry* entry);
+
+    bool moduleRead;
 };
 
 #endif /* MULTIBOOT_HPP */
