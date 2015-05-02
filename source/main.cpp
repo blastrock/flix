@@ -104,6 +104,7 @@ extern "C" int kmain(void* mboot)
 
   auto tm = TaskManager::get();
 
+#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
@@ -122,6 +123,7 @@ extern "C" int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&loop3);
     tm->addTask(std::move(task));
   }
+#endif
 
   Degf("Setting up TSS");
   TaskManager::setUpTss();
@@ -132,6 +134,9 @@ extern "C" int kmain(void* mboot)
   Timer::init(1);
 
   Degf("End of kernel");
+
+  std::string s(reinterpret_cast<char*>(0xffffffffd0000000), 4);
+  Degf("str %s", s);
 
   TaskManager::get()->scheduleNext(); // start a task, never returns
 

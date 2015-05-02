@@ -2,7 +2,8 @@
 #include "Util.hpp"
 #include "Memory.hpp"
 #include "Debug.hpp"
-#include <iomanip>
+#include "Symbols.hpp"
+#include "PageDirectory.hpp"
 
 void MultibootLoader::handle(void* vmboot)
 {
@@ -26,9 +27,24 @@ MultibootLoader::Tag* MultibootLoader::handleTag(Tag* tag)
     case 6: // memory map
       handleMemoryMap(reinterpret_cast<MemoryMap*>(tag));
       break;
+    case 3:
+      handleModule(reinterpret_cast<Module*>(tag));
+      break;
   }
 
   return ptrAlignSup(ptrAdd(tag, tag->size), 8);
+}
+
+void MultibootLoader::handleModule(Module* mod)
+{
+  const char* name = reinterpret_cast<char*>(mod) + sizeof(Module);
+
+  char* curPtr = static_cast<char*>(Symbols::getStackBase());
+  for (uint64_t page = mod->mod_start / 0x1000,
+      lastPage = page + (mod->mod_end + 0xFFF) / 0x1000;
+      page < lastPage;
+      ++page, curPtr += 0x1000)
+    PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page);
 }
 
 void MultibootLoader::handleMemoryMap(MemoryMap* map)
@@ -47,17 +63,12 @@ void MultibootLoader::handleMemoryMap(MemoryMap* map)
 
 void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
 {
-  //fDeg() << std::hex <<
-  //  "[" << std::setw(16) << std::setfill('0') << entry->base_addr << "-" <<
-  //  std::setw(16) << std::setfill('0') <<
-  //  entry->base_addr + entry->length << "] length " <<
-  //  entry->length << " type " << entry->type;
-
   // if the segment is free to use, skip it
   if (entry->type == 1)
     return;
 
   for (uint64_t page = entry->base_addr / 0x1000,
+      // TODO shouldn't we ceil() this?
       lastPage = page + entry->length / 0x1000;
       page < lastPage;
       ++page)

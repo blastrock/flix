@@ -21,25 +21,15 @@ MB2_HEADER_START:
   dd MB2_ARCHITECTURE
   dd MB2_LENGTH
   dd MB2_CHECKSUM
-;  ; info request
+; no need to specify sections and entry point, will be read from ELF file
+; info request
+; this part seems to be broken, it only works if 8 < size < 12. It seems to me
+; that the correct value should be 12...
 ;ALIGN 8
-;  dw 1 ; type
-;  dw 0 ; not optional
-;  dd 0 ; size
-;  ; section definition
-;ALIGN 8
-;  dw 2, 1
-;  dd 8 + 4*4
-;  dd MB2_HEADER_START
-;  dd _kernelBootstrapStart
-;  dd _kernelDataEnd
-;  dd _kernelBssEnd
-;  ; entry address
-;ALIGN 8
-;  dw 3, 1
-;  dd 8 + 4
-;  dd start
-;  ; page align
+;  dw 1, 0 ; not optional
+;  dd 12 ; size
+;  dd 1 ; request memory mapping
+;; page align
 ;ALIGN 8
 ;  dw 6
 ;  dw 0

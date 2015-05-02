@@ -41,7 +41,16 @@ class MultibootLoader
       uint32_t reserved;
     } __attribute__((packed));
 
+    struct Module
+    {
+      uint32_t type;
+      uint32_t size;
+      uint32_t mod_start;
+      uint32_t mod_end;
+    } __attribute__((packed));
+
     Tag* handleTag(Tag* tag);
+    void handleModule(Module* mod);
     void handleMemoryMap(MemoryMap* map);
     void handleMemoryMapEntry(MemoryMapEntry* entry);
 };
