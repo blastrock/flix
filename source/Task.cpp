@@ -29,7 +29,7 @@ void TaskManager::setUpTss()
   // initialize the TSS (which is at the bottom of the current stack)
   auto* tss = reinterpret_cast<TaskStateSegment*>(
       reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000);
-  std::memset(tss, 0, sizeof(tss));
+  std::memset(tss, 0, sizeof(*tss));
   // make it point to the top of the stack
   tss->ist1 = kernelStack + SIZE;
 }
