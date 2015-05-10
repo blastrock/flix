@@ -41,7 +41,10 @@
   throw FormatError(type)
 #else
 #define FORMAT_ERROR(type) \
-  assert(!#type)
+  do { \
+    assert(!#type); \
+    _Formatter::abort(); \
+  } while (0)
 #endif
 
 namespace pnt
@@ -87,6 +90,12 @@ inline const char* FormatError::what() const noexcept
 
 namespace _Formatter
 {
+  [[noreturn]] inline void abort()
+  {
+    ::abort();
+    while (true); // silence warning
+  }
+
   template <typename T>
   struct is_integral
   {
