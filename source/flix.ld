@@ -78,5 +78,7 @@ SECTIONS
   {
     *(.comment)
     *(.eh_frame)
+    *(.gcc_except_table)
+    *(.debug*)
   }
 }
