@@ -26,3 +26,13 @@ void printStackTrace(uint64_t stackPointer)
     }
   }
 }
+
+// make a non-inline function
+void PANIC2(const char* msg)
+{
+  asm volatile ("cli");
+  asm volatile ("xchgw %bx, %bx");
+  while (true)
+    asm volatile ("hlt");
+  //PANIC(msg);
+}
