@@ -159,19 +159,19 @@ start:
   ; set up stack
 [EXTERN _stackBase]
   mov rsp, _stackBase
-  ; do static initialization
-[EXTERN _initArrayBegin]
-[EXTERN _initArrayEnd]
-  ; r14 and r15 are callee-saved (rsi and rdi are too, but they do not work ><)
-  mov r14, _initArrayBegin
-  mov r15, _initArrayEnd
-.LinitLoop:
-  cmp r14, r15
-  je .LmainStart
-  mov rax, QWORD [r14]
-  call rax
-  add r14, 8
-  jmp .LinitLoop
+;  ; do static initialization
+;[EXTERN _initArrayBegin]
+;[EXTERN _initArrayEnd]
+;  ; r14 and r15 are callee-saved (rsi and rdi are too, but they do not work ><)
+;  mov r14, _initArrayBegin
+;  mov r15, _initArrayEnd
+;.LinitLoop:
+;  cmp r14, r15
+;  je .LmainStart
+;  mov rax, QWORD [r14]
+;  call rax
+;  add r14, 8
+;  jmp .LinitLoop
 
 .LmainStart:
   ; call kmain(multiboot)
