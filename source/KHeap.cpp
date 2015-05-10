@@ -151,15 +151,17 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
   return {block, nextBlock};
 }
 
-namespace std_impl
+extern "C"
 {
-  void free(void* ptr)
-  {
-    KHeap::kfree(ptr);
-  }
 
-  void* malloc(size_t size)
-  {
-    return KHeap::kmalloc(size);
-  }
+void free(void* ptr)
+{
+  KHeap::kfree(ptr);
+}
+
+void* malloc(size_t size)
+{
+  return KHeap::kmalloc(size);
+}
+
 }
