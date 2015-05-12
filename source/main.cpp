@@ -83,10 +83,6 @@ extern "C" int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
-  // then we load our module to have a file system
-  Degf("Loading module");
-  mbl.handle(mboot);
-
 #if 0
   auto tm = TaskManager::get();
 
@@ -115,6 +111,10 @@ extern "C" int kmain(void* mboot)
 
   Degf("Initializing TR");
   DescTables::initTr();
+
+  // then we load our module to have a file system
+  Degf("Loading module");
+  mbl.handle(mboot);
 
   Timer::init(1);
 
