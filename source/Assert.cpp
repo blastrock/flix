@@ -1,10 +1,8 @@
 #include <cassert>
 #include "Debug.hpp"
 
-namespace std_impl
+extern "C" void assert_fail(const char* file, int line, const char* condition)
 {
-  void assertFail(const char* file, int line, const char* condition)
-  {
-    Degf("%s:%d\nAssertaion failed: %s", file, line, condition);
-  }
+  Degf("%s:%d\nAssertaion failed: %s", file, line, condition);
+  PANIC("Assertion failed");
 }
