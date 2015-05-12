@@ -41,6 +41,8 @@ void TaskManager::addTask(Task&& t)
 
 void TaskManager::terminateCurrentTask()
 {
+  Degf("Terminating task %d, size %d", _currentTask, _tasks.size());
+  assert(_currentTask < _tasks.size());
   _tasks.erase(_tasks.begin() + _currentTask);
 }
 
@@ -69,6 +71,7 @@ Task TaskManager::newUserTask()
 void TaskManager::saveCurrentTask(const Task::Context& ctx)
 {
   Degf("Saving task %d with rip %x and rsp %x", _currentTask, ctx.rip, ctx.rsp);
+  assert(_currentTask < _tasks.size());
   _tasks[_currentTask].context = ctx;
 }
 
