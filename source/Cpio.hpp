@@ -4,13 +4,8 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include "Fs.hpp"
 
-struct File
-{
-  std::string name;
-  std::vector<uint8_t> data;
-};
-
-std::vector<File> readArchive(void* data);
+std::shared_ptr<fs::SuperBlock> readArchive(void* data);
 
 #endif
