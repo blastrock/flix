@@ -34,6 +34,7 @@ add_executable(flix
   Serial.cpp
   StaticMemoryPool.cpp
   Symbols.cpp
+  Syscall.cpp
   Task.cpp
   task.asm
   Timer.cpp

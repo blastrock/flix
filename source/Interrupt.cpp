@@ -113,20 +113,7 @@ void InterruptHandler::handle(InterruptState* s)
   }
   else // syscall
   {
-    Degf("SYSCALL %d", s->intNo, s->rax);
-
-    switch (s->rax)
-    {
-    case sys::exit:
-      // terminating a task will free its page directory, so we need to switch
-      // to the kernel one before we do that
-      PageDirectory::getKernelDirectory()->use();
-      TaskManager::get()->terminateCurrentTask();
-      TaskManager::get()->scheduleNext();
-      break;
-    default:
-      Degf("Unknown syscall");
-      break;
-    }
+    Degf("syscall %d", s->rax);
+    sys::handle(*s);
   }
 }

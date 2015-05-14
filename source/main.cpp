@@ -116,6 +116,9 @@ extern "C" int kmain(void* mboot)
   Degf("Loading module");
   mbl.handle(mboot);
 
+  Degf("Initializing syscall vector");
+  sys::initSysCalls();
+
   Timer::init(1);
 
   Degf("End of kernel");
