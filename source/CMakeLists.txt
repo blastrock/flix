@@ -20,6 +20,7 @@ add_executable(flix
   Cpio.cpp
   Debug.cpp
   DescTables.cpp
+  Elf.cpp
   Fs.cpp
   interrupt.asm
   Interrupt.cpp
