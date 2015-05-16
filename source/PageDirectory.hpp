@@ -32,6 +32,8 @@ class PageDirectory
 
     void use();
 
+    static void flushTlb();
+
   private:
     static PageDirectory* g_kernelDirectory;
 

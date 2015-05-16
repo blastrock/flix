@@ -171,3 +171,12 @@ bool PageDirectory::isPageMapped(void* vaddr)
   PageTableEntry* page = m_manager->getPage(ivaddr, false);
   return isValid(page) && page->p;
 }
+
+// TODO make something to invalidate a single page (invlpg)
+void PageDirectory::flushTlb()
+{
+  asm volatile(
+      "mov %%cr3, %%rax\n"
+      "mov %%rax, %%cr3\n"
+      :::"rax");
+}
