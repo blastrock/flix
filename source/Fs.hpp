@@ -11,7 +11,7 @@ namespace fs
 struct Handle {
   virtual ~Handle() {}
   //virtual int lseek (off_t, int) = 0;
-  virtual uint64_t read(char* buf, uint64_t pos, uint64_t size) = 0;
+  virtual uint64_t read(void* buf, uint64_t pos, uint64_t size) = 0;
   //virtual int write (Inode*, File*, const char *, int) = 0;
   //virtual int readdir (void *, filldir_t) = 0;
   //virtual int select (Inode*, File*, int, select_table *) = 0;

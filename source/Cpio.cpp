@@ -10,7 +10,7 @@ public:
     : _file(inode)
   {}
 
-  uint64_t read(char* buf, uint64_t pos, uint64_t size) override;
+  uint64_t read(void* buf, uint64_t pos, uint64_t size) override;
 
   CpioFileInode* _file;
 };
@@ -36,7 +36,7 @@ public:
   std::vector<uint8_t> _data;
 };
 
-uint64_t CpioFileHandle::read(char* buf, uint64_t pos, uint64_t size)
+uint64_t CpioFileHandle::read(void* buf, uint64_t pos, uint64_t size)
 {
   size = std::min(size, _file->_data.size() - pos);
   std::memcpy(buf, &_file->_data[pos], size);
