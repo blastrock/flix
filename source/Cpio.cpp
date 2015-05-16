@@ -155,13 +155,13 @@ std::shared_ptr<fs::SuperBlock> readArchive(void* data)
     if (curfile->namesize % 2)
       ptr += 1;
 
+    auto file = cpiofs->makeFile(sname.c_str());
+    file->_data = std::vector<uint8_t>(ptr, ptr + filesize);
+
     ptr += filesize;
     // round up
     if (filesize % 2)
       ptr += 1;
-
-    auto file = cpiofs->makeFile(sname.c_str());
-    file->_data = std::vector<uint8_t>(ptr, ptr + filesize);
   }
 
   return cpiofs;
