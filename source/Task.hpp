@@ -18,6 +18,8 @@ struct Task
 
   Context context;
   PageDirectory pageDirectory;
+  char* stack;
+  char* stackTop;
 };
 
 struct TaskStateSegment
@@ -49,6 +51,9 @@ public:
 
   void saveCurrentTask(const Task::Context& t);
   [[noreturn]] void scheduleNext();
+  [[noreturn]] void rescheduleSelf();
+
+  Task& getCurrentTask();
 
 private:
   static TaskManager* instance;

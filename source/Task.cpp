@@ -44,6 +44,7 @@ void TaskManager::terminateCurrentTask()
   Degf("Terminating task %d, size %d", _currentTask, _tasks.size());
   assert(_currentTask < _tasks.size());
   _tasks.erase(_tasks.begin() + _currentTask);
+  // TODO free stack
 }
 
 Task TaskManager::newKernelTask()
@@ -75,6 +76,12 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
   _tasks[_currentTask].context = ctx;
 }
 
+Task& TaskManager::getCurrentTask()
+{
+  assert(_currentTask < _tasks.size());
+  return _tasks[_currentTask];
+}
+
 void TaskManager::scheduleNext()
 {
   if (_tasks.empty())
@@ -89,5 +96,15 @@ void TaskManager::scheduleNext()
   Degf("Restoring task %d with rip %x and rsp %x", _currentTask,
       nextTask.context.rip, nextTask.context.rsp);
   nextTask.pageDirectory.use();
+  jump(&nextTask.context);
+}
+
+void TaskManager::rescheduleSelf()
+{
+  assert(!_tasks.empty());
+
+  Task& nextTask = _tasks[_currentTask];
+  assert(nextTask.context.rflags & (1 << 9) && "Interrupts were disabled in a task");
+  Degf("Rescheduling self at %x", nextTask.context.rip);
   jump(&nextTask.context);
 }
