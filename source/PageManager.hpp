@@ -24,23 +24,6 @@ inline T* invalidPtr()
   return static_cast<T*>(INVALID_ADDR);
 }
 
-namespace detail
-{
-
-template <unsigned Type, typename T0, typename... T>
-struct GetNthType
-{
-  typedef typename GetNthType<Type - 1, T...>::type type;
-};
-
-template <typename T0, typename... T>
-struct GetNthType<0, T0, T...>
-{
-  typedef T0 type;
-};
-
-}
-
 template <typename Allocator, typename CurLevel, typename... NextLevels>
 class PageManager
 {
@@ -79,8 +62,7 @@ class PageManager
     auto getEntryImpl(uintptr_t address, bool create) ->
       typename std::enable_if<RevLevel != 0,
                  decltype(
-                     std::declval<NextLayout>().template getEntryImpl<RevLevel-1>(
-                       std::declval<uintptr_t>(), std::declval<bool>()))
+                     NextLayout().template getEntryImpl<RevLevel-1>(0, false))
                >::type;
 
     template <unsigned RevLevel>
@@ -141,8 +123,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     uintptr_t address, bool create) ->
   typename std::enable_if<RevLevel != 0,
              decltype(
-                 std::declval<NextLayout>().template getEntryImpl<RevLevel-1>(
-                   std::declval<uintptr_t>(), std::declval<bool>()))
+                 NextLayout().template getEntryImpl<RevLevel-1>(0, false))
            >::type
 {
   uintptr_t index = (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
@@ -153,8 +134,8 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
   {
     if (!create)
       return invalidPtr<typename std::remove_pointer<decltype(
-                 std::declval<NextLayout>().template getEntryImpl<RevLevel-1>(
-                   std::declval<uintptr_t>(), std::declval<bool>()))>::type>();
+                 NextLayout().template getEntryImpl<RevLevel-1>(0, false)
+                 )>::type>();
 
     // create it
     std::vector<std::pair<void*, void*>> memory =
