@@ -6,24 +6,6 @@
 #include <new>
 #include "Debug.hpp"
 
-static void* const INVALID_ADDR = reinterpret_cast<void*>(-1L);
-
-inline bool isValid(void* ptr)
-{
-  return ptr != INVALID_ADDR;
-}
-
-inline bool isInvalid(void* ptr)
-{
-  return !isValid(ptr);
-}
-
-template <typename T>
-inline T* invalidPtr()
-{
-  return static_cast<T*>(INVALID_ADDR);
-}
-
 template <typename Allocator, typename CurLevel, typename... NextLevels>
 class PageManager
 {
@@ -133,9 +115,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
   if (!nextLayout)
   {
     if (!create)
-      return invalidPtr<typename std::remove_pointer<decltype(
-                 NextLayout().template getEntryImpl<RevLevel-1>(0, false)
-                 )>::type>();
+      return nullptr;
 
     // create it
     std::vector<std::pair<void*, void*>> memory =

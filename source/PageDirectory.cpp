@@ -29,7 +29,7 @@ void PageDirectory::mapKernel()
   auto* kern =
     getKernelDirectory()->m_manager->getEntry<2>(0xffffffffc0000000, false);
 
-  assert(!isInvalid(kern));
+  assert(kern);
 
   *m_manager->getEntry<2>(0xffffffffc0000000, true) = *kern;
 }
@@ -169,7 +169,7 @@ bool PageDirectory::isPageMapped(void* vaddr)
 {
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
   PageTableEntry* page = m_manager->getPage(ivaddr, false);
-  return isValid(page) && page->p;
+  return page && page->p;
 }
 
 // TODO make something to invalidate a single page (invlpg)
