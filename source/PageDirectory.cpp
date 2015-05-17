@@ -26,12 +26,7 @@ void PageDirectory::mapKernel()
   m_directory.value = 0;
   m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
 
-  auto* kern =
-    getKernelDirectory()->m_manager->getEntry<2>(0xffffffffc0000000, false);
-
-  assert(kern);
-
-  *m_manager->getEntry<2>(0xffffffffc0000000, true) = *kern;
+  m_manager->mapTo<2>(*getKernelDirectory()->m_manager, 0xffffffffc0000000);
 }
 
 void PageDirectory::initWithDefaultPaging()

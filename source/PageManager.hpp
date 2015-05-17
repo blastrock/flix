@@ -33,7 +33,22 @@ class PageManager
     template <unsigned Level>
     auto getEntry(uintptr_t address, bool create)
     {
-      return getEntryImpl<LevelCount - Level - 1>(address, create);
+      return getEntryImpl<LevelCount - Level - 1>(address, create).first;
+    }
+    template <unsigned Level>
+    void mapTo(ThisLayout& other, uintptr_t address)
+    {
+      static_assert(Level != 0, "Can't map at level 0");
+
+      auto otherPair =
+        other.getEntryImpl<LevelCount - Level - 1>(address, false);
+
+      assert(otherPair.first && "Mapping to unmapped address in 'other'");
+
+      auto thisPair =
+        this->getEntryImpl<LevelCount - Level - 1>(address, true);
+      *thisPair.first = *otherPair.first;
+      *thisPair.second = *otherPair.second;
     }
 
   private:
@@ -49,7 +64,8 @@ class PageManager
 
     template <unsigned RevLevel>
     auto getEntryImpl(uintptr_t address, bool create) ->
-      typename std::enable_if<RevLevel == 0, Entry*>::type;
+      typename std::enable_if<RevLevel == 0, std::pair<Entry*, NextLayout**>>
+      ::type;
 
     template <typename A, typename Clv, typename... Lv>
     friend class PageManager;
@@ -72,7 +88,7 @@ class PageManager<Allocator, CurLevel>
   private:
     Entry m_entries[1 << ADD_BITS];
     template <unsigned RevLevel>
-    typename std::enable_if<RevLevel == 0, Entry*>::type
+    typename std::enable_if<RevLevel == 0, std::pair<Entry*, void**>>::type
       getEntryImpl(uintptr_t address, bool create);
 
     template <typename A, typename Clv, typename... Lv>
@@ -115,7 +131,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
   if (!nextLayout)
   {
     if (!create)
-      return nullptr;
+      return {nullptr, nullptr};
 
     // create it
     std::vector<std::pair<void*, void*>> memory =
@@ -128,31 +144,32 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
       reinterpret_cast<uintptr_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
   }
 
-  return m_nextLayouts[index]->template getEntryImpl<RevLevel-1>(address, create);
+  return m_nextLayouts[index]
+    ->template getEntryImpl<RevLevel-1>(address, create);
 }
 
 template <typename Allocator, typename CurLevel, typename... NextLevels>
 template <unsigned RevLevel>
 auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     uintptr_t address, bool) ->
-  typename std::enable_if<RevLevel == 0, Entry*>::type
+  typename std::enable_if<RevLevel == 0, std::pair<Entry*, NextLayout**>>::type
 {
   uintptr_t index =
     (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
 
-  return &m_entries[index];
+  return {&m_entries[index], &m_nextLayouts[index]};
 }
 
 template <typename Allocator, typename CurLevel>
 template <unsigned RevLevel>
 auto PageManager<Allocator, CurLevel>::getEntryImpl(
     uintptr_t address, bool) ->
-  typename std::enable_if<RevLevel == 0, Entry*>::type
+  typename std::enable_if<RevLevel == 0, std::pair<Entry*, void**>>::type
 {
   uintptr_t index =
     (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
 
-  return &m_entries[index];
+  return {&m_entries[index], nullptr};
 }
 
 #endif
