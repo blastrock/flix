@@ -10,6 +10,8 @@
 #include "Task.hpp"
 #include "Cpu.hpp"
 #include "Syscall.hpp"
+#include "Fs.hpp"
+#include "Elf.hpp"
 
 // needed by libkcxx
 extern "C" void panic_message(const char* msg)
@@ -56,6 +58,18 @@ void loop3()
   sys::call(sys::exit);
 }
 
+void exec()
+{
+  Degf("Opening file");
+  auto inode = fs::getRootInode()->lookup("init");
+  auto hndl = inode->open();
+  Degf("Execing");
+  // FIXME exec never returns so hndl leaks
+  elf::exec(*hndl);
+
+  PANIC("init exec failed");
+}
+
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
@@ -83,6 +97,16 @@ extern "C" int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
+  auto tm = TaskManager::get();
+
+  {
+    Task task = tm->newKernelTask();
+    task.stack = new char[0x1000];
+    task.stackTop = task.stack + 0x1000;
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+    task.context.rip = reinterpret_cast<uint64_t>(&exec);
+    tm->addTask(std::move(task));
+  }
 #if 0
   auto tm = TaskManager::get();
 
