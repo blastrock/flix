@@ -127,6 +127,7 @@ PageDirectory* PageDirectory::getCurrent()
 
 void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 {
+  Degf("Mapping %p to %x", vaddr, ipage);
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr, true);

@@ -61,6 +61,7 @@
     asm volatile ("hlt");
 }
 
+void printStackTrace();
 void printStackTrace(uint64_t stackPointer);
 
 #endif /* DEBUG_HPP */

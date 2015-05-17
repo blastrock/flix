@@ -1,6 +1,13 @@
 #include "Debug.hpp"
 #include "PageDirectory.hpp"
 
+void printStackTrace()
+{
+  uint64_t rbp;
+  asm volatile ("mov %%rbp, %0":"=r"(rbp));
+  printStackTrace(rbp);
+}
+
 void printStackTrace(uint64_t stackPointer)
 {
   // stackFrame[0] is the return stack pointer and stackFrame[1] is the return

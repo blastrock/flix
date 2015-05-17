@@ -6,14 +6,16 @@ std::vector<bool> Memory::g_frames;
 
 uintptr_t Memory::getFreePage()
 {
-  Degf("free page");
+  Degf("Free page request");
 
   for (uintptr_t i = 0; i < g_frames.size(); ++i)
     if (!g_frames[i])
     {
+      Degf("Free page got");
       g_frames[i] = true;
       return i;
     }
+  Degf("No more freepage, enlaring...");
   uintptr_t i = g_frames.size();
   g_frames.resize(i+16, false);
   g_frames[i] = true;
