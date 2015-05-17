@@ -115,7 +115,7 @@ static PageDirectory* g_currentPageDirectory = 0;
 
 void PageDirectory::use()
 {
-  Degf("changing pagetable to %x", m_directory.value);
+  Degf("Changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
   g_currentPageDirectory = this;
 }
@@ -127,7 +127,7 @@ PageDirectory* PageDirectory::getCurrent()
 
 void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 {
-  Degf("Mapping %p to %x", vaddr, ipage);
+  //Degf("Mapping %p to %x", vaddr, ipage);
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr, true);

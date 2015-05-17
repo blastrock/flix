@@ -5,6 +5,9 @@
 
 extern "C" uint8_t _pageHeapBase;
 
+static constexpr unsigned PAGE_SIZE = 0x1000;
+static constexpr unsigned BLOCK_SIZE = 2; // in pages
+
 uint8_t* PageHeap::m_heapStart = nullptr;
 bool PageHeap::m_allocating = false;
 
@@ -16,84 +19,31 @@ void PageHeap::init()
   m_heapStart = &_pageHeapBase;
 }
 
-std::pair<void*, void*> PageHeap::kmalloc(uint64_t size)
+std::pair<void*, void*> PageHeap::kmalloc()
 {
-  std::pair<uint64_t, void*> item = allocPages(size/0x1000);
+  std::pair<uint64_t, void*> item = allocBlock();
   return {pageToPtr(item.first), item.second};
 }
 
-std::pair<uint64_t, void*> PageHeap::allocPages(uint64_t nbPages)
+std::pair<uint64_t, void*> PageHeap::allocBlock()
 {
-  std::pair<uint64_t, void*> ret;
-  unsigned int lastEmpty = -1;
   // if we are reentering, use pool
   if (m_allocating)
   {
     assert(!m_pool.empty());
 
-    for (unsigned int i = 0; i < m_pool.size(); )
-    {
-      bool ok = true;
-      for (unsigned int j = 0; j < nbPages && i+j < m_pool.size(); ++j)
-        // if pages are not contiguous
-        if (m_pool[i+j].first != m_pool[i].first + j)
-        {
-          ok = false;
-          break;
-        }
-        else
-          lastEmpty = i+j;
-
-      if (ok)
-      {
-        ret = m_pool[i];
-        m_pool.erase(m_pool.begin()+i, m_pool.begin()+i+nbPages);
-        return ret;
-      }
-      else
-        i = lastEmpty + 1;
-    }
-
-    assert(!"no free page for reentrant allocation");
+    std::pair<uint64_t, void*> ret = m_pool.back();
+    m_pool.resize(m_pool.size() - 1);
     return ret;
   }
 
-  for (unsigned int i = 0; i < m_map.size(); )
-  {
-    bool ok = true;
-    for (unsigned int j = 0; j < nbPages && i+j < m_map.size(); ++j)
-      if (m_map[i+j])
-      {
-        ok = false;
-        break;
-      }
-      else
-        lastEmpty = i+j;
+  for (unsigned int i = 0; i < m_map.size(); ++i)
+    if (!m_map[i])
+      return allocPage(i);
 
-    if (ok)
-    {
-      ret = allocPage(i);
-      for (unsigned int j = 1; j < nbPages && i+j < m_map.size(); ++j)
-        allocPage(i+j);
-      return ret;
-    }
-    else
-      if (lastEmpty == (unsigned int)-1)
-        ++i;
-      else
-        // start next iteration at first potentially unused page
-        // lastEmpty is unused, lastEmpty + 1 is used (or is out of range), so we
-        // take lastEmpty + 2
-        i = lastEmpty + 2;
-  }
-
-  if (lastEmpty == (unsigned int)-1)
-    lastEmpty = m_map.size();
-  m_map.resize(lastEmpty + nbPages);
-  ret = allocPage(lastEmpty);
-  for (unsigned int j = lastEmpty+1; j < m_map.size(); ++j)
-    allocPage(j);
-  return ret;
+  uint64_t index = m_map.size();
+  m_map.resize(index + 1);
+  return allocPage(index);
 }
 
 std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
@@ -115,10 +65,15 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 
   void* phys;
   // first 32 pages are always mapped
-  if (index > 32)
+  if (index * BLOCK_SIZE > 32)
+  {
     PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index), &phys);
+    for (unsigned n = 1; n < BLOCK_SIZE; ++n)
+      PageDirectory::getKernelDirectory()->mapPage(
+          static_cast<char*>(pageToPtr(index)) + n * PAGE_SIZE);
+  }
   else
-    phys = reinterpret_cast<void*>(0xa00000 + index * 0x1000);
+    phys = reinterpret_cast<void*>(0xa00000 + index * PAGE_SIZE * BLOCK_SIZE);
 
   m_allocating = false;
 
@@ -129,7 +84,7 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 
 void* PageHeap::pageToPtr(uint64_t index)
 {
-  return m_heapStart + index*0x1000;
+  return m_heapStart + index * PAGE_SIZE * BLOCK_SIZE;
 }
 
 void PageHeap::refillPool()
@@ -137,8 +92,8 @@ void PageHeap::refillPool()
   // the pool may be used while we replenish it
   while (m_pool.size() < 16)
   {
-    auto pages = allocPages(2);
-    m_pool.push_back(pages);
+    auto block = allocBlock();
+    m_pool.push_back(block);
   }
 }
 

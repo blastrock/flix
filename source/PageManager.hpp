@@ -104,7 +104,7 @@ PageManager<Allocator, CurLevel, Levels...>::PageManager()
 template <typename Allocator, typename CurLevel, typename... Levels>
 std::pair<PageManager<Allocator, CurLevel, Levels...>*, void*> PageManager<Allocator, CurLevel, Levels...>::makeNew()
 {
-  std::pair<void*, void*> memory = Allocator::kmalloc(sizeof(ThisLayout));
+  std::pair<void*, void*> memory = Allocator::kmalloc();
   return {new (memory.first) ThisLayout(), memory.second};
 }
 
@@ -133,7 +133,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
       return {nullptr, nullptr};
 
     // create it
-    std::pair<void*, void*> memory = Allocator::kmalloc(sizeof(NextLayout));
+    std::pair<void*, void*> memory = Allocator::kmalloc();
     nextLayout = new (memory.first) NextLayout();
     m_entries[index].p = true;
     m_entries[index].rw = true;
