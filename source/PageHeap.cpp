@@ -16,22 +16,15 @@ void PageHeap::init()
   m_heapStart = &_pageHeapBase;
 }
 
-std::vector<std::pair<void*, void*>> PageHeap::kmalloc(uint64_t size)
+std::pair<void*, void*> PageHeap::kmalloc(uint64_t size)
 {
-  std::vector<std::pair<uint64_t, void*>> items = allocPages(size/0x1000);
-  std::vector<std::pair<void*, void*>> ret;
-  ret.reserve(items.size());
-  std::transform(items.begin(), items.end(), std::back_inserter(ret),
-      [](const std::pair<uint64_t, void*>& item) ->
-          std::pair<void*, void*> {
-        return {pageToPtr(item.first), item.second};
-      });
-  return ret;
+  std::pair<uint64_t, void*> item = allocPages(size/0x1000);
+  return {pageToPtr(item.first), item.second};
 }
 
-std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
+std::pair<uint64_t, void*> PageHeap::allocPages(uint64_t nbPages)
 {
-  std::vector<std::pair<uint64_t, void*>> ret;
+  std::pair<uint64_t, void*> ret;
   unsigned int lastEmpty = -1;
   // if we are reentering, use pool
   if (m_allocating)
@@ -53,8 +46,7 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
 
       if (ok)
       {
-        for (unsigned int j = 0; j < nbPages && i+j < m_pool.size(); ++j)
-          ret.push_back(m_pool[i+j]);
+        ret = m_pool[i];
         m_pool.erase(m_pool.begin()+i, m_pool.begin()+i+nbPages);
         return ret;
       }
@@ -80,8 +72,9 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
 
     if (ok)
     {
-      for (unsigned int j = 0; j < nbPages && i+j < m_map.size(); ++j)
-        ret.push_back(allocPage(i+j));
+      ret = allocPage(i);
+      for (unsigned int j = 1; j < nbPages && i+j < m_map.size(); ++j)
+        allocPage(i+j);
       return ret;
     }
     else
@@ -97,8 +90,9 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::allocPages(uint64_t nbPages)
   if (lastEmpty == (unsigned int)-1)
     lastEmpty = m_map.size();
   m_map.resize(lastEmpty + nbPages);
-  for (unsigned int j = lastEmpty; j < m_map.size(); ++j)
-    ret.push_back(allocPage(j));
+  ret = allocPage(lastEmpty);
+  for (unsigned int j = lastEmpty+1; j < m_map.size(); ++j)
+    allocPage(j);
   return ret;
 }
 
@@ -144,7 +138,7 @@ void PageHeap::refillPool()
   while (m_pool.size() < 16)
   {
     auto pages = allocPages(2);
-    m_pool.insert(m_pool.end(), pages.begin(), pages.end());
+    m_pool.push_back(pages);
   }
 }
 

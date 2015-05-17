@@ -10,7 +10,7 @@ class PageHeap
   public:
     static void init();
 
-    static std::vector<std::pair<void*, void*>> kmalloc(uint64_t size);
+    static std::pair<void*, void*> kmalloc(uint64_t size);
     static void kfree(void* ptr);
 
   private:
@@ -21,7 +21,7 @@ class PageHeap
     static std::vector<std::pair<uint64_t, void*>> m_pool;
 
     static void* pageToPtr(uint64_t index);
-    static std::vector<std::pair<uint64_t, void*>> allocPages(uint64_t nbPages);
+    static std::pair<uint64_t, void*> allocPages(uint64_t nbPages);
     static std::pair<uint64_t, void*> allocPage(uint64_t index);
     static void refillPool();
 };

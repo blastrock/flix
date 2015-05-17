@@ -104,9 +104,8 @@ PageManager<Allocator, CurLevel, Levels...>::PageManager()
 template <typename Allocator, typename CurLevel, typename... Levels>
 std::pair<PageManager<Allocator, CurLevel, Levels...>*, void*> PageManager<Allocator, CurLevel, Levels...>::makeNew()
 {
-  std::vector<std::pair<void*, void*>> memory =
-    Allocator::kmalloc(sizeof(ThisLayout));
-  return {new (memory[0].first) ThisLayout(), memory[0].second};
+  std::pair<void*, void*> memory = Allocator::kmalloc(sizeof(ThisLayout));
+  return {new (memory.first) ThisLayout(), memory.second};
 }
 
 template <typename Allocator, typename CurLevel>
@@ -134,14 +133,13 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
       return {nullptr, nullptr};
 
     // create it
-    std::vector<std::pair<void*, void*>> memory =
-      Allocator::kmalloc(sizeof(NextLayout));
-    nextLayout = new (memory[0].first) NextLayout();
+    std::pair<void*, void*> memory = Allocator::kmalloc(sizeof(NextLayout));
+    nextLayout = new (memory.first) NextLayout();
     m_entries[index].p = true;
     m_entries[index].rw = true;
     m_entries[index].us = true;
     m_entries[index].base =
-      reinterpret_cast<uintptr_t>(memory[0].second) >> CurLevel::BASE_SHIFT;
+      reinterpret_cast<uintptr_t>(memory.second) >> CurLevel::BASE_SHIFT;
   }
 
   return m_nextLayouts[index]
