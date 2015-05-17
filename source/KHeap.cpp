@@ -83,7 +83,7 @@ void* KHeap::kmalloc(uint32_t size)
 
   Degf("heap enlarge");
 
-  // count last lock size if it's free
+  // count last block size if it's free
   uint32_t blockSize = block->getUsed() ? 0 : block->getSize();
   // asked size - last block size if it's free -> round up
   uint32_t neededPages = (size - blockSize + 0x1000-1) / 0x1000;

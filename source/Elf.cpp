@@ -1,4 +1,6 @@
 #include "Elf.hpp"
+#include "Task.hpp"
+#include "Debug.hpp"
 
 namespace elf
 {
@@ -62,27 +64,47 @@ bool checkHeader(const ElfHeader& hdr)
     && magic[3] == 'F';
 }
 
-bool exec(fs::Handle& f, PageDirectory& pd)
+bool exec(fs::Handle& f)
 {
+  Degf("Reading header");
   ElfHeader hdr;
   f.read(static_cast<void*>(&hdr), 0, sizeof(hdr));
 
   if (!checkHeader(hdr))
+  {
+    const auto& magic = hdr.e_ident;
+    Degf("%x %c%c%c", magic[0], magic[1], magic[2], magic[3]);
+    Degf("Invalid ELF header");
     return false;
+  }
 
   // TODO check arch type
 
   // TODO loop over segments
+  Degf("Reading program header");
   ElfProgramHeader prgHdr;
   f.read(&prgHdr, hdr.e_phoff, sizeof(prgHdr));
 
+  auto tm = TaskManager::get();
+  auto& task = tm->getCurrentTask();
+  auto& pd = task.pageDirectory;
+
+  Degf("Mapping segment");
   void* vaddr = reinterpret_cast<char*>(prgHdr.p_vaddr);
   pd.mapPage(vaddr);
 
-  std::vector<char> buf(prgHdr.p_filesz);
+  Degf("Loading segment");
   f.read(static_cast<char*>(vaddr), prgHdr.p_offset, prgHdr.p_filesz);
 
-  return true;
+  // reset stack pointer to the top of the stack
+  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+
+  task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
+
+  // TODO clear registers
+
+  Degf("Jumping");
+  tm->rescheduleSelf();
 }
 
 }
