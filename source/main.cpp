@@ -81,7 +81,7 @@ extern "C" int kmain(void* mboot)
 
   // first we need a heap (which is preallocated)
   Degf("Heap init");
-  KHeap::init();
+  KHeap::get().init();
 
   // second we need to prepare the heap which will be used for pagination
   Degf("PageHeap init");

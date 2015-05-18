@@ -4,9 +4,55 @@
 #include "Symbols.hpp"
 #include "Debug.hpp"
 
-uint8_t* KHeap::m_heapStart;
-uint8_t* KHeap::m_heapEnd;
-KHeap::HeapBlock* KHeap::m_lastBlock;
+static KHeap g_heap;
+
+class KHeap::HeapBlock
+{
+  public:
+    uint8_t* getData()
+    {
+      return &data;
+    }
+
+    uint32_t getSize()
+    {
+      return state.sizeUpper << 2;
+    }
+    void setSize(uint32_t asize)
+    {
+      assert(asize % 4 == 0);
+      state.sizeUpper = asize >> 2;
+    }
+
+    bool getUsed()
+    {
+      return state.used;
+    }
+    void setUsed(bool used)
+    {
+      state.used = used;
+    }
+
+  private:
+    struct State
+    {
+      unsigned used : 1;
+      unsigned avl : 1;
+      unsigned sizeUpper : 30;
+    };
+
+    union
+    {
+      State state;
+      uint32_t size;
+    };
+    uint8_t data;
+} __attribute__((packed));
+
+KHeap& KHeap::get()
+{
+  return g_heap;
+}
 
 void KHeap::init()
 {
@@ -156,12 +202,12 @@ extern "C"
 
 void free(void* ptr)
 {
-  KHeap::kfree(ptr);
+  g_heap.kfree(ptr);
 }
 
 void* malloc(size_t size)
 {
-  return KHeap::kmalloc(size);
+  return g_heap.kmalloc(size);
 }
 
 }
