@@ -163,7 +163,11 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
 
   // if not present
   if (!nextLayout)
+  {
+    assert(!m_entries[index].p
+        && "Incoherence between layouts and page directory");
     return {nullptr, nullptr};
+  }
 
   return m_nextLayouts[index]
     ->template getEntryImpl<RevLevel-1>(address);
@@ -184,6 +188,8 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
   // if not present
   if (!nextLayout)
   {
+    assert(!m_entries[index].p
+        && "Incoherence between layouts and page directory");
     // create it
     std::pair<void*, void*> memory = Allocator::kmalloc();
     nextLayout = new (memory.first) NextLayout();

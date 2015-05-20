@@ -16,6 +16,9 @@ PageDirectory* PageDirectory::initKernelDirectory()
 }
 
 static const auto PUBLIC_RW = [](auto& e) { e.us = true; e.rw = true; };
+static const auto PUBLIC_RO = [](auto& e) { e.us = true; e.rw = false; };
+static const auto PRIVATE_RW = [](auto& e) { e.us = false; e.rw = true; };
+static const auto PRIVATE_RO = [](auto& e) { e.us = false; e.rw = false; };
 
 // This function reuses the kernel's page directory for the upper adresses
 void PageDirectory::mapKernel()
@@ -44,9 +47,8 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(0xB8000, PUBLIC_RW);
     page->p = true;
-    page->us = true;
-    page->rw = true;
     page->base = 0xB8000 >> 12;
+    PUBLIC_RW(*page);
   }
 
   // mapping .text
@@ -55,11 +57,10 @@ void PageDirectory::initWithDefaultPaging()
   uintptr_t end = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
   while (cur < end)
   {
-    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
+    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RO);
     page->p = true;
-    page->us = true;
-    page->rw = true;
     page->base = cur >> 12;
+    PUBLIC_RO(*page);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -73,9 +74,8 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
     page->p = true;
-    page->us = true;
-    page->rw = true;
     page->base = cur >> 12;
+    PUBLIC_RW(*page);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -89,9 +89,8 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
     page->p = true;
-    page->us = true;
-    page->rw = true;
     page->base = cur >> 12;
+    PUBLIC_RW(*page);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -105,9 +104,8 @@ void PageDirectory::initWithDefaultPaging()
   {
     PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
     page->p = true;
-    page->us = true;
-    page->rw = true;
     page->base = cur >> 12;
+    PUBLIC_RW(*page);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -137,8 +135,7 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
   assert(!page->p && "Page already mapped");
   // TODO move this, only system pages may be mapped like this, which is bad
   page->p = true;
-  page->us = true;
-  page->rw = true;
+  PUBLIC_RW(*page);
   page->base = ipage;
 }
 
@@ -158,7 +155,7 @@ void PageDirectory::unmapPage(void* vaddr)
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr);
-  assert(page->p);
+  assert(page && page->p && "Unmapping page that was not mapped");
   page->p = false;
 
   Memory::setPageFree(ivaddr / 0x1000);
