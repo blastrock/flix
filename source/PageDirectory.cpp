@@ -88,7 +88,8 @@ void PageDirectory::initWithDefaultPaging()
   // mapping page heap
   vcur = reinterpret_cast<uintptr_t>(Symbols::getPageHeapBase());
   cur = 0xa00000;
-  end = cur + 0x200000;
+  // only first 32 pages are mapped
+  end = cur + 32 * 0x1000;
   while (cur < end)
   {
     PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
