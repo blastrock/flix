@@ -66,6 +66,8 @@ void PageDirectory::initWithDefaultPaging()
     page->base = cur >> 12;
     PUBLIC_RO(*page);
 
+    Memory::setPageUsed(cur / 0x1000);
+
     cur += 0x1000;
     vcur += 0x1000;
   }
@@ -80,6 +82,8 @@ void PageDirectory::initWithDefaultPaging()
     page->p = true;
     page->base = cur >> 12;
     PUBLIC_RW(*page);
+
+    Memory::setPageUsed(cur / 0x1000);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -97,6 +101,8 @@ void PageDirectory::initWithDefaultPaging()
     page->base = cur >> 12;
     PUBLIC_RW(*page);
 
+    Memory::setPageUsed(cur / 0x1000);
+
     cur += 0x1000;
     vcur += 0x1000;
   }
@@ -111,6 +117,8 @@ void PageDirectory::initWithDefaultPaging()
     page->p = true;
     page->base = cur >> 12;
     PUBLIC_RW(*page);
+
+    Memory::setPageUsed(cur / 0x1000);
 
     cur += 0x1000;
     vcur += 0x1000;
@@ -139,7 +147,7 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 {
   assert(g_pagingReady);
 
-  //Degf("Mapping %p to %x", vaddr, ipage);
+  Degf("Mapping %p to %x", vaddr, ipage);
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr, PUBLIC_RW);
