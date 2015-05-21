@@ -15,22 +15,25 @@ void printStackTrace(uint64_t stackPointer)
   void** stackFrame = reinterpret_cast<void**>(stackPointer);
 
   Degf("Stack trace:");
-  while (stackFrame[1])
+  while (true)
   {
+    if (!PageDirectory::getCurrent()->isPageMapped(stackFrame))
+    {
+      Degf("Invalid pointer: %p", stackFrame);
+      return;
+    }
+
+    if (!stackFrame[1])
+      break;
+
     Degf("%p", stackFrame[1]);
     if (stackFrame >= stackFrame[0])
     {
-      Degf("stack fail");
+      Degf("Stack going backward, aborting");
       return;
     }
 
     stackFrame = static_cast<void**>(stackFrame[0]);
-
-    if (!PageDirectory::getCurrent()->isPageMapped(stackFrame))
-    {
-      Degf("Invalid stack pointer");
-      return;
-    }
   }
 }
 
