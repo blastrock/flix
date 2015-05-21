@@ -30,6 +30,7 @@ std::pair<uint64_t, void*> PageHeap::allocBlock()
   // if we are reentering, use pool
   if (m_allocating)
   {
+    Degf("Nested page allocation, taking from pool");
     assert(!m_pool.empty());
 
     std::pair<uint64_t, void*> ret = m_pool.back();
@@ -65,7 +66,7 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 
   void* phys;
   // first 32 pages are always mapped
-  if (index * BLOCK_SIZE > 32)
+  if (index * BLOCK_SIZE >= 32)
   {
     PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index), &phys);
     for (unsigned n = 1; n < BLOCK_SIZE; ++n)
@@ -108,7 +109,7 @@ void PageHeap::kfree(void* ptr)
   assert(m_map[index]);
 
   // first 32 pages are always mapped
-  if (index > 32)
+  if (index >= 32)
     PageDirectory::getKernelDirectory()->unmapPage(ptr);
   m_map[index] = false;
 }
