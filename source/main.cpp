@@ -97,6 +97,21 @@ extern "C" int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
+  Degf("Setting up TSS");
+  TaskManager::setUpTss();
+
+  Degf("Initializing TR");
+  DescTables::initTr();
+
+  // then we load our module to have a file system
+  Degf("Loading module");
+  mbl.handle(mboot);
+
+  Degf("Initializing syscall vector");
+  sys::initSysCalls();
+
+  Timer::init(1);
+
   auto tm = TaskManager::get();
 
   {
@@ -129,21 +144,6 @@ extern "C" int kmain(void* mboot)
     tm->addTask(std::move(task));
   }
 #endif
-
-  Degf("Setting up TSS");
-  TaskManager::setUpTss();
-
-  Degf("Initializing TR");
-  DescTables::initTr();
-
-  // then we load our module to have a file system
-  Degf("Loading module");
-  mbl.handle(mboot);
-
-  Degf("Initializing syscall vector");
-  sys::initSysCalls();
-
-  Timer::init(1);
 
   Degf("End of kernel");
 
