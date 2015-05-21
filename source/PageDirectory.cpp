@@ -35,6 +35,10 @@ void PageDirectory::mapKernel()
       PUBLIC_RW);
 }
 
+#ifndef NDEBUG
+static bool g_pagingReady = false;
+#endif
+
 void PageDirectory::initWithDefaultPaging()
 {
   std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
@@ -116,6 +120,10 @@ static PageDirectory* g_currentPageDirectory = 0;
 
 void PageDirectory::use()
 {
+#ifndef NDEBUG
+  g_pagingReady = true;
+#endif
+
   Degf("Changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
   g_currentPageDirectory = this;
@@ -128,6 +136,8 @@ PageDirectory* PageDirectory::getCurrent()
 
 void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 {
+  assert(g_pagingReady);
+
   //Degf("Mapping %p to %x", vaddr, ipage);
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
@@ -141,6 +151,8 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
 
 void PageDirectory::mapPage(void* vaddr, void** paddr)
 {
+  assert(g_pagingReady);
+
   uintptr_t page = Memory::getFreePage();
 
   assert(page != static_cast<uintptr_t>(-1));
@@ -152,6 +164,8 @@ void PageDirectory::mapPage(void* vaddr, void** paddr)
 
 void PageDirectory::unmapPage(void* vaddr)
 {
+  assert(g_pagingReady);
+
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
 
   PageTableEntry* page = m_manager->getPage(ivaddr);
@@ -163,6 +177,8 @@ void PageDirectory::unmapPage(void* vaddr)
 
 bool PageDirectory::isPageMapped(void* vaddr)
 {
+  assert(g_pagingReady);
+
   uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
   PageTableEntry* page = m_manager->getPage(ivaddr);
   return page && page->p;

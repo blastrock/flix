@@ -116,8 +116,7 @@ void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
     return;
 
   for (uint64_t page = entry->base_addr / 0x1000,
-      // TODO shouldn't we ceil() this?
-      lastPage = page + entry->length / 0x1000;
+      lastPage = page + (entry->length + 0xFFF) / 0x1000;
       page < lastPage;
       ++page)
     Memory::setPageUsed(page);

@@ -51,7 +51,7 @@ void InterruptHandler::handle(InterruptState* s)
         Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
         Degf("Fault on %s", s->errCode & 2 ? "write" : "read");
         Degf("Access was %s",
-            s->errCode & 4 ? "unpriviledged" : "priviledged");
+            s->errCode & 4 ? "unprivileged" : "privileged");
         Degf("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
         {
           uint64_t address;
