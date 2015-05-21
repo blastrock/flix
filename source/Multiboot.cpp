@@ -15,27 +15,35 @@ void MultibootLoader::handle(void* vmboot, bool mem)
   //TagsHeader* header = reinterpret_cast<TagsHeader*>(vmboot);
 
   char* mboot = reinterpret_cast<char*>(vmboot);
+  bool memFound = false;
 
   for (Tag* tag = reinterpret_cast<Tag*>(mboot + sizeof(TagsHeader));
       tag->type != 0;
       tag = ptrAlignSup(ptrAdd(tag, tag->size), 8))
-  {
     if (mem)
     {
-      if (tag->type != 6)
-        continue;
-      else
-      {
-        handleMemoryMap(reinterpret_cast<MemoryMap*>(tag));
-        return;
-      }
+      if (tag->type == 6)
+        memFound = true;
+      prehandleTag(tag);
     }
     else
       handleTag(tag);
-  }
 
-  if (mem)
+  if (mem && !memFound)
     PANIC("Memory tag not found in multiboot information");
+}
+
+void MultibootLoader::prehandleTag(Tag* tag)
+{
+  switch (tag->type)
+  {
+    case 3:
+      prehandleModule(reinterpret_cast<Module*>(tag));
+      break;
+    case 6:
+      prehandleMemoryMap(reinterpret_cast<MemoryMap*>(tag));
+      break;
+  }
 }
 
 void MultibootLoader::handleTag(Tag* tag)
@@ -48,27 +56,46 @@ void MultibootLoader::handleTag(Tag* tag)
   }
 }
 
-void MultibootLoader::handleModule(Module* mod)
+template <typename F>
+char* MultibootLoader::handleModule(Module* mod, const F& cb)
 {
-  if (moduleRead)
-    PANIC("More than one module specified on boot");
-
   //const char* name = reinterpret_cast<char*>(mod) + sizeof(Module);
 
   char* basePtr = static_cast<char*>(Symbols::getStackBase());
   char* curPtr = basePtr;
   for (uint64_t page = mod->mod_start / 0x1000,
-      lastPage = page + (mod->mod_end + 0xFFF) / 0x1000;
+      lastPage = (mod->mod_end + 0xFFF) / 0x1000;
       page < lastPage;
       ++page, curPtr += 0x1000)
-    PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page);
+    cb(curPtr, page);
+
+  return basePtr;
+}
+
+void MultibootLoader::prehandleModule(Module* mod)
+{
+  handleModule(mod,
+      [](auto, auto page) {
+        Memory::setPageUsed(page);
+      });
+}
+
+void MultibootLoader::handleModule(Module* mod)
+{
+  if (_moduleRead)
+    PANIC("More than one module specified on boot");
+
+  char* basePtr = handleModule(mod,
+      [](auto curPtr, auto page) {
+        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page);
+      });
 
   fs::setRoot(readArchive(basePtr));
 
-  moduleRead = true;
+  _moduleRead = true;
 }
 
-void MultibootLoader::handleMemoryMap(MemoryMap* map)
+void MultibootLoader::prehandleMemoryMap(MemoryMap* map)
 {
   MemoryMapEntry* entry = reinterpret_cast<MemoryMapEntry*>(
       reinterpret_cast<char*>(map)+sizeof(MemoryMap));

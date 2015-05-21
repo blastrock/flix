@@ -56,14 +56,19 @@ class MultibootLoader
       uint32_t mod_end;
     } __attribute__((packed));
 
+    bool _moduleRead;
+
     void handle(void* vmboot, bool mem);
 
     void handleTag(Tag* tag);
+    void prehandleTag(Tag* tag);
+    void prehandleModule(Module* mod);
     void handleModule(Module* mod);
-    void handleMemoryMap(MemoryMap* map);
+    void prehandleMemoryMap(MemoryMap* map);
     void handleMemoryMapEntry(MemoryMapEntry* entry);
 
-    bool moduleRead;
+    template <typename F>
+    char* handleModule(Module* mod, const F& cb);
 };
 
 #endif /* MULTIBOOT_HPP */
