@@ -12,6 +12,7 @@
 #include "Syscall.hpp"
 #include "Fs.hpp"
 #include "Elf.hpp"
+#include "Symbols.hpp"
 
 // needed by libkcxx
 extern "C" void panic_message(const char* msg)
@@ -29,6 +30,11 @@ void segfault()
   *(volatile int*)0 = 0;
 }
 
+void segfault2()
+{
+  *Symbols::getKernelVTextStart() = 10;
+}
+
 uint8_t getCpl()
 {
   uint16_t var;
@@ -43,6 +49,7 @@ void loop()
 {
   for (unsigned int i = 0; i < 800; ++i)
     Degf("stuff %d %d", getCpl(), i++);
+  segfault2();
   sys::call(sys::exit);
 }
 

@@ -95,11 +95,13 @@ start:
   ; setup long mode pagination
   mov eax, Pdpt
   bts eax, 0
+  bts eax, 1
   mov [Pml4], eax
   mov [Pml4 + 0xFF8], eax
 
   mov eax, Pd
   bts eax, 0
+  bts eax, 1
   ; lower memory is identity mapped
   mov [Pdpt], eax
   ; map text, stack and heaps
@@ -141,9 +143,10 @@ start:
   bts eax, 8
   wrmsr
 
-  ; Enable Paging
+  ; Enable Paging and Write Protection
   mov eax, cr0
   bts eax, 31
+  bts eax, 16
   mov cr0, eax
 
   jmp 0x08:.LenableLongSeg
