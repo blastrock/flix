@@ -6,16 +6,16 @@
 class Symbols
 {
   public:
-    static void* getPml4();
+    static char* getPml4();
     static uintptr_t getKernelBootstrapStart();
     static uintptr_t getKernelTextStart();
-    static void* getKernelVTextStart();
-    static void* getKernelVTextEnd();
-    static void* getKernelVBssEnd();
-    static void* getVirtualBase();
-    static void* getStackBase();
-    static void* getPageHeapBase();
-    static void* getHeapBase();
+    static char* getKernelVTextStart();
+    static char* getKernelVTextEnd();
+    static char* getKernelVBssEnd();
+    static char* getVirtualBase();
+    static char* getStackBase();
+    static char* getPageHeapBase();
+    static char* getHeapBase();
 };
 
 #endif /* SYMBOLS_HPP */

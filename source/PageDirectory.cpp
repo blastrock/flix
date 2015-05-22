@@ -45,84 +45,36 @@ void PageDirectory::initWithDefaultPaging()
   m_manager = pm.first;
 
   m_directory.value = 0;
-  m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
+  m_directory.bitfield.base =
+    reinterpret_cast<uintptr_t>(pm.second) >> BASE_SHIFT;
 
   // map VGA
-  {
-    PageTableEntry* page = m_manager->getPage(0xB8000, PUBLIC_RW);
-    page->p = true;
-    page->base = 0xB8000 >> 12;
-    PUBLIC_RW(*page);
-  }
+  mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000);
+  Memory::setPageUsed(0xB8000 / 0x1000);
 
   // mapping .text
-  uintptr_t vcur = reinterpret_cast<uintptr_t>(Symbols::getKernelVTextStart());
-  uintptr_t cur = reinterpret_cast<uintptr_t>(Symbols::getKernelTextStart());
-  uintptr_t vend = reinterpret_cast<uintptr_t>(Symbols::getKernelVBssEnd());
-  while (vcur < vend)
-  {
-    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RO);
-    page->p = true;
-    page->base = cur >> 12;
-    PUBLIC_RO(*page);
-
-    Memory::setPageUsed(cur / 0x1000);
-
-    cur += 0x1000;
-    vcur += 0x1000;
-  }
+  mapRangeTo(
+      Symbols::getKernelVTextStart(),
+      Symbols::getKernelVBssEnd(),
+      Symbols::getKernelTextStart());
 
   // mapping stack
-  cur = 0x800000 + 0x200000 - 0x4000;
-  uintptr_t end = cur + 0x4000;
-  vcur = reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000;
-  while (cur < end)
-  {
-    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
-    page->p = true;
-    page->base = cur >> 12;
-    PUBLIC_RW(*page);
-
-    Memory::setPageUsed(cur / 0x1000);
-
-    cur += 0x1000;
-    vcur += 0x1000;
-  }
+  mapRangeTo(
+      Symbols::getStackBase() - 0x4000,
+      Symbols::getStackBase(),
+      0x800000 + 0x200000 - 0x4000);
 
   // mapping page heap
-  vcur = reinterpret_cast<uintptr_t>(Symbols::getPageHeapBase());
-  cur = 0xa00000;
-  // only first 32 pages are mapped
-  end = cur + 32 * 0x1000;
-  while (cur < end)
-  {
-    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
-    page->p = true;
-    page->base = cur >> 12;
-    PUBLIC_RW(*page);
-
-    Memory::setPageUsed(cur / 0x1000);
-
-    cur += 0x1000;
-    vcur += 0x1000;
-  }
+  mapRangeTo(
+      Symbols::getPageHeapBase(),
+      Symbols::getPageHeapBase() + 32*0x1000,
+      0xa00000);
 
   // mapping heap
-  vcur = reinterpret_cast<uintptr_t>(Symbols::getHeapBase());
-  cur = 0xc00000;
-  end = cur + 0x200000;
-  while (cur < end)
-  {
-    PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RW);
-    page->p = true;
-    page->base = cur >> 12;
-    PUBLIC_RW(*page);
-
-    Memory::setPageUsed(cur / 0x1000);
-
-    cur += 0x1000;
-    vcur += 0x1000;
-  }
+  mapRangeTo(
+      Symbols::getHeapBase(),
+      Symbols::getHeapBase() + 0x200000,
+      0xc00000);
 }
 
 static PageDirectory* g_currentPageDirectory = 0;
@@ -143,12 +95,9 @@ PageDirectory* PageDirectory::getCurrent()
   return g_currentPageDirectory;
 }
 
-void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
+void PageDirectory::mapPageTo(uintptr_t ivaddr, uintptr_t ipage)
 {
-  assert(g_pagingReady);
-
-  Degf("Mapping %p to %x", vaddr, ipage);
-  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
+  Degf("Mapping %x to %x", ivaddr, ipage << BASE_SHIFT);
 
   PageTableEntry* page = m_manager->getPage(ivaddr, PUBLIC_RW);
   assert(!page->p && "Page already mapped");
@@ -156,6 +105,34 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
   page->p = true;
   PUBLIC_RW(*page);
   page->base = ipage;
+}
+
+void PageDirectory::mapAddrTo(void* ivaddr, uintptr_t ipaddr)
+{
+  mapPageTo(reinterpret_cast<uintptr_t>(ivaddr), ipaddr >> BASE_SHIFT);
+
+  Memory::setPageUsed(ipaddr >> BASE_SHIFT);
+}
+
+void PageDirectory::mapRangeTo(void* vastart, void* vaend, uintptr_t pastart)
+{
+  uintptr_t ivastart = reinterpret_cast<uintptr_t>(vastart);
+  uintptr_t ivaend = reinterpret_cast<uintptr_t>(vaend);
+
+  while (ivastart < ivaend)
+  {
+    mapAddrTo(reinterpret_cast<void*>(ivastart), pastart);
+
+    ivastart += 0x1000;
+    pastart += 0x1000;
+  }
+}
+
+void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
+{
+  assert(g_pagingReady);
+
+  mapPageTo(reinterpret_cast<uintptr_t>(vaddr), ipage);
 }
 
 void PageDirectory::mapPage(void* vaddr, void** paddr)

@@ -8,7 +8,7 @@
 class PageDirectory
 {
   public:
-    static constexpr uint8_t ADDRESSING_BITS = 52;
+    static constexpr uint8_t BASE_SHIFT = 12;
 
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;
@@ -40,7 +40,7 @@ class PageDirectory
     struct PageTableEntry
     {
       static constexpr uint8_t ADD_BITS = 9;
-      static constexpr uint8_t BASE_SHIFT = 12;
+      static constexpr uint8_t BASE_SHIFT = ::PageDirectory::BASE_SHIFT;
 
       unsigned long long p    : 1; ///< Present
       unsigned long long rw   : 1; ///< Read/Write
@@ -68,7 +68,7 @@ class PageDirectory
       struct CR3Bitfield
       {
         static constexpr uint8_t ADD_BITS = 0;
-        static constexpr uint8_t BASE_SHIFT = 12;
+        static constexpr uint8_t BASE_SHIFT = ::PageDirectory::BASE_SHIFT;
         static constexpr uint8_t p = 1;
 
         unsigned long long res  : 3; ///< Reserved
@@ -95,6 +95,9 @@ class PageDirectory
     X86_64PageManager* m_manager;
 
     void initWithDefaultPaging();
+    void mapRangeTo(void* vastart, void* vaend, uintptr_t pastart);
+    void mapAddrTo(void* ivaddr, uintptr_t ipaddr);
+    void mapPageTo(uintptr_t ivaddr, uintptr_t ipage);
 };
 
 inline PageDirectory::PageDirectory() :

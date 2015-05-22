@@ -58,7 +58,7 @@ void KHeap::init()
 {
   uint32_t initialSize = 0x200000;
 
-  m_heapStart = static_cast<uint8_t*>(Symbols::getHeapBase());
+  m_heapStart = Symbols::getHeapBase();
   m_heapEnd = m_heapStart + initialSize;
   HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
 
@@ -87,7 +87,7 @@ void* KHeap::kmalloc(uint32_t size)
   size = intAlignSup(size, 4);
 
   HeapBlock* block;
-  uint8_t* ptr = m_heapStart;
+  char* ptr = m_heapStart;
   while (ptr < m_heapEnd)
   {
     block = reinterpret_cast<HeapBlock*>(ptr);
@@ -148,7 +148,7 @@ void* KHeap::kmalloc(uint32_t size)
       block = ptrAdd(m_lastBlock, m_lastBlock->getSize());
 
       assert(reinterpret_cast<uint64_t>(block) % 0x1000 == 0);
-      assert(reinterpret_cast<uint8_t*>(block) < m_heapEnd);
+      assert(reinterpret_cast<char*>(block) < m_heapEnd);
 
       // set size to 0, it will be updated below
       block->setSize(0);

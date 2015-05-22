@@ -18,8 +18,8 @@ class KHeap
   private:
     class HeapBlock;
 
-    uint8_t* m_heapStart;
-    uint8_t* m_heapEnd;
+    char* m_heapStart;
+    char* m_heapEnd;
     HeapBlock* m_lastBlock;
 
     std::pair<HeapBlock*, HeapBlock*> splitBlock(HeapBlock* block,

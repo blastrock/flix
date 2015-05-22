@@ -1,18 +1,18 @@
 #include "Symbols.hpp"
 #include <cstdint>
 
-extern "C" uint8_t Pml4;
-extern "C" uint8_t _kernelBootstrapStart;
-extern "C" uint8_t _kernelTextStart;
-extern "C" uint8_t _kernelVTextStart;
-extern "C" uint8_t _kernelVTextEnd;
-extern "C" uint8_t _kernelVBssEnd;
-extern "C" uint8_t VIRTUAL_BASE;
-extern "C" uint8_t _stackBase;
-extern "C" uint8_t _pageHeapBase;
-extern "C" uint8_t _heapBase;
+extern "C" char Pml4;
+extern "C" char _kernelBootstrapStart;
+extern "C" char _kernelTextStart;
+extern "C" char _kernelVTextStart;
+extern "C" char _kernelVTextEnd;
+extern "C" char _kernelVBssEnd;
+extern "C" char VIRTUAL_BASE;
+extern "C" char _stackBase;
+extern "C" char _pageHeapBase;
+extern "C" char _heapBase;
 
-void* Symbols::getPml4()
+char* Symbols::getPml4()
 {
   return &Pml4;
 }
@@ -27,37 +27,37 @@ uintptr_t Symbols::getKernelTextStart()
   return reinterpret_cast<uintptr_t>(&_kernelTextStart);
 }
 
-void* Symbols::getKernelVTextStart()
+char* Symbols::getKernelVTextStart()
 {
   return &_kernelVTextStart;
 }
 
-void* Symbols::getKernelVTextEnd()
+char* Symbols::getKernelVTextEnd()
 {
   return &_kernelVTextStart;
 }
 
-void* Symbols::getKernelVBssEnd()
+char* Symbols::getKernelVBssEnd()
 {
   return &_kernelVBssEnd;
 }
 
-void* Symbols::getVirtualBase()
+char* Symbols::getVirtualBase()
 {
   return &VIRTUAL_BASE;
 }
 
-void* Symbols::getStackBase()
+char* Symbols::getStackBase()
 {
   return &_stackBase;
 }
 
-void* Symbols::getPageHeapBase()
+char* Symbols::getPageHeapBase()
 {
   return &_pageHeapBase;
 }
 
-void* Symbols::getHeapBase()
+char* Symbols::getHeapBase()
 {
   return &_heapBase;
 }
