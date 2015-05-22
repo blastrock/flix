@@ -55,12 +55,22 @@ void PageDirectory::initWithDefaultPaging()
   // mapping .text
   mapRangeTo(
       Symbols::getKernelVTextStart(),
-      Symbols::getKernelVBssEnd(),
+      Symbols::getKernelVTextEnd(),
       Symbols::getKernelTextStart());
   Memory::setRangeUsed(
       Symbols::getKernelTextStart() / 0x1000,
       (Symbols::getKernelTextStart() +
-       Symbols::getKernelVBssEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+       Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+
+  // mapping .data and .bss
+  mapRangeTo(
+      Symbols::getKernelVDataStart(),
+      Symbols::getKernelVBssEnd(),
+      Symbols::getKernelDataStart());
+  Memory::setRangeUsed(
+      Symbols::getKernelDataStart() / 0x1000,
+      (Symbols::getKernelDataStart() +
+       Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart()) / 0x1000);
 
   // mapping stack
   mapRangeTo(

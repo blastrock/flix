@@ -50,6 +50,7 @@ SECTIONS
   .data ALIGN(0x1000) :
     AT(ADDR(.data) - SHIFT)
   {
+    _kernelDataStart = ABSOLUTE(. - SHIFT);
     _kernelVDataStart = ABSOLUTE(.);
     *(.data*)
     *(.rodata*)

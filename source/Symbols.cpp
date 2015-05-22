@@ -2,62 +2,33 @@
 #include <cstdint>
 
 extern "C" char Pml4;
-extern "C" char _kernelBootstrapStart;
-extern "C" char _kernelTextStart;
-extern "C" char _kernelVTextStart;
-extern "C" char _kernelVTextEnd;
-extern "C" char _kernelVBssEnd;
-extern "C" char VIRTUAL_BASE;
-extern "C" char _stackBase;
-extern "C" char _pageHeapBase;
-extern "C" char _heapBase;
-
 char* Symbols::getPml4()
 {
   return &Pml4;
 }
 
-uintptr_t Symbols::getKernelBootstrapStart()
-{
-  return reinterpret_cast<uintptr_t>(&_kernelBootstrapStart);
-}
+#define DECLARE_VIRT_SYMBOL(sym, capsym) \
+  extern "C" char _##sym; \
+  char* Symbols::get##capsym() \
+  { \
+    return &_##sym; \
+  }
+#define DECLARE_PHYS_SYMBOL(sym, capsym) \
+  extern "C" char _##sym; \
+  uintptr_t Symbols::get##capsym() \
+  { \
+    return reinterpret_cast<uintptr_t>(&_##sym); \
+  }
 
-uintptr_t Symbols::getKernelTextStart()
-{
-  return reinterpret_cast<uintptr_t>(&_kernelTextStart);
-}
+DECLARE_PHYS_SYMBOL(kernelBootstrapStart, KernelBootstrapStart)
+DECLARE_PHYS_SYMBOL(kernelTextStart, KernelTextStart)
+DECLARE_PHYS_SYMBOL(kernelDataStart, KernelDataStart)
 
-char* Symbols::getKernelVTextStart()
-{
-  return &_kernelVTextStart;
-}
-
-char* Symbols::getKernelVTextEnd()
-{
-  return &_kernelVTextStart;
-}
-
-char* Symbols::getKernelVBssEnd()
-{
-  return &_kernelVBssEnd;
-}
-
-char* Symbols::getVirtualBase()
-{
-  return &VIRTUAL_BASE;
-}
-
-char* Symbols::getStackBase()
-{
-  return &_stackBase;
-}
-
-char* Symbols::getPageHeapBase()
-{
-  return &_pageHeapBase;
-}
-
-char* Symbols::getHeapBase()
-{
-  return &_heapBase;
-}
+DECLARE_VIRT_SYMBOL(kernelVTextStart, KernelVTextStart)
+DECLARE_VIRT_SYMBOL(kernelVTextEnd, KernelVTextEnd);
+DECLARE_VIRT_SYMBOL(kernelVDataStart, KernelVDataStart);
+DECLARE_VIRT_SYMBOL(kernelVDataEnd, KernelVDataEnd);
+DECLARE_VIRT_SYMBOL(kernelVBssEnd, KernelVBssEnd);
+DECLARE_VIRT_SYMBOL(stackBase, StackBase);
+DECLARE_VIRT_SYMBOL(pageHeapBase, PageHeapBase);
+DECLARE_VIRT_SYMBOL(heapBase, HeapBase);
