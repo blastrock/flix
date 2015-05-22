@@ -96,14 +96,17 @@ bool exec(fs::Handle& f)
   Degf("Loading segment");
   f.read(static_cast<char*>(vaddr), prgHdr.p_offset, prgHdr.p_filesz);
 
-  // reset stack pointer to the top of the stack
-  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+  Degf("Allocating new stack");
+  pd.mapPage(reinterpret_cast<char*>(0xffffffff00000000),
+      PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
+  task.context.rsp = 0xffffffff00000000 + 0x1000;
 
   task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
 
   // TODO clear registers
 
   Degf("Jumping");
+  TaskManager::get()->downgradeCurrentTask();
   tm->rescheduleSelf();
 }
 

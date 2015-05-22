@@ -47,6 +47,7 @@ public:
   void addTask(Task&& t);
   Task newKernelTask();
   Task newUserTask();
+  void downgradeCurrentTask();
   void terminateCurrentTask();
 
   void saveCurrentTask(const Task::Context& t);

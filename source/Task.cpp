@@ -69,6 +69,14 @@ Task TaskManager::newUserTask()
   return task;
 }
 
+void TaskManager::downgradeCurrentTask()
+{
+  assert(_currentTask < _tasks.size());
+  Task& task = _tasks[_currentTask];
+  task.context.cs = 0x1B;
+  task.context.ss = 0x23;
+}
+
 void TaskManager::saveCurrentTask(const Task::Context& ctx)
 {
   Degf("Saving task %d with rip %x and rsp %x", _currentTask, ctx.rip, ctx.rsp);
