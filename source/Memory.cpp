@@ -39,6 +39,13 @@ void Memory::setPageUsed(uintptr_t page)
     g_frames.resize(intAlignSup(page+1, 16));
 
   assert(g_frames.size() > page);
+  assert(!g_frames[page]);
 
   g_frames[page] = true;
+}
+
+void Memory::setRangeUsed(uintptr_t from, uintptr_t to)
+{
+  for (; from < to; ++from)
+    setPageUsed(from);
 }

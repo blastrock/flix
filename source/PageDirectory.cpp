@@ -57,24 +57,37 @@ void PageDirectory::initWithDefaultPaging()
       Symbols::getKernelVTextStart(),
       Symbols::getKernelVBssEnd(),
       Symbols::getKernelTextStart());
+  Memory::setRangeUsed(
+      Symbols::getKernelTextStart() / 0x1000,
+      (Symbols::getKernelTextStart() +
+       Symbols::getKernelVBssEnd() - Symbols::getKernelVTextStart()) / 0x1000);
 
   // mapping stack
   mapRangeTo(
       Symbols::getStackBase() - 0x4000,
       Symbols::getStackBase(),
       0x800000 + 0x200000 - 0x4000);
+  Memory::setRangeUsed(
+      (0x800000 + 0x200000 - 0x4000) / 0x1000,
+      0x4000 / 0x1000);
 
   // mapping page heap
   mapRangeTo(
       Symbols::getPageHeapBase(),
       Symbols::getPageHeapBase() + 32*0x1000,
       0xa00000);
+  Memory::setRangeUsed(
+      0xa00000 / 0x1000,
+      (0xa00000 + 32*0x1000) / 0x1000);
 
   // mapping heap
   mapRangeTo(
       Symbols::getHeapBase(),
       Symbols::getHeapBase() + 0x200000,
       0xc00000);
+  Memory::setRangeUsed(
+      0xc00000 / 0x1000,
+      (0xc00000 + 0x200000) / 0x1000);
 }
 
 static PageDirectory* g_currentPageDirectory = 0;
@@ -110,8 +123,6 @@ void PageDirectory::mapPageTo(uintptr_t ivaddr, uintptr_t ipage)
 void PageDirectory::mapAddrTo(void* ivaddr, uintptr_t ipaddr)
 {
   mapPageTo(reinterpret_cast<uintptr_t>(ivaddr), ipaddr >> BASE_SHIFT);
-
-  Memory::setPageUsed(ipaddr >> BASE_SHIFT);
 }
 
 void PageDirectory::mapRangeTo(void* vastart, void* vaend, uintptr_t pastart)
