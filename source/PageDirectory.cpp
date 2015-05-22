@@ -15,10 +15,13 @@ PageDirectory* PageDirectory::initKernelDirectory()
   return g_kernelDirectory;
 }
 
-static const auto PUBLIC_RW = [](auto& e) { e.us = true; e.rw = true; };
-static const auto PUBLIC_RO = [](auto& e) { e.us = true; e.rw = false; };
-static const auto PRIVATE_RW = [](auto& e) { e.us = false; e.rw = true; };
-static const auto PRIVATE_RO = [](auto& e) { e.us = false; e.rw = false; };
+template <unsigned Attr>
+static const auto AttributeSetter = [](auto& e) {
+  if (Attr & PageDirectory::ATTR_RW)
+    e.rw = true;
+  if (Attr & PageDirectory::ATTR_PUBLIC)
+    e.us = true;
+};
 
 // This function reuses the kernel's page directory for the upper adresses
 void PageDirectory::mapKernel()
@@ -32,7 +35,7 @@ void PageDirectory::mapKernel()
   m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
 
   m_manager->mapTo<2>(*getKernelDirectory()->m_manager, 0xffffffffc0000000,
-      PUBLIC_RW);
+      AttributeSetter<ATTR_RW>);
 }
 
 #ifndef NDEBUG
@@ -49,14 +52,15 @@ void PageDirectory::initWithDefaultPaging()
     reinterpret_cast<uintptr_t>(pm.second) >> BASE_SHIFT;
 
   // map VGA
-  mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000);
+  mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
   // mapping .text
   mapRangeTo(
       Symbols::getKernelVTextStart(),
       Symbols::getKernelVTextEnd(),
-      Symbols::getKernelTextStart());
+      Symbols::getKernelTextStart(),
+      0);
   Memory::setRangeUsed(
       Symbols::getKernelTextStart() / 0x1000,
       (Symbols::getKernelTextStart() +
@@ -66,7 +70,8 @@ void PageDirectory::initWithDefaultPaging()
   mapRangeTo(
       Symbols::getKernelVDataStart(),
       Symbols::getKernelVBssEnd(),
-      Symbols::getKernelDataStart());
+      Symbols::getKernelDataStart(),
+      ATTR_RW);
   Memory::setRangeUsed(
       Symbols::getKernelDataStart() / 0x1000,
       (Symbols::getKernelDataStart() +
@@ -76,7 +81,8 @@ void PageDirectory::initWithDefaultPaging()
   mapRangeTo(
       Symbols::getStackBase() - 0x4000,
       Symbols::getStackBase(),
-      0x800000 + 0x200000 - 0x4000);
+      0x800000 + 0x200000 - 0x4000,
+      ATTR_RW);
   Memory::setRangeUsed(
       (0x800000 + 0x200000 - 0x4000) / 0x1000,
       0x4000 / 0x1000);
@@ -85,7 +91,8 @@ void PageDirectory::initWithDefaultPaging()
   mapRangeTo(
       Symbols::getPageHeapBase(),
       Symbols::getPageHeapBase() + 32*0x1000,
-      0xa00000);
+      0xa00000,
+      ATTR_RW);
   Memory::setRangeUsed(
       0xa00000 / 0x1000,
       (0xa00000 + 32*0x1000) / 0x1000);
@@ -94,7 +101,8 @@ void PageDirectory::initWithDefaultPaging()
   mapRangeTo(
       Symbols::getHeapBase(),
       Symbols::getHeapBase() + 0x200000,
-      0xc00000);
+      0xc00000,
+      ATTR_RW);
   Memory::setRangeUsed(
       0xc00000 / 0x1000,
       (0xc00000 + 0x200000) / 0x1000);
@@ -118,45 +126,67 @@ PageDirectory* PageDirectory::getCurrent()
   return g_currentPageDirectory;
 }
 
-void PageDirectory::mapPageTo(uintptr_t ivaddr, uintptr_t ipage)
+void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage, uint8_t attributes)
 {
-  Degf("Mapping %x to %x", ivaddr, ipage << BASE_SHIFT);
+  assert(g_pagingReady);
 
-  PageTableEntry* page = m_manager->getPage(ivaddr, PUBLIC_RW);
+  _mapPageTo(vaddr, ipage, attributes);
+}
+
+void PageDirectory::_mapPageTo(void* vaddr, uintptr_t ipage,
+    uint8_t attributes)
+{
+  switch (attributes)
+  {
+#define CASE(n) \
+  case n: mapPageToF(vaddr, ipage, AttributeSetter<n>); break;
+    CASE(0x0)
+    CASE(0x1)
+    CASE(0x2)
+    CASE(0x3)
+#undef CASE
+  default:
+    PANIC("Invalid page attributes parameter");
+  }
+}
+
+template <typename F>
+void PageDirectory::mapPageToF(void* vaddr, uintptr_t ipage, const F& f)
+{
+  Degf("Mapping %p to %x", vaddr, ipage << BASE_SHIFT);
+
+  // map intermediate pages with all rights and limit permissions only on last
+  // level
+  PageTableEntry* page = m_manager->getPage(reinterpret_cast<uintptr_t>(vaddr),
+      AttributeSetter<0x3>);
   assert(!page->p && "Page already mapped");
-  // TODO move this, only system pages may be mapped like this, which is bad
   page->p = true;
-  PUBLIC_RW(*page);
   page->base = ipage;
+  f(*page);
 }
 
-void PageDirectory::mapAddrTo(void* ivaddr, uintptr_t ipaddr)
+void PageDirectory::mapAddrTo(void* vaddr, uintptr_t ipaddr,
+    uint8_t attributes)
 {
-  mapPageTo(reinterpret_cast<uintptr_t>(ivaddr), ipaddr >> BASE_SHIFT);
+  _mapPageTo(vaddr, ipaddr >> BASE_SHIFT, attributes);
 }
 
-void PageDirectory::mapRangeTo(void* vastart, void* vaend, uintptr_t pastart)
+void PageDirectory::mapRangeTo(void* vastart, void* vaend, uintptr_t pastart,
+    uint8_t attributes)
 {
   uintptr_t ivastart = reinterpret_cast<uintptr_t>(vastart);
   uintptr_t ivaend = reinterpret_cast<uintptr_t>(vaend);
 
   while (ivastart < ivaend)
   {
-    mapAddrTo(reinterpret_cast<void*>(ivastart), pastart);
+    mapAddrTo(reinterpret_cast<void*>(ivastart), pastart, attributes);
 
     ivastart += 0x1000;
     pastart += 0x1000;
   }
 }
 
-void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage)
-{
-  assert(g_pagingReady);
-
-  mapPageTo(reinterpret_cast<uintptr_t>(vaddr), ipage);
-}
-
-void PageDirectory::mapPage(void* vaddr, void** paddr)
+void PageDirectory::mapPage(void* vaddr, uint8_t attributes, void** paddr)
 {
   assert(g_pagingReady);
 
@@ -164,7 +194,7 @@ void PageDirectory::mapPage(void* vaddr, void** paddr)
 
   assert(page != static_cast<uintptr_t>(-1));
 
-  mapPageTo(vaddr, page);
+  mapPageTo(vaddr, page, attributes);
   if (paddr)
     *paddr = reinterpret_cast<void*>(page * 0x1000);
 }

@@ -8,7 +8,10 @@
 class PageDirectory
 {
   public:
-    static constexpr uint8_t BASE_SHIFT = 12;
+    static constexpr unsigned BASE_SHIFT = 12;
+
+    static constexpr unsigned ATTR_RW     = 0x1;
+    static constexpr unsigned ATTR_PUBLIC = 0x2;
 
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;
@@ -24,8 +27,8 @@ class PageDirectory
 
     void mapKernel();
 
-    void mapPageTo(void* vaddr, uintptr_t page);
-    void mapPage(void* vaddr, void** paddr = nullptr);
+    void mapPageTo(void* vaddr, uintptr_t page, uint8_t attributes);
+    void mapPage(void* vaddr, uint8_t attributes, void** paddr = nullptr);
     void unmapPage(void* vaddr);
 
     bool isPageMapped(void* vaddr);
@@ -95,9 +98,12 @@ class PageDirectory
     X86_64PageManager* m_manager;
 
     void initWithDefaultPaging();
-    void mapRangeTo(void* vastart, void* vaend, uintptr_t pastart);
-    void mapAddrTo(void* ivaddr, uintptr_t ipaddr);
-    void mapPageTo(uintptr_t ivaddr, uintptr_t ipage);
+    void mapRangeTo(void* vastart, void* vaend, uintptr_t pastart,
+        uint8_t attributes);
+    void mapAddrTo(void* ivaddr, uintptr_t ipaddr, uint8_t attributes);
+    void _mapPageTo(void* vaddr, uintptr_t page, uint8_t attributes);
+    template <typename F>
+    void mapPageToF(void* vaddr, uintptr_t ipage, const F& f);
 };
 
 inline PageDirectory::PageDirectory() :

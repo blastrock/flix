@@ -68,10 +68,12 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
   // first 32 pages are always mapped
   if (index * BLOCK_SIZE >= 32)
   {
-    PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index), &phys);
+    PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index),
+        PageDirectory::ATTR_RW, &phys);
     for (unsigned n = 1; n < BLOCK_SIZE; ++n)
       PageDirectory::getKernelDirectory()->mapPage(
-          static_cast<char*>(pageToPtr(index)) + n * PAGE_SIZE);
+          static_cast<char*>(pageToPtr(index)) + n * PAGE_SIZE,
+          PageDirectory::ATTR_RW);
   }
   else
     phys = reinterpret_cast<void*>(0xa00000 + index * PAGE_SIZE * BLOCK_SIZE);

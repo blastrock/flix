@@ -137,7 +137,8 @@ void* KHeap::kmalloc(uint32_t size)
   for (uint32_t i = 0; i < neededPages; ++i)
   {
     // kmalloc may be reentered here!
-    PageDirectory::getKernelDirectory()->mapPage(m_heapEnd);
+    PageDirectory::getKernelDirectory()->mapPage(m_heapEnd,
+        PageDirectory::ATTR_RW);
     m_heapEnd += 0x1000;
 
     // if block is used, go to next block

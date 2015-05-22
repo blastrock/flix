@@ -87,7 +87,7 @@ void MultibootLoader::handleModule(Module* mod)
 
   char* basePtr = handleModule(mod,
       [](auto curPtr, auto page) {
-        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page);
+        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page, 0);
       });
 
   fs::setRoot(readArchive(basePtr));

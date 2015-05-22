@@ -91,7 +91,7 @@ bool exec(fs::Handle& f)
 
   Degf("Mapping segment");
   void* vaddr = reinterpret_cast<char*>(prgHdr.p_vaddr);
-  pd.mapPage(vaddr);
+  pd.mapPage(vaddr, PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
 
   Degf("Loading segment");
   f.read(static_cast<char*>(vaddr), prgHdr.p_offset, prgHdr.p_filesz);
