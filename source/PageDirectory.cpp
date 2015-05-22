@@ -58,8 +58,8 @@ void PageDirectory::initWithDefaultPaging()
   // mapping .text
   uintptr_t vcur = reinterpret_cast<uintptr_t>(Symbols::getKernelVTextStart());
   uintptr_t cur = reinterpret_cast<uintptr_t>(Symbols::getKernelTextStart());
-  uintptr_t end = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
-  while (cur < end)
+  uintptr_t vend = reinterpret_cast<uintptr_t>(Symbols::getKernelVBssEnd());
+  while (vcur < vend)
   {
     PageTableEntry* page = m_manager->getPage(vcur, PUBLIC_RO);
     page->p = true;
@@ -74,7 +74,7 @@ void PageDirectory::initWithDefaultPaging()
 
   // mapping stack
   cur = 0x800000 + 0x200000 - 0x4000;
-  end = cur + 0x4000;
+  uintptr_t end = cur + 0x4000;
   vcur = reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000;
   while (cur < end)
   {

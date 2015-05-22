@@ -44,25 +44,30 @@ SECTIONS
     KEEP(*(.init_array))
     _initArrayEnd = .;
     . = ALIGN(0x1000);
+    _kernelVTextEnd = ABSOLUTE(.);
   }
 
   .data ALIGN(0x1000) :
     AT(ADDR(.data) - SHIFT)
   {
+    _kernelVDataStart = ABSOLUTE(.);
     *(.data*)
     *(.rodata*)
     *(.got)
     *(.got.plt)
     . = ALIGN(0x1000);
-    _kernelDataEnd = ABSOLUTE(. - SHIFT);
+    _kernelVDataEnd = ABSOLUTE(.);
   }
 
   .bss ALIGN(0x1000) :
     AT(ADDR(.bss) - SHIFT)
   {
+    _kernelBssStart = ABSOLUTE(. - SHIFT);
+    _kernelVBssStart = ABSOLUTE(.);
     *(.bss*)
     . = ALIGN(0x1000);
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
+    _kernelVBssEnd = ABSOLUTE(.);
   }
 
   . = VIRTUAL_STACK;

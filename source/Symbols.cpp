@@ -5,7 +5,8 @@ extern "C" uint8_t Pml4;
 extern "C" uint8_t _kernelBootstrapStart;
 extern "C" uint8_t _kernelTextStart;
 extern "C" uint8_t _kernelVTextStart;
-extern "C" uint8_t _kernelBssEnd;
+extern "C" uint8_t _kernelVTextEnd;
+extern "C" uint8_t _kernelVBssEnd;
 extern "C" uint8_t VIRTUAL_BASE;
 extern "C" uint8_t _stackBase;
 extern "C" uint8_t _pageHeapBase;
@@ -16,14 +17,14 @@ void* Symbols::getPml4()
   return &Pml4;
 }
 
-void* Symbols::getKernelBootstrapStart()
+uintptr_t Symbols::getKernelBootstrapStart()
 {
-  return &_kernelBootstrapStart;
+  return reinterpret_cast<uintptr_t>(&_kernelBootstrapStart);
 }
 
-void* Symbols::getKernelTextStart()
+uintptr_t Symbols::getKernelTextStart()
 {
-  return &_kernelTextStart;
+  return reinterpret_cast<uintptr_t>(&_kernelTextStart);
 }
 
 void* Symbols::getKernelVTextStart()
@@ -31,9 +32,14 @@ void* Symbols::getKernelVTextStart()
   return &_kernelVTextStart;
 }
 
-void* Symbols::getKernelBssEnd()
+void* Symbols::getKernelVTextEnd()
 {
-  return &_kernelBssEnd;
+  return &_kernelVTextStart;
+}
+
+void* Symbols::getKernelVBssEnd()
+{
+  return &_kernelVBssEnd;
 }
 
 void* Symbols::getVirtualBase()

@@ -12,7 +12,7 @@ MB2_CHECKSUM       equ -(MB2_HEADER_MAGIC + MB2_ARCHITECTURE + MB2_LENGTH) & 0xF
 [BITS 32]
 [SECTION .mbhdr]
 [EXTERN _kernelBootstrapStart]
-[EXTERN _kernelDataEnd]
+[EXTERN _kernelBssStart]
 [EXTERN _kernelBssEnd]
 
 ALIGN 8
@@ -72,7 +72,7 @@ start:
 
 .LMBCopyEnd:
   ; bss section isn't 0-filled with grub2, do it now
-  mov eax, _kernelDataEnd
+  mov eax, _kernelBssStart
   cmp eax, _kernelBssEnd
   jge .LfillBssEnd
 .LfillBssLoop:

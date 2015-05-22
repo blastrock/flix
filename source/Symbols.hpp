@@ -1,14 +1,17 @@
 #ifndef SYMBOLS_HPP
 #define SYMBOLS_HPP
 
+#include <stdint.h>
+
 class Symbols
 {
   public:
     static void* getPml4();
-    static void* getKernelBootstrapStart();
-    static void* getKernelTextStart();
+    static uintptr_t getKernelBootstrapStart();
+    static uintptr_t getKernelTextStart();
     static void* getKernelVTextStart();
-    static void* getKernelBssEnd();
+    static void* getKernelVTextEnd();
+    static void* getKernelVBssEnd();
     static void* getVirtualBase();
     static void* getStackBase();
     static void* getPageHeapBase();
