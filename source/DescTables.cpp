@@ -3,7 +3,7 @@
 #include "io.hpp"
 #include "Debug.hpp"
 
-uint64_t DescTables::g_gdtEntries[] = {
+const uint64_t DescTables::g_gdtEntries[] = {
   // null descriptor
   0x0000000000000000,
   // code segment (ring0)
@@ -19,19 +19,19 @@ uint64_t DescTables::g_gdtEntries[] = {
   0xCF0089FFC0000067,
   0x00000000FFFFFFFF,
 };
-DescTables::GdtPtr DescTables::g_gdtPtr = {
+const DescTables::GdtPtr DescTables::g_gdtPtr = {
   sizeof(g_gdtEntries) - 1,
   g_gdtEntries
 };
 DescTables::IdtEntry DescTables::g_idtEntries[256];
-DescTables::GdtPtr   DescTables::g_idtPtr = {
+const DescTables::GdtPtr DescTables::g_idtPtr = {
   sizeof(g_idtEntries) - 1,
   g_idtEntries
 };
 
 extern "C" void* intVectors[];
 
-void DescTables::commitGdt(void* gdt)
+void DescTables::commitGdt(const void* gdt)
 {
   asm volatile(
     "lgdt (%0)\n"
@@ -52,7 +52,7 @@ void DescTables::commitGdt(void* gdt)
     :"%rax");
 }
 
-void DescTables::commitIdt(void* idt)
+void DescTables::commitIdt(const void* idt)
 {
   asm volatile(
       "lidt (%0)"
@@ -97,9 +97,6 @@ void DescTables::initIdt()
 
   g_idtEntries[0x80] = makeIdtGate(intVectors[48], 0x08, true);
 
-  g_idtPtr.limit = sizeof(IdtEntry) * 256 - 1;
-  g_idtPtr.base  = &g_idtEntries;
-
   commitIdt(&g_idtPtr);
 }
 
@@ -121,6 +118,7 @@ DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector,
   entry.targetMid = (ioff >> 16) & 0xFFFF;
   entry.targetHigh = (ioff >> 32) & 0xFFFFFFFF;
   entry.targetSelector = selector;
+  // present, DPL = 0, type = Interrupt, IST = 1
   entry.flags = 0x8E01;
   if (pub)
     entry.flags |= 0x6000;

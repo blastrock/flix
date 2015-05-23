@@ -27,7 +27,7 @@ void write(const char* str)
 
 void segfault()
 {
-  *(volatile int*)0 = 0;
+  *(volatile int*)0xffffffff = 0;
 }
 
 void segfault2()
@@ -84,6 +84,7 @@ extern "C" int kmain(void* mboot)
 
   Degf("Booting Flix");
 
+  Degf("Initializing GDT and IDT");
   DescTables::init();
 
   // first we need a heap (which is preallocated)
@@ -110,12 +111,12 @@ extern "C" int kmain(void* mboot)
   Degf("Initializing TR");
   DescTables::initTr();
 
+  Degf("Initializing syscall vector");
+  sys::initSysCalls();
+
   // then we load our module to have a file system
   Degf("Loading module");
   mbl.handle(mboot);
-
-  Degf("Initializing syscall vector");
-  sys::initSysCalls();
 
   Timer::init(1);
 

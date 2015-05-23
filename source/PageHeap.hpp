@@ -15,7 +15,7 @@ class PageHeap
 
   private:
     static bool m_allocating;
-    static uint8_t* m_heapStart;
+    static char* m_heapStart;
 
     static std::vector<bool> m_map;
     static std::vector<std::pair<uint64_t, void*>> m_pool;

@@ -1,14 +1,13 @@
 #include "PageHeap.hpp"
 #include "PageDirectory.hpp"
 #include "Util.hpp"
+#include "Symbols.hpp"
 #include "Debug.hpp"
-
-extern "C" uint8_t _pageHeapBase;
 
 static constexpr unsigned PAGE_SIZE = 0x1000;
 static constexpr unsigned BLOCK_SIZE = 2; // in pages
 
-uint8_t* PageHeap::m_heapStart = nullptr;
+char* PageHeap::m_heapStart = nullptr;
 bool PageHeap::m_allocating = false;
 
 std::vector<bool> PageHeap::m_map;
@@ -16,7 +15,7 @@ std::vector<std::pair<uint64_t, void*>> PageHeap::m_pool;
 
 void PageHeap::init()
 {
-  m_heapStart = &_pageHeapBase;
+  m_heapStart = Symbols::getPageHeapBase();
 }
 
 std::pair<void*, void*> PageHeap::kmalloc()
@@ -105,7 +104,7 @@ void PageHeap::kfree(void* ptr)
   if (!ptr)
     return;
 
-  uint8_t* bptr = static_cast<uint8_t*>(ptr);
+  char* bptr = static_cast<char*>(ptr);
   uint64_t index = bptr - m_heapStart;
 
   assert(m_map[index]);
