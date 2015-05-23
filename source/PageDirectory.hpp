@@ -29,7 +29,7 @@ class PageDirectory
 
     void mapPageTo(void* vaddr, uintptr_t page, uint8_t attributes);
     void mapPage(void* vaddr, uint8_t attributes, void** paddr = nullptr);
-    void unmapPage(void* vaddr);
+    uintptr_t unmapPage(void* vaddr);
 
     bool isPageMapped(void* vaddr);
 

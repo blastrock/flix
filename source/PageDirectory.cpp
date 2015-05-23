@@ -202,7 +202,7 @@ void PageDirectory::mapPage(void* vaddr, uint8_t attributes, void** paddr)
     *paddr = reinterpret_cast<void*>(page * 0x1000);
 }
 
-void PageDirectory::unmapPage(void* vaddr)
+uintptr_t PageDirectory::unmapPage(void* vaddr)
 {
   assert(g_pagingReady);
 
@@ -212,7 +212,7 @@ void PageDirectory::unmapPage(void* vaddr)
   assert(page && page->p && "Unmapping page that was not mapped");
   page->p = false;
 
-  Memory::setPageFree(ivaddr / 0x1000);
+  return page->base << BASE_SHIFT;
 }
 
 bool PageDirectory::isPageMapped(void* vaddr)
