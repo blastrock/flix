@@ -131,6 +131,9 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage, uint8_t attributes)
   assert(g_pagingReady);
 
   _mapPageTo(vaddr, ipage, attributes);
+
+  // refill pool if needed
+  PageHeap::get().refillPool();
 }
 
 void PageDirectory::_mapPageTo(void* vaddr, uintptr_t ipage,

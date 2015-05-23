@@ -14,6 +14,7 @@ class PageHeap
 
     std::pair<void*, void*> kmalloc();
     void kfree(void* ptr);
+    void refillPool();
 
   private:
     bool m_allocating;
@@ -25,7 +26,6 @@ class PageHeap
     void* pageToPtr(uint64_t index);
     std::pair<uint64_t, void*> allocBlock();
     std::pair<uint64_t, void*> allocPage(uint64_t index);
-    void refillPool();
 };
 
 #endif /* PAGE_HEAP_HPP */

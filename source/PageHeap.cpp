@@ -81,8 +81,6 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 
   m_allocating = false;
 
-  //refillPool();
-
   return {index, phys};
 }
 
@@ -93,9 +91,14 @@ void* PageHeap::pageToPtr(uint64_t index)
 
 void PageHeap::refillPool()
 {
-  // the pool may be used while we replenish it
+  // this function is called everytime a page is mapped so it may reenter
+  if (m_allocating)
+    return;
+
+  // the pool may be used while we refill it
   while (m_pool.size() < 16)
   {
+    Degf("Refilling page pool");
     auto block = allocBlock();
     m_pool.push_back(block);
   }
