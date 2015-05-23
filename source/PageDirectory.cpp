@@ -23,16 +23,21 @@ static const auto AttributeSetter = [](auto& e) {
     e.us = true;
 };
 
-// This function reuses the kernel's page directory for the upper adresses
-void PageDirectory::mapKernel()
+void PageDirectory::createPm()
 {
-  // TODO this function should not initialize, or its name should be changed
-  // TODO this code is copy pasted from below
   std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
   m_manager = pm.first;
 
   m_directory.value = 0;
-  m_directory.bitfield.base = reinterpret_cast<uintptr_t>(pm.second) >> 12;
+  m_directory.bitfield.base =
+    reinterpret_cast<uintptr_t>(pm.second) >> BASE_SHIFT;
+}
+
+// This function reuses the kernel's page directory for the upper adresses
+void PageDirectory::mapKernel()
+{
+  // TODO this function should not initialize, or its name should be changed
+  createPm();
 
   m_manager->mapTo<2>(*getKernelDirectory()->m_manager, 0xffffffffc0000000,
       AttributeSetter<ATTR_RW>);
@@ -44,12 +49,7 @@ static bool g_pagingReady = false;
 
 void PageDirectory::initWithDefaultPaging()
 {
-  std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
-  m_manager = pm.first;
-
-  m_directory.value = 0;
-  m_directory.bitfield.base =
-    reinterpret_cast<uintptr_t>(pm.second) >> BASE_SHIFT;
+  createPm();
 
   // map VGA
   mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000, ATTR_RW);

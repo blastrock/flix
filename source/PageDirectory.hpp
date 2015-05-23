@@ -97,6 +97,7 @@ class PageDirectory
     CR3 m_directory;
     X86_64PageManager* m_manager;
 
+    void createPm();
     void initWithDefaultPaging();
     void mapRangeTo(void* vastart, void* vaend, uintptr_t pastart,
         uint8_t attributes);
