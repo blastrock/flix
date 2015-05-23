@@ -36,13 +36,3 @@ void printStackTrace(uint64_t stackPointer)
     stackFrame = static_cast<void**>(stackFrame[0]);
   }
 }
-
-// make a non-inline function
-void PANIC2(const char* msg)
-{
-  asm volatile ("cli");
-  asm volatile ("xchgw %bx, %bx");
-  while (true)
-    asm volatile ("hlt");
-  //PANIC(msg);
-}
