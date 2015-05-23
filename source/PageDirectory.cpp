@@ -25,12 +25,11 @@ static const auto AttributeSetter = [](auto& e) {
 
 void PageDirectory::createPm()
 {
-  std::pair<X86_64PageManager*, void*> pm = X86_64PageManager::makeNew();
-  m_manager = pm.first;
+  auto pm = X86_64PageManager::makeNew();
+  m_manager = std::move(pm.ptr);
 
   m_directory.value = 0;
-  m_directory.bitfield.base =
-    reinterpret_cast<uintptr_t>(pm.second) >> BASE_SHIFT;
+  m_directory.bitfield.base = pm.physAddr >> BASE_SHIFT;
 }
 
 // This function reuses the kernel's page directory for the upper adresses

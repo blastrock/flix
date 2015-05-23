@@ -6,25 +6,37 @@
 #include <new>
 #include "Debug.hpp"
 
+template <typename T>
+struct PageManagerAlloc
+{
+  std::unique_ptr<T, typename T::Deleter> ptr;
+  uintptr_t physAddr;
+};
+
 template <typename Allocator, typename CurLevel, typename... NextLevels>
 class PageManager
 {
   public:
-    typedef std::tuple<CurLevel, NextLevels...> Levels;
-    typedef typename std::tuple_element<
-      std::tuple_size<Levels>::value - 1, Levels>::type PageType;
-    typedef CurLevel Entry;
-    typedef PageManager<Allocator, CurLevel, NextLevels...> ThisLayout;
-    typedef PageManager<Allocator, NextLevels...> NextLayout;
+    using Levels = std::tuple<CurLevel, NextLevels...>;
+    using PageType = typename std::tuple_element<
+      std::tuple_size<Levels>::value - 1, Levels>::type;
+    using Entry = CurLevel;
+    using ThisLayout = PageManager<Allocator, CurLevel, NextLevels...>;
+    using NextLayout = PageManager<Allocator, NextLevels...>;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS + NextLayout::TOTAL_BITS;
 
     static constexpr uint8_t LevelCount = std::tuple_size<Levels>::value;
 
-    static std::pair<ThisLayout*, void*> makeNew();
+    static void release(ThisLayout*);
+
+    using Deleter = decltype(&ThisLayout::release);
+
+    static auto makeNew() -> PageManagerAlloc<ThisLayout>;
 
     PageManager();
+    ~PageManager();
 
     auto getPage(uintptr_t address)
     {
@@ -102,8 +114,8 @@ template <typename Allocator, typename CurLevel>
 class PageManager<Allocator, CurLevel>
 {
   public:
-    typedef CurLevel Entry;
-    typedef CurLevel PageType;
+    using Entry = CurLevel;
+    using PageType = CurLevel;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS + CurLevel::BASE_SHIFT;
@@ -137,10 +149,43 @@ PageManager<Allocator, CurLevel, Levels...>::PageManager()
 }
 
 template <typename Allocator, typename CurLevel, typename... Levels>
-std::pair<PageManager<Allocator, CurLevel, Levels...>*, void*> PageManager<Allocator, CurLevel, Levels...>::makeNew()
+PageManager<Allocator, CurLevel, Levels...>::~PageManager()
+{
+  for (unsigned int i = 0; i < (1 << ADD_BITS); ++i)
+  {
+    // TODO remove this hack...
+    // this hack is here to avoid freeing kernel pages which are shared between
+    // all processes
+    if ((std::tuple_size<Levels>::value == 4 || std::tuple_size<Levels>::value == 3) && i == ((1 << ADD_BITS) - 1))
+      continue;
+
+    auto& next = m_nextLayouts[i];
+
+    if (next)
+    {
+      next->~NextLayout();
+      Allocator::get().kfree(next);
+    }
+  }
+}
+
+template <typename Allocator, typename CurLevel, typename... Levels>
+auto PageManager<Allocator, CurLevel, Levels...>::makeNew() ->
+  PageManagerAlloc<ThisLayout>
 {
   std::pair<void*, void*> memory = Allocator::get().kmalloc();
-  return {new (memory.first) ThisLayout(), memory.second};
+  return {{new (memory.first) ThisLayout(), &ThisLayout::release},
+    reinterpret_cast<uintptr_t>(memory.second)};
+}
+
+template <typename Allocator, typename CurLevel, typename... Levels>
+void PageManager<Allocator, CurLevel, Levels...>::release(ThisLayout* ptr)
+{
+  if (ptr)
+  {
+    ptr->~PageManager();
+    Allocator::get().kfree(ptr);
+  }
 }
 
 template <typename Allocator, typename CurLevel>

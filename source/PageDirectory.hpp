@@ -95,7 +95,7 @@ class PageDirectory
         X86_64PageManager;
 
     CR3 m_directory;
-    X86_64PageManager* m_manager;
+    std::unique_ptr<X86_64PageManager, X86_64PageManager::Deleter> m_manager;
 
     void createPm();
     void initWithDefaultPaging();
@@ -108,14 +108,14 @@ class PageDirectory
 };
 
 inline PageDirectory::PageDirectory() :
-  m_manager(nullptr)
+  m_manager(nullptr, [](auto){})
 {
   m_directory.value = 0;
 }
 
 inline PageDirectory::PageDirectory(PageDirectory&& pd) :
   m_directory(pd.m_directory),
-  m_manager(pd.m_manager)
+  m_manager(std::move(pd.m_manager))
 {
   pd.m_directory.value = 0;
   pd.m_manager = nullptr;
@@ -124,7 +124,7 @@ inline PageDirectory::PageDirectory(PageDirectory&& pd) :
 inline PageDirectory& PageDirectory::operator=(PageDirectory&& pd)
 {
   m_directory = pd.m_directory;
-  m_manager = pd.m_manager;
+  m_manager = std::move(pd.m_manager);
 
   pd.m_directory.value = 0;
   pd.m_manager = nullptr;
