@@ -139,7 +139,7 @@ PageManager<Allocator, CurLevel, Levels...>::PageManager()
 template <typename Allocator, typename CurLevel, typename... Levels>
 std::pair<PageManager<Allocator, CurLevel, Levels...>*, void*> PageManager<Allocator, CurLevel, Levels...>::makeNew()
 {
-  std::pair<void*, void*> memory = Allocator::kmalloc();
+  std::pair<void*, void*> memory = Allocator::get().kmalloc();
   return {new (memory.first) ThisLayout(), memory.second};
 }
 
@@ -191,7 +191,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     assert(!m_entries[index].p
         && "Incoherence between layouts and page directory");
     // create it
-    std::pair<void*, void*> memory = Allocator::kmalloc();
+    std::pair<void*, void*> memory = Allocator::get().kmalloc();
     nextLayout = new (memory.first) NextLayout();
     m_entries[index].p = true;
     m_entries[index].base =

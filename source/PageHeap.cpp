@@ -7,15 +7,17 @@
 static constexpr unsigned PAGE_SIZE = 0x1000;
 static constexpr unsigned BLOCK_SIZE = 2; // in pages
 
-char* PageHeap::m_heapStart = nullptr;
-bool PageHeap::m_allocating = false;
+static PageHeap g_pageHeap;
 
-std::vector<bool> PageHeap::m_map;
-std::vector<std::pair<uint64_t, void*>> PageHeap::m_pool;
+PageHeap& PageHeap::get()
+{
+  return g_pageHeap;
+}
 
 void PageHeap::init()
 {
   m_heapStart = Symbols::getPageHeapBase();
+  m_allocating = false;
 }
 
 std::pair<void*, void*> PageHeap::kmalloc()

@@ -93,7 +93,7 @@ extern "C" int kmain(void* mboot)
 
   // second we need to prepare the heap which will be used for pagination
   Degf("PageHeap init");
-  PageHeap::init();
+  PageHeap::get().init();
 
   // third we need pagination
   Degf("Paging init");
