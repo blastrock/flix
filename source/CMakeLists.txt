@@ -36,7 +36,7 @@ add_executable(flix
   StaticMemoryPool.cpp
   Symbols.cpp
   Syscall.cpp
-  Task.cpp
+  TaskManager.cpp
   task.asm
   Timer.cpp
 )
