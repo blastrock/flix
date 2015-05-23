@@ -24,6 +24,7 @@ class PageHeap
     std::vector<std::pair<uint64_t, void*>> m_pool;
 
     void* pageToPtr(uint64_t index);
+    uint64_t ptrToPage(void* ptr);
     std::pair<uint64_t, void*> allocBlock();
     std::pair<uint64_t, void*> allocPage(uint64_t index);
 };

@@ -2,6 +2,7 @@
 #include "PageDirectory.hpp"
 #include "Util.hpp"
 #include "Symbols.hpp"
+#include "Memory.hpp"
 #include "Debug.hpp"
 
 static constexpr unsigned PAGE_SIZE = 0x1000;
@@ -89,6 +90,11 @@ void* PageHeap::pageToPtr(uint64_t index)
   return m_heapStart + index * PAGE_SIZE * BLOCK_SIZE;
 }
 
+uint64_t PageHeap::ptrToPage(void* ptr)
+{
+  return (static_cast<char*>(ptr) - m_heapStart) / PAGE_SIZE / BLOCK_SIZE;
+}
+
 void PageHeap::refillPool()
 {
   // this function is called everytime a page is mapped so it may reenter
@@ -109,13 +115,21 @@ void PageHeap::kfree(void* ptr)
   if (!ptr)
     return;
 
-  char* bptr = static_cast<char*>(ptr);
-  uint64_t index = bptr - m_heapStart;
+  uint64_t index = ptrToPage(ptr);
 
   assert(m_map[index]);
 
   // first 32 pages are always mapped
-  if (index >= 32)
-    PageDirectory::getKernelDirectory()->unmapPage(ptr);
+  if (index * BLOCK_SIZE >= 32)
+  {
+    uintptr_t phys = PageDirectory::getKernelDirectory()->unmapPage(ptr);
+    Memory::setPageFree(phys / PAGE_SIZE);
+    for (unsigned n = 1; n < BLOCK_SIZE; ++n)
+    {
+      phys = PageDirectory::getKernelDirectory()->unmapPage(
+          static_cast<char*>(ptr) + n * PAGE_SIZE);
+      Memory::setPageFree(phys / PAGE_SIZE);
+    }
+  }
   m_map[index] = false;
 }
