@@ -54,16 +54,16 @@ void PageDirectory::initWithDefaultPaging()
   mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
-  // mapping .text
+  // mapping .text and .rodata
   mapRangeTo(
       Symbols::getKernelVTextStart(),
-      Symbols::getKernelVTextEnd(),
+      Symbols::getKernelVRodataEnd(),
       Symbols::getKernelTextStart(),
       0);
   Memory::setRangeUsed(
       Symbols::getKernelTextStart() / 0x1000,
       (Symbols::getKernelTextStart() +
-       Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+       Symbols::getKernelVRodataEnd() - Symbols::getKernelVTextStart()) / 0x1000);
 
   // mapping .data and .bss
   mapRangeTo(

@@ -3,7 +3,8 @@
 #include "io.hpp"
 #include "Debug.hpp"
 
-const uint64_t DescTables::g_gdtEntries[] = {
+// the GDT must not be marked const because the ltr instruction writes in there
+uint64_t DescTables::g_gdtEntries[] = {
   // null descriptor
   0x0000000000000000,
   // code segment (ring0)
@@ -102,7 +103,7 @@ void DescTables::initIdt()
 
 void DescTables::initTr()
 {
-  asm("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
+  asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
 }
 
 // Make gate that points to code at offset. If pub is true, the gate is

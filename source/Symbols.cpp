@@ -22,10 +22,13 @@ char* Symbols::getPml4()
 
 DECLARE_PHYS_SYMBOL(kernelBootstrapStart, KernelBootstrapStart)
 DECLARE_PHYS_SYMBOL(kernelTextStart, KernelTextStart)
+DECLARE_PHYS_SYMBOL(kernelRodataStart, KernelRodataStart)
 DECLARE_PHYS_SYMBOL(kernelDataStart, KernelDataStart)
 
 DECLARE_VIRT_SYMBOL(kernelVTextStart, KernelVTextStart)
 DECLARE_VIRT_SYMBOL(kernelVTextEnd, KernelVTextEnd);
+DECLARE_VIRT_SYMBOL(kernelVRodataStart, KernelVRodataStart);
+DECLARE_VIRT_SYMBOL(kernelVRodataEnd, KernelVRodataEnd);
 DECLARE_VIRT_SYMBOL(kernelVDataStart, KernelVDataStart);
 DECLARE_VIRT_SYMBOL(kernelVDataEnd, KernelVDataEnd);
 DECLARE_VIRT_SYMBOL(kernelVBssEnd, KernelVBssEnd);

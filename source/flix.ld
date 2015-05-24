@@ -47,13 +47,22 @@ SECTIONS
     _kernelVTextEnd = ABSOLUTE(.);
   }
 
+  .rodata ALIGN(0x1000) :
+    AT(ADDR(.rodata) - SHIFT)
+  {
+    _kernelRodataStart = ABSOLUTE(. - SHIFT);
+    _kernelVRodataStart = ABSOLUTE(.);
+    *(.rodata*)
+    . = ALIGN(0x1000);
+    _kernelVRodataEnd = ABSOLUTE(.);
+  }
+
   .data ALIGN(0x1000) :
     AT(ADDR(.data) - SHIFT)
   {
     _kernelDataStart = ABSOLUTE(. - SHIFT);
     _kernelVDataStart = ABSOLUTE(.);
     *(.data*)
-    *(.rodata*)
     *(.got)
     *(.got.plt)
     . = ALIGN(0x1000);

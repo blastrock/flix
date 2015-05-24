@@ -9,9 +9,12 @@ public:
   static char* getPml4();
   static uintptr_t getKernelBootstrapStart();
   static uintptr_t getKernelTextStart();
+  static uintptr_t getKernelRodataStart();
   static uintptr_t getKernelDataStart();
   static char* getKernelVTextStart();
   static char* getKernelVTextEnd();
+  static char* getKernelVRodataStart();
+  static char* getKernelVRodataEnd();
   static char* getKernelVDataStart();
   static char* getKernelVDataEnd();
   static char* getKernelVBssEnd();
