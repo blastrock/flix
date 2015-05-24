@@ -3,8 +3,24 @@
 #include "io.hpp"
 #include "Debug.hpp"
 
+struct GdtPtr
+{
+  uint16_t limit;
+  const void* base;
+} __attribute__((packed));
+
+struct IdtEntry
+{
+  uint16_t targetLow;
+  uint16_t targetSelector;
+  uint16_t flags;
+  uint16_t targetMid;
+  uint32_t targetHigh;
+  uint32_t reserved;
+} __attribute__((packed));
+
 // the GDT must not be marked const because the ltr instruction writes in there
-uint64_t DescTables::g_gdtEntries[] = {
+static uint64_t g_gdtEntries[] = {
   // null descriptor
   0x0000000000000000,
   // code segment (ring0)
@@ -20,19 +36,26 @@ uint64_t DescTables::g_gdtEntries[] = {
   0xCF0089FFC0000067,
   0x00000000FFFFFFFF,
 };
-const DescTables::GdtPtr DescTables::g_gdtPtr = {
+
+static const GdtPtr g_gdtPtr = {
   sizeof(g_gdtEntries) - 1,
   g_gdtEntries
 };
-DescTables::IdtEntry DescTables::g_idtEntries[256];
-const DescTables::GdtPtr DescTables::g_idtPtr = {
+static IdtEntry g_idtEntries[256];
+static const GdtPtr g_idtPtr = {
   sizeof(g_idtEntries) - 1,
   g_idtEntries
 };
 
 extern "C" void* intVectors[];
 
-void DescTables::commitGdt(const void* gdt)
+static void initGdt();
+static void initIdt();
+static void commitGdt(const void* gdt);
+static void commitIdt(const void* idt);
+static IdtEntry makeIdtGate(void* offset, uint16_t selector, bool pub);
+
+void commitGdt(const void* gdt)
 {
   asm volatile(
     "lgdt (%0)\n"
@@ -53,7 +76,7 @@ void DescTables::commitGdt(const void* gdt)
     :"%rax");
 }
 
-void DescTables::commitIdt(const void* idt)
+void commitIdt(const void* idt)
 {
   asm volatile(
       "lidt (%0)"
@@ -67,12 +90,12 @@ void DescTables::init()
   initIdt();
 }
 
-void DescTables::initGdt()
+void initGdt()
 {
   commitGdt(&g_gdtPtr);
 }
 
-void DescTables::initIdt()
+void initIdt()
 {
   std::memset(&g_idtEntries, 0, sizeof(g_idtEntries));
 
@@ -109,7 +132,7 @@ void DescTables::initTr()
 // Make gate that points to code at offset. If pub is true, the gate is
 // accessible from unpriviledged code
 // TODO is the selector argument useful? it's always equal to 0x08
-DescTables::IdtEntry DescTables::makeIdtGate(void* offset, uint16_t selector,
+IdtEntry makeIdtGate(void* offset, uint16_t selector,
     bool pub)
 {
   uint64_t ioff = reinterpret_cast<uint64_t>(offset);
