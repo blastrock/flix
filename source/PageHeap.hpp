@@ -5,14 +5,18 @@
 #include <vector>
 #include <utility>
 
+#include "Types.hpp"
+
 class PageHeap
 {
   public:
+    using page_index_t = uint32_t;
+
     static PageHeap& get();
 
     void init();
 
-    std::pair<void*, void*> kmalloc();
+    std::pair<void*, physaddr_t> kmalloc();
     void kfree(void* ptr);
     void refillPool();
 
@@ -21,12 +25,12 @@ class PageHeap
     char* m_heapStart;
 
     std::vector<bool> m_map;
-    std::vector<std::pair<uint64_t, void*>> m_pool;
+    std::vector<std::pair<page_index_t, physaddr_t>> m_pool;
 
-    void* pageToPtr(uint64_t index);
-    uint64_t ptrToPage(void* ptr);
-    std::pair<uint64_t, void*> allocBlock();
-    std::pair<uint64_t, void*> allocPage(uint64_t index);
+    void* pageToPtr(page_index_t index);
+    page_index_t ptrToPage(void* ptr);
+    std::pair<page_index_t, physaddr_t> allocBlock();
+    std::pair<page_index_t, physaddr_t> allocPage(page_index_t index);
 };
 
 #endif /* PAGE_HEAP_HPP */

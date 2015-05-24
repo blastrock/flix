@@ -38,7 +38,8 @@ void PageDirectory::mapKernel()
   // TODO this function should not initialize, or its name should be changed
   createPm();
 
-  m_manager->mapTo<2>(*getKernelDirectory()->m_manager, 0xffffffffc0000000,
+  m_manager->mapTo<2>(*getKernelDirectory()->m_manager,
+      Symbols::getKernelVBase(),
       AttributeSetter<ATTR_RW>);
 }
 
@@ -135,7 +136,7 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage, uint8_t attributes)
   PageHeap::get().refillPool();
 }
 
-void PageDirectory::_mapPageTo(void* vaddr, uintptr_t ipage,
+void PageDirectory::_mapPageTo(void* vaddr, page_t ipage,
     uint8_t attributes)
 {
   switch (attributes)
@@ -153,61 +154,58 @@ void PageDirectory::_mapPageTo(void* vaddr, uintptr_t ipage,
 }
 
 template <typename F>
-void PageDirectory::mapPageToF(void* vaddr, uintptr_t ipage, const F& f)
+void PageDirectory::mapPageToF(void* vaddr, page_t ipage, const F& f)
 {
   Degf("Mapping %p to %x", vaddr, ipage << BASE_SHIFT);
 
   // map intermediate pages with all rights and limit permissions only on last
   // level
-  PageTableEntry* page = m_manager->getPage(reinterpret_cast<uintptr_t>(vaddr),
-      AttributeSetter<0x3>);
+  PageTableEntry* page = m_manager->getPage(vaddr, AttributeSetter<0x3>);
   assert(!page->p && "Page already mapped");
   page->p = true;
   page->base = ipage;
   f(*page);
 }
 
-void PageDirectory::mapAddrTo(void* vaddr, uintptr_t ipaddr,
+void PageDirectory::mapAddrTo(void* vaddr, physaddr_t ipaddr,
     uint8_t attributes)
 {
   _mapPageTo(vaddr, ipaddr >> BASE_SHIFT, attributes);
 }
 
-void PageDirectory::mapRangeTo(void* vastart, void* vaend, uintptr_t pastart,
+void PageDirectory::mapRangeTo(void* vvastart, void* vvaend, physaddr_t pastart,
     uint8_t attributes)
 {
-  uintptr_t ivastart = reinterpret_cast<uintptr_t>(vastart);
-  uintptr_t ivaend = reinterpret_cast<uintptr_t>(vaend);
+  char* vastart = static_cast<char*>(vvastart);
+  char* vaend = static_cast<char*>(vvaend);
 
-  while (ivastart < ivaend)
+  while (vastart < vaend)
   {
-    mapAddrTo(reinterpret_cast<void*>(ivastart), pastart, attributes);
+    mapAddrTo(vastart, pastart, attributes);
 
-    ivastart += 0x1000;
+    vastart += 0x1000;
     pastart += 0x1000;
   }
 }
 
-void PageDirectory::mapPage(void* vaddr, uint8_t attributes, void** paddr)
+void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
 {
   assert(g_pagingReady);
 
-  uintptr_t page = Memory::getFreePage();
+  page_t page = Memory::getFreePage();
 
-  assert(page != static_cast<uintptr_t>(-1));
+  assert(page != INVALID_PAGE);
 
   mapPageTo(vaddr, page, attributes);
   if (paddr)
-    *paddr = reinterpret_cast<void*>(page * 0x1000);
+    *paddr = page * 0x1000;
 }
 
 uintptr_t PageDirectory::unmapPage(void* vaddr)
 {
   assert(g_pagingReady);
 
-  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
-
-  PageTableEntry* page = m_manager->getPage(ivaddr);
+  PageTableEntry* page = m_manager->getPage(vaddr);
   assert(page && page->p && "Unmapping page that was not mapped");
   page->p = false;
 
@@ -218,8 +216,7 @@ bool PageDirectory::isPageMapped(void* vaddr)
 {
   assert(g_pagingReady);
 
-  uintptr_t ivaddr = reinterpret_cast<uintptr_t>(vaddr);
-  PageTableEntry* page = m_manager->getPage(ivaddr);
+  PageTableEntry* page = m_manager->getPage(vaddr);
   return page && page->p;
 }
 

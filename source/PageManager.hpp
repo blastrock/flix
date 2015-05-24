@@ -38,30 +38,34 @@ class PageManager
     PageManager();
     ~PageManager();
 
-    auto getPage(uintptr_t address)
+    auto getPage(void* address)
     {
       return getEntry<0>(address);
     }
     template <typename Initializer>
-    auto getPage(uintptr_t address, Initializer& initializer)
+    auto getPage(void* address, Initializer& initializer)
     {
       return getEntry<0>(address, initializer);
     }
     template <unsigned Level>
-    auto getEntry(uintptr_t address)
+    auto getEntry(void* address)
     {
-      return getEntryImpl<LevelCount - Level - 1>(address).first;
+      return getEntryImpl<LevelCount - Level - 1>(
+          reinterpret_cast<uintptr_t>(address)).first;
     }
     template <unsigned Level, typename Initializer>
-    auto getEntry(uintptr_t address, Initializer& initializer)
+    auto getEntry(void* address, Initializer& initializer)
     {
-      return getEntryImpl<LevelCount - Level - 1>(address, initializer).first;
+      return getEntryImpl<LevelCount - Level - 1>(
+          reinterpret_cast<uintptr_t>(address), initializer).first;
     }
 
     template <unsigned Level, typename Initializer>
-    void mapTo(ThisLayout& other, uintptr_t address, Initializer& initializer)
+    void mapTo(ThisLayout& other, void* paddress, Initializer& initializer)
     {
       static_assert(Level != 0, "Can't map at level 0");
+
+      const auto address = reinterpret_cast<uintptr_t>(paddress);
 
       auto otherPair =
         other.getEntryImpl<LevelCount - Level - 1>(address);
@@ -173,9 +177,9 @@ template <typename Allocator, typename CurLevel, typename... Levels>
 auto PageManager<Allocator, CurLevel, Levels...>::makeNew() ->
   PageManagerAlloc<ThisLayout>
 {
-  std::pair<void*, void*> memory = Allocator::get().kmalloc();
+  std::pair<void*, physaddr_t> memory = Allocator::get().kmalloc();
   return {{new (memory.first) ThisLayout(), &ThisLayout::release},
-    reinterpret_cast<uintptr_t>(memory.second)};
+    memory.second};
 }
 
 template <typename Allocator, typename CurLevel, typename... Levels>
@@ -236,11 +240,10 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     assert(!m_entries[index].p
         && "Incoherence between layouts and page directory");
     // create it
-    std::pair<void*, void*> memory = Allocator::get().kmalloc();
+    std::pair<void*, physaddr_t> memory = Allocator::get().kmalloc();
     nextLayout = new (memory.first) NextLayout();
     m_entries[index].p = true;
-    m_entries[index].base =
-      reinterpret_cast<uintptr_t>(memory.second) >> CurLevel::BASE_SHIFT;
+    m_entries[index].base = memory.second >> CurLevel::BASE_SHIFT;
     init(m_entries[index]);
   }
 

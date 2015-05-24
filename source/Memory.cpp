@@ -4,11 +4,11 @@
 
 std::vector<bool> Memory::g_frames;
 
-uintptr_t Memory::getFreePage()
+page_t Memory::getFreePage()
 {
   Degf("Free page request");
 
-  for (uintptr_t i = 0; i < g_frames.size(); ++i)
+  for (page_t i = 0; i < g_frames.size(); ++i)
     if (!g_frames[i])
     {
       Degf("Free page got");
@@ -16,13 +16,13 @@ uintptr_t Memory::getFreePage()
       return i;
     }
   Degf("No more freepage, enlaring...");
-  uintptr_t i = g_frames.size();
+  page_t i = g_frames.size();
   g_frames.resize(i+16, false);
   g_frames[i] = true;
   return i;
 }
 
-void Memory::setPageFree(uintptr_t page)
+void Memory::setPageFree(page_t page)
 {
   //if (g_frames.size() <= page)
   //  g_frames.resize(intAlignSup(page+1, 16));
@@ -33,7 +33,7 @@ void Memory::setPageFree(uintptr_t page)
   g_frames[page] = false;
 }
 
-void Memory::setPageUsed(uintptr_t page)
+void Memory::setPageUsed(page_t page)
 {
   if (g_frames.size() <= page)
     g_frames.resize(intAlignSup(page+1, 16));
@@ -44,7 +44,7 @@ void Memory::setPageUsed(uintptr_t page)
   g_frames[page] = true;
 }
 
-void Memory::setRangeUsed(uintptr_t from, uintptr_t to)
+void Memory::setRangeUsed(page_t from, page_t to)
 {
   for (; from < to; ++from)
     setPageUsed(from);

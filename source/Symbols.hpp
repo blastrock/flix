@@ -11,6 +11,10 @@ public:
   static uintptr_t getKernelTextStart();
   static uintptr_t getKernelRodataStart();
   static uintptr_t getKernelDataStart();
+  static char* getKernelVBase()
+  {
+    return getKernelVTextStart();
+  }
   static char* getKernelVTextStart();
   static char* getKernelVTextEnd();
   static char* getKernelVRodataStart();

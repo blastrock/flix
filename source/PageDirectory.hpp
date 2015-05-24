@@ -27,9 +27,9 @@ class PageDirectory
 
     void mapKernel();
 
-    void mapPageTo(void* vaddr, uintptr_t page, uint8_t attributes);
-    void mapPage(void* vaddr, uint8_t attributes, void** paddr = nullptr);
-    uintptr_t unmapPage(void* vaddr);
+    void mapPageTo(void* vaddr, page_t page, uint8_t attributes);
+    void mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr = nullptr);
+    physaddr_t unmapPage(void* vaddr);
 
     bool isPageMapped(void* vaddr);
 
@@ -99,12 +99,12 @@ class PageDirectory
 
     void createPm();
     void initWithDefaultPaging();
-    void mapRangeTo(void* vastart, void* vaend, uintptr_t pastart,
+    void mapRangeTo(void* vastart, void* vaend, physaddr_t pastart,
         uint8_t attributes);
-    void mapAddrTo(void* ivaddr, uintptr_t ipaddr, uint8_t attributes);
-    void _mapPageTo(void* vaddr, uintptr_t page, uint8_t attributes);
+    void mapAddrTo(void* ivaddr, physaddr_t ipaddr, uint8_t attributes);
+    void _mapPageTo(void* vaddr, page_t page, uint8_t attributes);
     template <typename F>
-    void mapPageToF(void* vaddr, uintptr_t ipage, const F& f);
+    void mapPageToF(void* vaddr, page_t ipage, const F& f);
 };
 
 inline PageDirectory::PageDirectory() :

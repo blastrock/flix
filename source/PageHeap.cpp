@@ -5,7 +5,6 @@
 #include "Memory.hpp"
 #include "Debug.hpp"
 
-static constexpr unsigned PAGE_SIZE = 0x1000;
 static constexpr unsigned BLOCK_SIZE = 2; // in pages
 
 static PageHeap g_pageHeap;
@@ -21,13 +20,13 @@ void PageHeap::init()
   m_allocating = false;
 }
 
-std::pair<void*, void*> PageHeap::kmalloc()
+std::pair<void*, physaddr_t> PageHeap::kmalloc()
 {
-  std::pair<uint64_t, void*> item = allocBlock();
+  std::pair<page_index_t, physaddr_t> item = allocBlock();
   return {pageToPtr(item.first), item.second};
 }
 
-std::pair<uint64_t, void*> PageHeap::allocBlock()
+std::pair<PageHeap::page_index_t, physaddr_t> PageHeap::allocBlock()
 {
   // if we are reentering, use pool
   if (m_allocating)
@@ -35,7 +34,7 @@ std::pair<uint64_t, void*> PageHeap::allocBlock()
     Degf("Nested page allocation, taking from pool");
     assert(!m_pool.empty());
 
-    std::pair<uint64_t, void*> ret = m_pool.back();
+    std::pair<page_index_t, physaddr_t> ret = m_pool.back();
     m_pool.resize(m_pool.size() - 1);
     return ret;
   }
@@ -44,12 +43,13 @@ std::pair<uint64_t, void*> PageHeap::allocBlock()
     if (!m_map[i])
       return allocPage(i);
 
-  uint64_t index = m_map.size();
+  page_index_t index = m_map.size();
   m_map.resize(index + 1);
   return allocPage(index);
 }
 
-std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
+std::pair<PageHeap::page_index_t, physaddr_t>
+  PageHeap::allocPage(page_index_t index)
 {
   m_allocating = true;
 
@@ -66,7 +66,7 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
 
   m_map[index] = true;
 
-  void* phys;
+  physaddr_t phys;
   // first 32 pages are always mapped
   if (index * BLOCK_SIZE >= 32)
   {
@@ -78,19 +78,19 @@ std::pair<uint64_t, void*> PageHeap::allocPage(uint64_t index)
           PageDirectory::ATTR_RW);
   }
   else
-    phys = reinterpret_cast<void*>(0xa00000 + index * PAGE_SIZE * BLOCK_SIZE);
+    phys = 0xa00000 + index * PAGE_SIZE * BLOCK_SIZE;
 
   m_allocating = false;
 
   return {index, phys};
 }
 
-void* PageHeap::pageToPtr(uint64_t index)
+void* PageHeap::pageToPtr(page_index_t index)
 {
   return m_heapStart + index * PAGE_SIZE * BLOCK_SIZE;
 }
 
-uint64_t PageHeap::ptrToPage(void* ptr)
+PageHeap::page_index_t PageHeap::ptrToPage(void* ptr)
 {
   return (static_cast<char*>(ptr) - m_heapStart) / PAGE_SIZE / BLOCK_SIZE;
 }
@@ -115,14 +115,14 @@ void PageHeap::kfree(void* ptr)
   if (!ptr)
     return;
 
-  uint64_t index = ptrToPage(ptr);
+  page_index_t index = ptrToPage(ptr);
 
   assert(m_map[index]);
 
   // first 32 pages are always mapped
   if (index * BLOCK_SIZE >= 32)
   {
-    uintptr_t phys = PageDirectory::getKernelDirectory()->unmapPage(ptr);
+    physaddr_t phys = PageDirectory::getKernelDirectory()->unmapPage(ptr);
     Memory::setPageFree(phys / PAGE_SIZE);
     for (unsigned n = 1; n < BLOCK_SIZE; ++n)
     {
