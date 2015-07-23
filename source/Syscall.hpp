@@ -9,7 +9,7 @@ namespace sys
 
 enum ScId
 {
-  exit = 1,
+  exit = 300,
   print,
 
   last_id,

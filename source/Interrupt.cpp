@@ -111,7 +111,7 @@ void InterruptHandler::handle(InterruptState* s)
       TaskManager::get()->scheduleNext();
     }
   }
-  else // syscall
+  else if (s->intNo == 0x80) // syscall
   {
     Degf("syscall %d", s->rax);
     sys::handle(*s);

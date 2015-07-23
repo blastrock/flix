@@ -2,6 +2,7 @@
 #include "KHeap.hpp"
 #include "Symbols.hpp"
 #include "Memory.hpp"
+#include "Debug.hpp"
 
 PageDirectory* PageDirectory::g_kernelDirectory = nullptr;
 
@@ -41,6 +42,8 @@ void PageDirectory::mapKernel()
   m_manager->mapTo<2>(*getKernelDirectory()->m_manager,
       Symbols::getKernelVBase(),
       AttributeSetter<ATTR_RW>);
+
+  m_manager->getEntry<3>(reinterpret_cast<void*>(0xffffffff00000000))->us = 1;
 }
 
 #ifndef NDEBUG
@@ -136,9 +139,16 @@ void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage, uint8_t attributes)
   PageHeap::get().refillPool();
 }
 
-void PageDirectory::_mapPageTo(void* vaddr, page_t ipage,
-    uint8_t attributes)
+void PageDirectory::_mapPageTo(void* vaddr, page_t ipage, uint8_t attributes)
 {
+  if (reinterpret_cast<uintptr_t>(vaddr) < 0xffffffffc0000000 &&
+      !(attributes & ATTR_PUBLIC) &&
+      reinterpret_cast<uintptr_t>(vaddr) != 0xb8000)
+    PANIC("Mapping private page in user space");
+  if (reinterpret_cast<uintptr_t>(vaddr) > 0xffffffffc0000000 &&
+      (attributes & ATTR_PUBLIC))
+    PANIC("Mapping public page in kernel space");
+
   switch (attributes)
   {
 #define CASE(n) \

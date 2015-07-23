@@ -17,7 +17,8 @@ void printStackTrace(uint64_t stackPointer)
   Degf("Stack trace:");
   while (true)
   {
-    if (!PageDirectory::getCurrent()->isPageMapped(stackFrame))
+    if (!PageDirectory::getCurrent()->isPageMapped(stackFrame) ||
+        !PageDirectory::getCurrent()->isPageMapped(stackFrame+1))
     {
       Degf("Invalid pointer: %p", stackFrame);
       return;
