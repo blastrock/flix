@@ -19,6 +19,7 @@ struct IdtEntry
   uint32_t reserved;
 } __attribute__((packed));
 
+// WARNING: if you change things in there, update the header
 // the GDT must not be marked const because the ltr instruction writes in there
 static uint64_t g_gdtEntries[] = {
   // null descriptor

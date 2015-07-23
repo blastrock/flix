@@ -62,6 +62,7 @@ void loop2()
 
 void loop3()
 {
+  asm volatile ("syscall");
   sys::call(sys::exit);
 }
 
@@ -150,7 +151,7 @@ extern "C" int kmain(void* mboot)
     tm->addTask(std::move(task));
   }
   {
-    Task task = tm->newUserTask();
+    Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop3);
     tm->addTask(std::move(task));
