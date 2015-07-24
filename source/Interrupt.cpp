@@ -113,7 +113,7 @@ void InterruptHandler::handle(InterruptState* s)
   }
   else if (s->intNo == 0x80) // syscall
   {
-    Degf("syscall %d", s->rax);
+    Degf("syscall interrupt %d", s->rax);
     sys::handle(*s);
   }
 }

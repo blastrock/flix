@@ -98,7 +98,7 @@ void handle(const InterruptState& st)
 
 }
 
-extern "C" void syscallHandler()
+extern "C" void syscallHandler(InterruptState* s)
 {
-  Degf("SYSCALL GATE");
+  Degf("syscall %d", s->rax);
 }
