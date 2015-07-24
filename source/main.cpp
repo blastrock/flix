@@ -78,6 +78,17 @@ void exec()
   PANIC("init exec failed");
 }
 
+void enableSSEInstructions()
+{
+  asm volatile (
+      "mov %%cr4, %%rax\n"
+      "btsq $9, %%rax\n"
+      "mov %%rax, %%cr4\n"
+      :
+      :
+      :"rax");
+}
+
 extern "C" int kmain(void* mboot)
 {
   Screen::clear();
@@ -118,6 +129,8 @@ extern "C" int kmain(void* mboot)
   // then we load our module to have a file system
   Degf("Loading module");
   mbl.handle(mboot);
+
+  enableSSEInstructions();
 
   Timer::init(1);
 

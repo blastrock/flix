@@ -96,6 +96,21 @@ isr_common_stub:
   push r14
   push r15
 
+  ; pass the stack pointer as an argument so that the handler has access to the
+  ; machine state before the interrupt and to the interrupt number and error
+  ; code
+  mov rdi, rsp
+
+  ; align to 16
+  mov rcx, rsp
+  and rcx, 0xf
+  sub rsp, rcx
+
+  sub rsp, 0x200
+  fxsave [rsp]
+
+  push rcx
+
   ;mov ax, ds               ; Lower 16-bits of eax = ds.
   ;push eax                 ; save the data segment descriptor
 
@@ -105,12 +120,13 @@ isr_common_stub:
   ;mov fs, ax
   ;mov gs, ax
 
-  ; pass the stack pointer as an argument so that the handler has access to the
-  ; machine state before the interrupt and to the interrupt number and error
-  ; code
-  mov rdi, rsp
-
   call intHandler
+
+  pop rcx
+
+  fxrstor [rsp]
+  add rsp, 0x200
+  add rsp, rcx
 
   ;pop eax        ; reload the original data segment descriptor
   ;mov ds, ax
