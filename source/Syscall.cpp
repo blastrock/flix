@@ -10,14 +10,13 @@ extern "C" void syscall_entry();
 namespace sys
 {
 
-static std::array<std::function<void(const InterruptState& state)>, last_id>
-  g_syscallHandlers;
+static std::array<SyscallHandler, last_id> g_syscallHandlers;
 
 namespace detail
 {
 
 void registerHandler(ScId scid,
-    std::function<void(const InterruptState&)> handler)
+    std::function<SyscallReturnType(const InterruptState&)> handler)
 {
   auto id = static_cast<unsigned>(scid);
   assert(id < last_id);
@@ -89,16 +88,17 @@ void initSysCalls()
   registerHandler(print, hndl::print);
 }
 
-void handle(const InterruptState& st)
+SyscallReturnType handle(const InterruptState& st)
 {
   assert(st.rax < last_id);
   assert(g_syscallHandlers[st.rax]);
-  g_syscallHandlers[st.rax](st);
+  return g_syscallHandlers[st.rax](st);
 }
 
 }
 
-extern "C" void syscallHandler(InterruptState* s)
+extern "C" SyscallReturnType syscallHandler(InterruptState* s)
 {
   Degf("syscall %d", s->rax);
+  return sys::handle(*s);
 }
