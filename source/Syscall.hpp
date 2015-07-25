@@ -13,8 +13,10 @@ namespace sys
 
 enum ScId
 {
-  exit = 300,
-  print,
+  mmap = 9,
+  arch_prctl = 158,
+  exit = 231,
+  print = 300,
 
   last_id,
 };

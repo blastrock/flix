@@ -28,6 +28,49 @@ void registerHandler(ScId scid,
 namespace hndl
 {
 
+int arch_prctl(int code, unsigned long addr)
+{
+  static constexpr uint32_t MSR_FS = 0xC0000100;
+  if (code == 0x1002)
+  {
+    Degf("arch_prctl: set fs to %x", addr);
+    asm volatile (
+        "wrmsr\n"
+        :
+        :"c"(MSR_FS)
+        ,"d"(static_cast<uint32_t>(addr >> 32))
+        ,"a"(static_cast<uint32_t>(addr))
+        );
+  }
+  else
+    Degf("arch_prctl: unknown code 0x%x", code);
+  return 0;
+}
+
+void* mmap(void*, size_t length)
+{
+  Degf("mmap: size %x", length);
+
+  if (length == 0)
+    return nullptr;
+
+  static uintptr_t curPtr = 0xffffffff00005000;
+
+  void* start = reinterpret_cast<void*>(curPtr);
+
+  size_t nbPages = (length + PAGE_SIZE - 1) / PAGE_SIZE;
+  auto& pd = TaskManager::get()->getCurrentTask().pageDirectory;
+  while (nbPages--)
+  {
+    pd.mapPage(reinterpret_cast<void*>(curPtr),
+        PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
+    curPtr += PAGE_SIZE;
+  }
+
+  Degf("returning %p", start);
+  return start;
+}
+
 void exit()
 {
   // terminating a task will free its page directory, so we need to switch
@@ -85,6 +128,8 @@ void initSysCalls()
 {
   initSysCallGate();
 
+  registerHandler(mmap, hndl::mmap);
+  registerHandler(arch_prctl, hndl::arch_prctl);
   registerHandler(exit, hndl::exit);
   registerHandler(print, hndl::print);
 }
@@ -92,8 +137,13 @@ void initSysCalls()
 SyscallReturnType handle(const InterruptState& st)
 {
   assert(st.rax < last_id);
-  assert(g_syscallHandlers[st.rax]);
-  return g_syscallHandlers[st.rax](st);
+  if (g_syscallHandlers[st.rax])
+    return g_syscallHandlers[st.rax](st);
+  else
+  {
+    Degf("Unknown syscall %d", st.rax);
+    return 0;
+  }
 }
 
 }
