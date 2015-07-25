@@ -97,8 +97,8 @@ SyscallReturnType handle(const InterruptState& st)
 
 }
 
-extern "C" SyscallReturnType syscallHandler(InterruptState* s)
+extern "C" void syscallHandler(InterruptState* s)
 {
   Degf("syscall %d", s->rax);
-  return sys::handle(*s);
+  s->rax = sys::handle(*s);
 }
