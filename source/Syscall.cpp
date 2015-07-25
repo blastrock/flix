@@ -28,6 +28,14 @@ void registerHandler(ScId scid,
 namespace hndl
 {
 
+ssize_t write(int fd, const void* buf, size_t count)
+{
+  const std::string str(static_cast<const char*>(buf), count);
+  Degf("writing %s on fd %d", str.c_str(), fd);
+  Screen::putString(str.c_str());
+  return 0;
+}
+
 int arch_prctl(int code, unsigned long addr)
 {
   static constexpr uint32_t MSR_FS = 0xC0000100;
@@ -128,6 +136,7 @@ void initSysCalls()
 {
   initSysCallGate();
 
+  registerHandler(write, hndl::write);
   registerHandler(mmap, hndl::mmap);
   registerHandler(arch_prctl, hndl::arch_prctl);
   registerHandler(exit, hndl::exit);

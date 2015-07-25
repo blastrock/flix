@@ -13,6 +13,7 @@ namespace sys
 
 enum ScId
 {
+  write = 1,
   mmap = 9,
   arch_prctl = 158,
   exit = 231,
