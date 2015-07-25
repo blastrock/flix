@@ -5,11 +5,13 @@
 #include <cstring>
 #include "io.hpp"
 
+static constexpr uintptr_t VGA_BASE = 0xffffffffc1000000;
+
 Position Screen::g_cursor = {0, 0};
 
 void Screen::clear()
 {
-  std::memset((void*)0xB8000, 0, sizeof(uint16_t)*80*25);
+  std::memset((void*)VGA_BASE, 0, sizeof(uint16_t)*80*25);
   g_cursor = {0, 0};
 }
 
@@ -66,7 +68,7 @@ void Screen::putChar(char c, Color fg, Color bg)
 void Screen::putChar(Position pos, char c, Color fg, Color bg)
 {
   uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
-  uint16_t* screen = (uint16_t*)0xB8000;
+  uint16_t* screen = (uint16_t*)VGA_BASE;
   screen[pos.y * 80 + pos.x] = val;
 }
 
@@ -81,6 +83,6 @@ void Screen::updateCursor()
 
 void Screen::scrollOneLine()
 {
-  std::memcpy((void*)0xB8000, (void*)(0xB8000 + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
-  std::memset((void*)(0xB8000 + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
+  std::memcpy((void*)VGA_BASE, (void*)(VGA_BASE + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
+  std::memset((void*)(VGA_BASE + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
 }

@@ -55,7 +55,7 @@ void PageDirectory::initWithDefaultPaging()
   createPm();
 
   // map VGA
-  mapAddrTo(reinterpret_cast<void*>(0xB8000), 0xB8000, ATTR_RW);
+  mapAddrTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
   // mapping .text and .rodata

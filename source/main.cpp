@@ -91,9 +91,6 @@ void enableSSEInstructions()
 
 extern "C" int kmain(void* mboot)
 {
-  Screen::clear();
-  Screen::putString("Booting Flix");
-
   Degf("Booting Flix");
 
   Degf("Initializing GDT and IDT");
@@ -135,6 +132,9 @@ extern "C" int kmain(void* mboot)
   Timer::init(1);
 
   auto tm = TaskManager::get();
+
+  Screen::clear();
+  Screen::putString("Booting Flix\n");
 
   {
     Task task = tm->newKernelTask();
