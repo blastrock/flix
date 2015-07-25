@@ -1,6 +1,7 @@
 [EXTERN syscallHandler]
 
 [GLOBAL syscall_entry]
+;TODO switch to kernel stack
 syscall_entry:
   sub rsp, 8 ; ss
   push rsp

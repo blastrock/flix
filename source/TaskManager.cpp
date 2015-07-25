@@ -3,6 +3,7 @@
 #include "Interrupt.hpp"
 #include "Debug.hpp"
 #include "Symbols.hpp"
+#include "DescTables.hpp"
 
 TaskManager* TaskManager::instance;
 
@@ -50,9 +51,8 @@ void TaskManager::terminateCurrentTask()
 Task TaskManager::newKernelTask()
 {
   Task task{};
-  // see DescTables.cpp
-  task.context.cs = 0x08;
-  task.context.ss = 0x10;
+  task.context.cs = DescTables::SYSTEM_CS;
+  task.context.ss = DescTables::SYSTEM_DS;
   task.context.rflags = 0x0200; // enable IRQ
   task.pageDirectory.mapKernel();
   return task;
@@ -61,9 +61,8 @@ Task TaskManager::newKernelTask()
 Task TaskManager::newUserTask()
 {
   Task task{};
-  // see DescTables.cpp
-  task.context.cs = 0x1B;
-  task.context.ss = 0x23;
+  task.context.cs = DescTables::USER_CS | 0x3;
+  task.context.ss = DescTables::USER_DS | 0x3;
   task.context.rflags = 0x0200; // enable IRQ
   task.pageDirectory.mapKernel();
   return task;
@@ -73,8 +72,8 @@ void TaskManager::downgradeCurrentTask()
 {
   assert(_currentTask < _tasks.size());
   Task& task = _tasks[_currentTask];
-  task.context.cs = 0x1B;
-  task.context.ss = 0x23;
+  task.context.cs = DescTables::USER_CS | 0x3;
+  task.context.ss = DescTables::USER_DS | 0x3;
 }
 
 void TaskManager::saveCurrentTask(const Task::Context& ctx)

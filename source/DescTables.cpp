@@ -21,6 +21,7 @@ struct IdtEntry
 
 // WARNING: if you change things in there, update the header
 // the GDT must not be marked const because the ltr instruction writes in there
+// the data and code segments in ring3 are inverted because of how sysret works
 static uint64_t g_gdtEntries[] = {
   // null descriptor
   0x0000000000000000,
@@ -28,10 +29,10 @@ static uint64_t g_gdtEntries[] = {
   0x0020980000000000,
   // data segment (ring0)
   0x0000920000000000,
-  // code segment (ring3)
-  0x0020F80000000000,
   // data segment (ring3)
   0x0000F20000000000,
+  // code segment (ring3)
+  0x0020F80000000000,
   // task segment (128bits, LE)
   // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
   0xCF0089FFC0000067,
@@ -127,7 +128,7 @@ void initIdt()
 
 void DescTables::initTr()
 {
-  asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(0x28)));
+  asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(TSS)));
 }
 
 // Make gate that points to code at offset. If pub is true, the gate is

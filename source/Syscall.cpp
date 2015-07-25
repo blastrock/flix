@@ -50,9 +50,10 @@ static constexpr uint32_t MSR_LSTAR = 0xC0000082;
 
 static void initSysCallGate()
 {
+  // sysret sets the cs to SYSTEM_CS + 16, don't know why...
   uint64_t star =
-    static_cast<uint64_t>(DescTables::USER_CS) << 48 |
-    static_cast<uint64_t>(DescTables::SYSTEM_CS) << 32;
+    (static_cast<uint64_t>(DescTables::USER_CS - 16) << 48) |
+    (static_cast<uint64_t>(DescTables::SYSTEM_CS) << 32);
 
   asm volatile ("wrmsr"
       :
