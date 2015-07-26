@@ -91,6 +91,8 @@ void enableSSEInstructions()
 
 extern "C" int kmain(void* mboot)
 {
+  enableSSEInstructions();
+
   Degf("Booting Flix");
 
   Degf("Initializing GDT and IDT");
@@ -126,8 +128,6 @@ extern "C" int kmain(void* mboot)
   // then we load our module to have a file system
   Degf("Loading module");
   mbl.handle(mboot);
-
-  enableSSEInstructions();
 
   Timer::init(1);
 

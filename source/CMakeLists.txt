@@ -3,7 +3,7 @@ enable_language(ASM)
 
 set(FLIX_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/flix.ld")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Ilibkcxx -nostdinc -nostdinc++ -isystem ${CXX_COMPILER_INCLUDE} -isystem ${LIBKC_INCLUDE} -D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_NO_EXCEPTIONS -D_LIBCPP_NO_RTTI -D_LIBCPP_BUILD_STATIC -fno-builtin -fno-stack-protector -std=c++14 -fno-exceptions -Wall -Wextra -pedantic -fPIC -m64 -mno-sse -mno-mmx")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Ilibkcxx -nostdinc -nostdinc++ -isystem ${CXX_COMPILER_INCLUDE} -isystem ${LIBKC_INCLUDE} -D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_NO_EXCEPTIONS -D_LIBCPP_NO_RTTI -D_LIBCPP_BUILD_STATIC -fno-builtin -fno-stack-protector -std=c++14 -fno-exceptions -Wall -Wextra -pedantic -fPIC -m64")
 
 set(CMAKE_ASM_NASM_FLAGS "-felf64")
 set(CMAKE_EXE_LINKER_FLAGS "-T${FLIX_LINKER_SCRIPT} -nostdlib -melf_x86_64 -z max-page-size=0x1000 -O0")
