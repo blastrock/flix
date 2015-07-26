@@ -1,4 +1,5 @@
 enable_language(ASM_NASM)
+enable_language(ASM)
 
 set(FLIX_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/flix.ld")
 
@@ -36,7 +37,7 @@ add_executable(flix
   StaticMemoryPool.cpp
   Symbols.cpp
   Syscall.cpp
-  syscall.asm
+  syscall.S
   TaskManager.cpp
   task.asm
   Timer.cpp

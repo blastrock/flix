@@ -1,5 +1,7 @@
 #include "Cpu.hpp"
 
+void* kernelStack;
+
 uint64_t Cpu::rflags()
 {
   uint64_t ret;
@@ -8,4 +10,9 @@ uint64_t Cpu::rflags()
       "popq %0\n"
       : "=r"(ret));
   return ret;
+}
+
+void Cpu::setKernelStack(void* stack)
+{
+  kernelStack = stack;
 }

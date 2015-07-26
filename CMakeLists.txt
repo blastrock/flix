@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(flix)
 
+# allow to override Compiler/Clang-ASM.cmake file
+cmake_policy(SET CMP0017 OLD)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
 # clang doesn't print colored diagnostics when invoked from Ninja
 if(UNIX AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_GENERATOR STREQUAL
 "Ninja")

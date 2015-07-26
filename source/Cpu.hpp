@@ -7,6 +7,7 @@ namespace Cpu
 {
 
 uint64_t rflags();
+void setKernelStack(void* stack);
 
 }
 
