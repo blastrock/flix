@@ -6,6 +6,10 @@
 class MultibootLoader
 {
   public:
+    MultibootLoader()
+      : _moduleRead(false)
+    {}
+
     void handle(void* mboot)
     {
       handle(mboot, false);
