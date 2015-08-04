@@ -87,6 +87,7 @@ struct SuperBlock {
 
 void setRoot(std::shared_ptr<SuperBlock> root);
 std::shared_ptr<Inode> getRootInode();
+std::shared_ptr<Inode> lookup(const std::string& path);
 
 }
 
