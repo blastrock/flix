@@ -1,17 +1,26 @@
 #ifndef FS_HPP
 #define FS_HPP
 
-#include <stdint.h>
+#include <cstdint>
 #include <cstdlib>
 #include <memory>
+
+#include "defs.hpp"
 
 namespace fs
 {
 
+enum class Whence
+{
+  Begin,
+  Current,
+  End
+};
+
 struct Handle {
   virtual ~Handle() {}
-  //virtual int lseek (off_t, int) = 0;
-  virtual uint64_t read(void* buf, uint64_t pos, uint64_t size) = 0;
+  virtual off_t lseek(off_t position, Whence whence) = 0;
+  virtual off_t read(void* buffer, off_t size) = 0;
   //virtual int write (Inode*, File*, const char *, int) = 0;
   //virtual int readdir (void *, filldir_t) = 0;
   //virtual int select (Inode*, File*, int, select_table *) = 0;

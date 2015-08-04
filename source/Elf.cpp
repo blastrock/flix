@@ -78,7 +78,8 @@ bool exec(fs::Handle& f)
 {
   Degf("Reading header");
   ElfHeader hdr;
-  f.read(static_cast<void*>(&hdr), 0, sizeof(hdr));
+    f.lseek(0, fs::Whence::Begin);
+  f.read(static_cast<void*>(&hdr), sizeof(hdr));
 
   if (!checkHeader(hdr))
   {
@@ -96,11 +97,15 @@ bool exec(fs::Handle& f)
 
   Degf("%d program headers to read", hdr.e_phnum);
   auto currentOffset = hdr.e_phoff;
-  for (unsigned int i = 0; i < hdr.e_phnum; ++i, currentOffset += hdr.e_phentsize)
+  for (unsigned int i = 0;
+      i < hdr.e_phnum;
+      ++i, currentOffset += hdr.e_phentsize)
   {
+    f.lseek(currentOffset, fs::Whence::Begin);
+
     Degf("Reading program header %d", i);
     ElfProgramHeader prgHdr;
-    f.read(&prgHdr, currentOffset, sizeof(prgHdr));
+    f.read(&prgHdr, sizeof(prgHdr));
 
     Degf("Type is 0x%x", prgHdr.p_type);
     if (prgHdr.p_type != PT_LOAD)
@@ -120,8 +125,8 @@ bool exec(fs::Handle& f)
     Degf("Loading segment in file at %x of size %x",
         prgHdr.p_offset, prgHdr.p_filesz);
     // FIXME what should we do if filesz > memsz??
+    f.lseek(prgHdr.p_offset, fs::Whence::Begin);
     f.read(reinterpret_cast<char*>(prgHdr.p_vaddr),
-        prgHdr.p_offset,
         prgHdr.p_filesz);
   }
 

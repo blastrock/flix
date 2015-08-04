@@ -10,9 +10,11 @@ public:
     : _file(inode)
   {}
 
-  uint64_t read(void* buf, uint64_t pos, uint64_t size) override;
+  off_t lseek(off_t position, fs::Whence whence) override;
+  off_t read(void* buffer, off_t size) override;
 
   CpioFileInode* _file;
+  off_t _pos;
 };
 
 class CpioInode : public fs::Inode
@@ -36,10 +38,30 @@ public:
   std::vector<uint8_t> _data;
 };
 
-uint64_t CpioFileHandle::read(void* buf, uint64_t pos, uint64_t size)
+off_t CpioFileHandle::lseek(off_t position, fs::Whence whence)
 {
-  size = std::min(size, _file->_data.size() - pos);
-  std::memcpy(buf, &_file->_data[pos], size);
+  switch (whence)
+  {
+  case fs::Whence::Begin:
+    _pos = position;
+    break;
+  case fs::Whence::Current:
+    _pos += position;
+    break;
+  case fs::Whence::End:
+    _pos = _file->_data.size() + position;
+    break;
+  }
+  // TODO handle _pos < 0 or > size
+
+  return _pos;
+}
+
+off_t CpioFileHandle::read(void* buf, off_t size)
+{
+  size = std::min(size, _file->_data.size() - _pos);
+  std::memcpy(buf, &_file->_data[_pos], size);
+  _pos += size;
   return size;
 }
 
