@@ -1,6 +1,12 @@
 [submodule "libkcxx"]
 	path = libkcxx
 	url = https://BlastRock@bitbucket.org/BlastRock/libkcxx.git
+[submodule "libkc"]
+	path = libkc
+	url = https://BlastRock@bitbucket.org/BlastRock/libkc.git
+[submodule "libcxxabi"]
+	path = libcxxabi
+	url = https://github.com/llvm-mirror/libcxxabi.git
 [submodule "external/pnt"]
 	path = external/pnt
 	url = https://github.com/blastrock/pnt
