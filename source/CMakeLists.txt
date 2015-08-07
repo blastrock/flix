@@ -3,6 +3,8 @@ enable_language(ASM)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/external/pnt/include
+  ${PROJECT_SOURCE_DIR}/external/variant/include
+  ${PROJECT_SOURCE_DIR}/external/expected/include
   )
 
 set(FLIX_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/flix.ld")

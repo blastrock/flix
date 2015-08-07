@@ -7,6 +7,12 @@
 [submodule "libcxxabi"]
 	path = libcxxabi
 	url = https://github.com/llvm-mirror/libcxxabi.git
+[submodule "external/variant"]
+	path = external/variant
+	url = https://github.com/eggs-cpp/variant
+[submodule "external/expected"]
+	path = external/expected
+	url = https://BlastRock@bitbucket.org/BlastRock/expected.git
 [submodule "external/pnt"]
 	path = external/pnt
 	url = https://github.com/blastrock/pnt
