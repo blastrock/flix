@@ -1,6 +1,10 @@
 enable_language(ASM_NASM)
 enable_language(ASM)
 
+include_directories(
+  ${PROJECT_SOURCE_DIR}/external/pnt/include
+  )
+
 set(FLIX_LINKER_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/flix.ld")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Ilibkcxx -nostdinc -nostdinc++ -isystem ${CXX_COMPILER_INCLUDE} -isystem ${LIBKC_INCLUDE} -D_LIBCPP_HAS_NO_MONOTONIC_CLOCK -D_LIBCPP_HAS_NO_THREADS -D_LIBCPP_NO_EXCEPTIONS -D_LIBCPP_NO_RTTI -D_LIBCPP_BUILD_STATIC -fno-builtin -fno-stack-protector -std=c++14 -fno-exceptions -Wall -Wextra -pedantic -fPIC -m64")
