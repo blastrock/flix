@@ -19,9 +19,24 @@ enum class Whence
 
 struct Handle {
   virtual ~Handle() {}
-  virtual off_t lseek(off_t position, Whence whence) = 0;
-  virtual off_t read(void* buffer, off_t size) = 0;
-  //virtual int write (Inode*, File*, const char *, int) = 0;
+  virtual off_t lseek(off_t position, Whence whence)
+  {
+    (void)position;
+    (void)whence;
+    return -1;
+  }
+  virtual off_t read(void* buffer, off_t size)
+  {
+    (void)buffer;
+    (void)size;
+    return -1;
+  }
+  virtual off_t write (const void* buffer, off_t size)
+  {
+    (void)buffer;
+    (void)size;
+    return -1;
+  }
   //virtual int readdir (void *, filldir_t) = 0;
   //virtual int select (Inode*, File*, int, select_table *) = 0;
   //virtual int ioctl (Inode*, File*, unsigned int, unsigned long) = 0;
