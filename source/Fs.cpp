@@ -1,4 +1,5 @@
 #include "Fs.hpp"
+
 #include <vector>
 #include <string>
 
@@ -27,12 +28,13 @@ static std::vector<std::string> split(
   {
     if (*iter == val)
     {
-      if (merge && lastiter == iter)
-        continue;
-      out.push_back(std::string(lastiter, iter));
+      if (!merge || lastiter != iter)
+        out.push_back(std::string(lastiter, iter));
       lastiter = iter+1;
     }
   }
+  if (lastiter != end || !merge)
+    out.push_back(std::string(lastiter, end));
   return out;
 }
 
