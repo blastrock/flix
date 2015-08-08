@@ -3,7 +3,9 @@
 
 #include <cstdint>
 #include <vector>
+
 #include "PageDirectory.hpp"
+#include "FileManager.hpp"
 
 struct Task
 {
@@ -20,6 +22,7 @@ struct Task
   PageDirectory pageDirectory;
   char* stack;
   char* stackTop;
+  FileManager fileManager;
 };
 
 struct TaskStateSegment

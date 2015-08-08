@@ -30,10 +30,20 @@ namespace hndl
 
 ssize_t write(int fd, const void* buf, size_t count)
 {
-  const std::string str(static_cast<const char*>(buf), count);
-  Degf("writing %s on fd %d", str.c_str(), fd);
-  Screen::putString(str.c_str());
-  return 0;
+  Degf("writing %s on fd %d",
+      std::string(static_cast<const char*>(buf), count).c_str(),
+      fd);
+
+  auto& task = TaskManager::get()->getCurrentTask();
+  auto handle = task.fileManager.getHandle(fd);
+
+  if (!handle)
+  {
+    Degf("fd not found");
+    return -1;
+  }
+
+  return handle->write(buf, count);
 }
 
 int arch_prctl(int code, unsigned long addr)

@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <memory>
 
+#include <eggs/variant.hpp>
+
 #include "defs.hpp"
 
 namespace fs
@@ -16,6 +18,10 @@ enum class Whence
   Current,
   End
 };
+
+struct IoError_NotFound {};
+
+using IoError = eggs::variant<IoError_NotFound>;
 
 struct Handle {
   virtual ~Handle() {}

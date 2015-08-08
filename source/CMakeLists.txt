@@ -30,6 +30,7 @@ add_executable(flix
   DescTables.cpp
   Elf.cpp
   Fs.cpp
+  FileManager.cpp
   interrupt.asm
   Interrupt.cpp
   IntUtil.cpp
