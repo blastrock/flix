@@ -77,6 +77,7 @@ public:
   }
   std::unique_ptr<fs::Handle> open() override
   {
+    Degf("Trying to open Cpio folder");
     return nullptr;
   }
 

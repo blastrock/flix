@@ -14,6 +14,8 @@ public:
   FileManager();
 
   xll::expected<int, fs::IoError> open(const char* name);
+  int close(int fd);
+
   std::shared_ptr<fs::Handle> getHandle(int fd);
 
 private:

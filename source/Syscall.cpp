@@ -28,9 +28,46 @@ void registerHandler(ScId scid,
 namespace hndl
 {
 
+int open(const char* path)
+{
+  auto& task = TaskManager::get()->getCurrentTask();
+  auto expfd = task.fileManager.open(path);
+  if (!expfd)
+    return -1;
+  return *expfd;
+}
+
+int openat(int dirfd, const char* path)
+{
+  (void)dirfd;
+  return open(path);
+}
+
+int close(int fd)
+{
+  auto& task = TaskManager::get()->getCurrentTask();
+  return task.fileManager.close(fd);
+}
+
+ssize_t read(int fd, void* buf, size_t count)
+{
+  Degf("reading fd %d", fd);
+
+  auto& task = TaskManager::get()->getCurrentTask();
+  auto handle = task.fileManager.getHandle(fd);
+
+  if (!handle)
+  {
+    Degf("fd not found");
+    return -1;
+  }
+
+  return handle->read(buf, count);
+}
+
 ssize_t write(int fd, const void* buf, size_t count)
 {
-  Degf("writing %s on fd %d",
+  Degf("writing \"%s\" on fd %d",
       std::string(static_cast<const char*>(buf), count).c_str(),
       fd);
 
@@ -146,10 +183,14 @@ void initSysCalls()
 {
   initSysCallGate();
 
+  registerHandler(read, hndl::read);
   registerHandler(write, hndl::write);
+  registerHandler(open, hndl::open);
+  registerHandler(close, hndl::close);
   registerHandler(mmap, hndl::mmap);
   registerHandler(arch_prctl, hndl::arch_prctl);
   registerHandler(exit, hndl::exit);
+  registerHandler(openat, hndl::openat);
   registerHandler(print, hndl::print);
 }
 
