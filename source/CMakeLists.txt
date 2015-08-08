@@ -2,6 +2,7 @@ enable_language(ASM_NASM)
 enable_language(ASM)
 
 include_directories(
+  SYSTEM
   ${PROJECT_SOURCE_DIR}/external/pnt/include
   ${PROJECT_SOURCE_DIR}/external/variant/include
   ${PROJECT_SOURCE_DIR}/external/expected/include
