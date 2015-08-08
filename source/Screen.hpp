@@ -1,6 +1,8 @@
 #ifndef SCREEN_HPP
 #define SCREEN_HPP
 
+#include <stddef.h>
+
 struct Position
 {
   int x;
@@ -31,9 +33,18 @@ class Screen
 {
   public:
     static void clear();
-    static void putString(const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    static void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    static void putChar(Position pos, char c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void putString(const char* c,
+        size_t size,
+        Color fg = Color::LightGrey,
+        Color bg = Color::Black);
+    static void putString(
+        const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void putChar(
+        char c, Color fg = Color::LightGrey, Color bg = Color::Black);
+    static void putChar(Position pos,
+        char c,
+        Color fg = Color::LightGrey,
+        Color bg = Color::Black);
     static void updateCursor();
 
   private:

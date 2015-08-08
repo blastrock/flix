@@ -15,11 +15,29 @@ void Screen::clear()
   g_cursor = {0, 0};
 }
 
+void Screen::putString(const char* c, size_t size, Color fg, Color bg)
+{
+  bool i = Cpu::rflags() & (1 << 9);
+  if (i)
+    asm volatile ("cli");
+
+  while (size--)
+  {
+    putChar(*c, fg, bg);
+    ++c;
+  }
+
+  updateCursor();
+  if (i)
+    asm volatile ("sti");
+}
+
 void Screen::putString(const char* c, Color fg, Color bg)
 {
   bool i = Cpu::rflags() & (1 << 9);
   if (i)
     asm volatile ("cli");
+
   while (*c)
   {
     putChar(*c, fg, bg);
