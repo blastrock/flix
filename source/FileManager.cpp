@@ -8,10 +8,10 @@ class NullHandle : public fs::Handle
 class StdOut : public fs::Handle
 {
 public:
-  virtual off_t write(const void* buffer, off_t size) override;
+  fs::IoExpected<off_t> write(const void* buffer, off_t size) override;
 };
 
-off_t StdOut::write(const void* buffer, off_t size)
+fs::IoExpected<off_t> StdOut::write(const void* buffer, off_t size)
 {
   const char* str = static_cast<const char*>(buffer);
   Screen::putString(str, size);
@@ -31,18 +31,13 @@ xll::expected<int, fs::IoError> FileManager::open(const char* path)
 {
   Degf("opening %s", path);
 
-  auto inode = fs::lookup(path);
-  if (!inode)
-  {
-    Degf("not found");
-    return xll::make_unexpected(fs::IoError_NotFound{});
-  }
-  auto handle = inode->open();
-  if (!handle)
-  {
-    Degf("open failed");
-    return xll::make_unexpected(fs::IoError_NotFound{});
-  }
+  auto ehandle =
+    fs::lookup(path).bind([](auto&& inode)
+        { return inode->open(); });
+  if (!ehandle)
+    return ehandle.get_unexpected();
+  auto handle = std::move(*ehandle);
+
   // find a free entry and return it
   for (unsigned i = 0; i < _files.size(); ++i)
     if (!_files[i])

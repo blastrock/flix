@@ -10,8 +10,8 @@ public:
     : _file(inode)
   {}
 
-  off_t lseek(off_t position, fs::Whence whence) override;
-  off_t read(void* buffer, off_t size) override;
+  fs::IoExpected<off_t> lseek(off_t position, fs::Whence whence) override;
+  fs::IoExpected<off_t> read(void* buffer, off_t size) override;
 
   CpioFileInode* _file;
   off_t _pos;
@@ -26,11 +26,7 @@ public:
 class CpioFileInode : public CpioInode
 {
 public:
-  std::shared_ptr<fs::Inode> lookup(const char*) override
-  {
-    PANIC("No lookup for files");
-  }
-  std::unique_ptr<fs::Handle> open() override
+  fs::IoExpected<std::unique_ptr<fs::Handle>> open() override
   {
     return std::make_unique<CpioFileHandle>(this);
   }
@@ -38,7 +34,7 @@ public:
   std::vector<uint8_t> _data;
 };
 
-off_t CpioFileHandle::lseek(off_t position, fs::Whence whence)
+fs::IoExpected<off_t> CpioFileHandle::lseek(off_t position, fs::Whence whence)
 {
   switch (whence)
   {
@@ -57,7 +53,7 @@ off_t CpioFileHandle::lseek(off_t position, fs::Whence whence)
   return _pos;
 }
 
-off_t CpioFileHandle::read(void* buf, off_t size)
+fs::IoExpected<off_t> CpioFileHandle::read(void* buf, off_t size)
 {
   size = std::min(size, _file->_data.size() - _pos);
   std::memcpy(buf, &_file->_data[_pos], size);
@@ -68,17 +64,12 @@ off_t CpioFileHandle::read(void* buf, off_t size)
 class CpioFolderInode : public CpioInode
 {
 public:
-  std::shared_ptr<fs::Inode> lookup(const char* name) override
+  fs::IoExpected<std::shared_ptr<fs::Inode>> lookup(const char* name) override
   {
     for (const auto& child : _children)
       if (child->_name == name)
         return child;
-    return nullptr;
-  }
-  std::unique_ptr<fs::Handle> open() override
-  {
-    Degf("Trying to open Cpio folder");
-    return nullptr;
+    return xll::make_unexpected(fs::IoError_NotFound{});
   }
 
   std::vector<std::shared_ptr<CpioInode>> _children;

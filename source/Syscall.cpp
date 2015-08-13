@@ -62,7 +62,10 @@ ssize_t read(int fd, void* buf, size_t count)
     return -1;
   }
 
-  return handle->read(buf, count);
+  auto readResult = handle->read(buf, count);
+  if (!readResult)
+    return -1;
+  return *readResult;
 }
 
 ssize_t write(int fd, const void* buf, size_t count)
@@ -80,7 +83,10 @@ ssize_t write(int fd, const void* buf, size_t count)
     return -1;
   }
 
-  return handle->write(buf, count);
+  auto writeResult = handle->write(buf, count);
+  if (!writeResult)
+    return -1;
+  return *writeResult;
 }
 
 int arch_prctl(int code, unsigned long addr)

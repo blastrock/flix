@@ -7,6 +7,9 @@
 
 #include <eggs/variant.hpp>
 
+#include <xll/expected.hpp>
+
+#include "Debug.hpp"
 #include "defs.hpp"
 
 namespace fs
@@ -19,29 +22,49 @@ enum class Whence
   End
 };
 
+struct IoError_InvalidPath {};
 struct IoError_NotFound {};
+struct IoError_NotSeekable {};
+struct IoError_NotReadable {};
+struct IoError_NotWritable {};
+struct IoError_NotADirectory {};
+struct IoError_NotAFile {};
 
-using IoError = eggs::variant<IoError_NotFound>;
+using IoError = eggs::variant<
+    IoError_InvalidPath,
+    IoError_NotFound,
+    IoError_NotSeekable,
+    IoError_NotReadable,
+    IoError_NotWritable,
+    IoError_NotADirectory,
+    IoError_NotAFile
+>;
+
+template <typename T>
+using IoExpected = xll::expected<T, IoError>;
 
 struct Handle {
   virtual ~Handle() {}
-  virtual off_t lseek(off_t position, Whence whence)
+  virtual IoExpected<off_t> lseek(off_t position, Whence whence)
   {
+    Degf("lseek stub called");
     (void)position;
     (void)whence;
-    return -1;
+    return xll::make_unexpected(IoError_NotSeekable{});
   }
-  virtual off_t read(void* buffer, off_t size)
+  virtual IoExpected<off_t> read(void* buffer, off_t size)
   {
+    Degf("read stub called");
     (void)buffer;
     (void)size;
-    return -1;
+    return xll::make_unexpected(IoError_NotReadable{});
   }
-  virtual off_t write (const void* buffer, off_t size)
+  virtual IoExpected<off_t> write (const void* buffer, off_t size)
   {
+    Degf("write stub called");
     (void)buffer;
     (void)size;
-    return -1;
+    return xll::make_unexpected(IoError_NotWritable{});
   }
   //virtual int readdir (void *, filldir_t) = 0;
   //virtual int select (Inode*, File*, int, select_table *) = 0;
@@ -72,8 +95,15 @@ struct Inode {
 
   virtual ~Inode() {}
   //virtual int create(Inode*, const char*, int, int, Inode**) = 0;
-  virtual std::shared_ptr<Inode> lookup(const char* name) = 0;
-  virtual std::unique_ptr<Handle> open() = 0;
+  virtual IoExpected<std::shared_ptr<Inode>> lookup(const char* name)
+  {
+    (void)name;
+    return xll::make_unexpected(IoError_NotADirectory{});
+  }
+  virtual IoExpected<std::unique_ptr<Handle>> open()
+  {
+    return xll::make_unexpected(IoError_NotAFile{});
+  }
   //virtual int link(Inode*, Inode*, const char*, int) = 0;
   //virtual int unlink(Inode*, const char*, int) = 0;
   //virtual int symlink(Inode*, const char*, int, const char*) = 0;
@@ -117,7 +147,7 @@ struct SuperBlock {
 
 void setRoot(std::shared_ptr<SuperBlock> root);
 std::shared_ptr<Inode> getRootInode();
-std::shared_ptr<Inode> lookup(const std::string& path);
+IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path);
 
 }
 

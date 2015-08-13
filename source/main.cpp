@@ -69,11 +69,11 @@ void loop3()
 void exec()
 {
   Degf("Opening file");
-  auto inode = fs::getRootInode()->lookup("init");
-  auto hndl = inode->open();
+  auto einode = fs::getRootInode()->lookup("init");
+  auto ehndl = (*einode)->open();
   Degf("Execing");
   // FIXME exec never returns so hndl leaks
-  elf::exec(*hndl);
+  elf::exec(**ehndl);
 
   PANIC("init exec failed");
 }
@@ -138,8 +138,8 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   {
     Task task = tm->newKernelTask();
-    task.stack = new char[0x1000];
-    task.stackTop = task.stack + 0x1000;
+    task.stack = new char[0x4000];
+    task.stackTop = task.stack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     tm->addTask(std::move(task));

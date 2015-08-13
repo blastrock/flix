@@ -38,21 +38,22 @@ static std::vector<std::string> split(
   return out;
 }
 
-std::shared_ptr<Inode> lookup(const std::string& path)
+IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path)
 {
   if (path.empty())
-    return nullptr;
+    return xll::make_unexpected(IoError_InvalidPath{});
 
   if (path[0] != '/')
-    return nullptr;
+    return xll::make_unexpected(IoError_InvalidPath{});
 
   const auto splitted = split(path, '/', true);
   auto curInode = getRootInode();
   for (const auto& part : splitted)
   {
-    curInode = curInode->lookup(part.c_str());
-    if (!curInode)
-      return nullptr;
+    auto expCurInode = curInode->lookup(part.c_str());
+    if (!expCurInode)
+      return xll::make_unexpected(IoError_NotFound{});
+    curInode = *expCurInode;
   }
 
   return curInode;
