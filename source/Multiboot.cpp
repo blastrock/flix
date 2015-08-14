@@ -63,11 +63,11 @@ char* MultibootLoader::handleModule(Module* mod, const F& cb)
 
   char* basePtr = static_cast<char*>(Symbols::getStackBase());
   char* curPtr = basePtr;
-  for (uint64_t page = mod->mod_start / 0x1000,
-      lastPage = (mod->mod_end + 0xFFF) / 0x1000;
-      page < lastPage;
-      ++page, curPtr += 0x1000)
-    cb(curPtr, page);
+  for (physaddr_t paddr = mod->mod_start,
+      lastPAddr = mod->mod_end;
+      paddr < lastPAddr;
+      paddr += PAGE_SIZE, curPtr += PAGE_SIZE)
+    cb(curPtr, paddr);
 
   return basePtr;
 }
@@ -75,8 +75,8 @@ char* MultibootLoader::handleModule(Module* mod, const F& cb)
 void MultibootLoader::prehandleModule(Module* mod)
 {
   handleModule(mod,
-      [](auto, auto page) {
-        Memory::setPageUsed(page);
+      [](auto, auto paddr) {
+        Memory::setPageUsed(paddr / PAGE_SIZE);
       });
 }
 
@@ -86,8 +86,8 @@ void MultibootLoader::handleModule(Module* mod)
     PANIC("More than one module specified on boot");
 
   char* basePtr = handleModule(mod,
-      [](auto curPtr, auto page) {
-        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, page, 0);
+      [](auto curPtr, auto paddr) {
+        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, paddr, 0);
       });
 
   fs::setRoot(readArchive(basePtr));

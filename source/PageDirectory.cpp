@@ -129,17 +129,17 @@ PageDirectory* PageDirectory::getCurrent()
   return g_currentPageDirectory;
 }
 
-void PageDirectory::mapPageTo(void* vaddr, uintptr_t ipage, uint8_t attributes)
+void PageDirectory::mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)
 {
   assert(g_pagingReady);
 
-  _mapPageTo(vaddr, ipage, attributes);
+  _mapPageTo(vaddr, paddr, attributes);
 
   // refill pool if needed
   PageHeap::get().refillPool();
 }
 
-void PageDirectory::_mapPageTo(void* vaddr, page_t ipage, uint8_t attributes)
+void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)
 {
   if (reinterpret_cast<uintptr_t>(vaddr) < 0xffffffffc0000000 &&
       !(attributes & ATTR_PUBLIC) &&
@@ -152,7 +152,7 @@ void PageDirectory::_mapPageTo(void* vaddr, page_t ipage, uint8_t attributes)
   switch (attributes)
   {
 #define CASE(n) \
-  case n: mapPageToF(vaddr, ipage, AttributeSetter<n>); break;
+  case n: mapPageToF(vaddr, paddr, AttributeSetter<n>); break;
     CASE(0x0)
     CASE(0x1)
     CASE(0x2)
@@ -164,23 +164,23 @@ void PageDirectory::_mapPageTo(void* vaddr, page_t ipage, uint8_t attributes)
 }
 
 template <typename F>
-void PageDirectory::mapPageToF(void* vaddr, page_t ipage, const F& f)
+void PageDirectory::mapPageToF(void* vaddr, physaddr_t paddr, const F& f)
 {
-  Degf("Mapping %p to %x", vaddr, ipage << BASE_SHIFT);
+  Degf("Mapping %p to %x", vaddr, paddr);
 
   // map intermediate pages with all rights and limit permissions only on last
   // level
   PageTableEntry* page = m_manager->getPage(vaddr, AttributeSetter<0x3>);
   assert(!page->p && "Page already mapped");
   page->p = true;
-  page->base = ipage;
+  page->base = paddr >> BASE_SHIFT;
   f(*page);
 }
 
-void PageDirectory::mapAddrTo(void* vaddr, physaddr_t ipaddr,
+void PageDirectory::mapAddrTo(void* vaddr, physaddr_t paddr,
     uint8_t attributes)
 {
-  _mapPageTo(vaddr, ipaddr >> BASE_SHIFT, attributes);
+  _mapPageTo(vaddr, paddr, attributes);
 }
 
 void PageDirectory::mapRangeTo(void* vvastart, void* vvaend, physaddr_t pastart,
@@ -206,7 +206,7 @@ void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
 
   assert(page != INVALID_PAGE);
 
-  mapPageTo(vaddr, page, attributes);
+  mapPageTo(vaddr, page << BASE_SHIFT, attributes);
   if (paddr)
     *paddr = page * 0x1000;
 }
