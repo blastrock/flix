@@ -192,6 +192,17 @@ void PageDirectory::mapRangeTo(void* vvastart, void* vvaend, physaddr_t pastart,
   }
 }
 
+void PageDirectory::mapRange(void* vvastart, void* vvaend, uint8_t attributes)
+{
+  for (char* vastart = static_cast<char*>(vvastart),
+             * vaend = static_cast<char*>(vvaend);
+       vastart < vaend;
+       vastart += PAGE_SIZE)
+  {
+    mapPage(vastart, attributes);
+  }
+}
+
 void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
 {
   assert(g_pagingReady);

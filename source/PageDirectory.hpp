@@ -34,6 +34,9 @@ class PageDirectory
      */
     void mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr = nullptr);
 
+    /// Map a from \p vastart to \p vaend with \p attributes
+    void mapRange(void* vastart, void* vaend, uint8_t attributes);
+
     /// Unmap a page and return the physical address it pointed to
     physaddr_t unmapPage(void* vaddr);
 

@@ -131,11 +131,10 @@ bool exec(fs::Handle& f)
   }
 
   Degf("Allocating new stack");
-  pd.mapPage(reinterpret_cast<char*>(0xffffffff00000000),
+  pd.mapRange(reinterpret_cast<void*>(0xffffffff00000000),
+      reinterpret_cast<void*>(0xffffffff00004000),
       PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
-  pd.mapPage(reinterpret_cast<char*>(0xffffffff00001000),
-      PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
-  task.context.rsp = 0xffffffff00000000 + 0x2000;
+  task.context.rsp = 0xffffffff00004000;
 
   task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
 
