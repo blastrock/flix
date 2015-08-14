@@ -28,7 +28,13 @@ class PageDirectory
     void mapKernel();
 
     void mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes);
+    /** Map a virtual address \p vaddr to any free page
+     *
+     * Return physical address in \p paddr.
+     */
     void mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr = nullptr);
+
+    /// Unmap a page and return the physical address it pointed to
     physaddr_t unmapPage(void* vaddr);
 
     bool isPageMapped(void* vaddr);
@@ -99,12 +105,29 @@ class PageDirectory
 
     void createPm();
     void initWithDefaultPaging();
+
+    /// Map \p vaddr to \p paddr with \p attributes
+    void _mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes);
+
+    /** Map from \p vastart to \p vaend with \p attributes.
+     *
+     * This will allocate contiguous pages from \p pastart.
+     *
+     * This function does not assert that paging is ready and does not refill
+     * the page pool.
+     */
     void mapRangeTo(void* vastart, void* vaend, physaddr_t pastart,
         uint8_t attributes);
-    void mapAddrTo(void* ivaddr, physaddr_t ipaddr, uint8_t attributes);
-    void _mapPageTo(void* vaddr, physaddr_t page, uint8_t attributes);
+
+    /** Do the real mapping and nothing else
+     *
+     * Map \p vaddr to \p paddr and apply \p f to the first level page entry.
+     *
+     * This function only does the mapping. It does not assert that the page
+     * directory is ready and it does not refill the page pool after use.
+     */
     template <typename F>
-    void mapPageToF(void* vaddr, physaddr_t ipage, const F& f);
+    void mapPageToF(void* vaddr, physaddr_t paddr, const F& f);
 };
 
 inline PageDirectory::PageDirectory() :

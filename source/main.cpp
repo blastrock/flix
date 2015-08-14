@@ -89,7 +89,7 @@ void enableSSEInstructions()
       :"rax");
 }
 
-extern "C" int kmain(void* mboot)
+extern "C" [[noreturn]] int kmain(void* mboot)
 {
   enableSSEInstructions();
 

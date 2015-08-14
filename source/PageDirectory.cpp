@@ -55,7 +55,7 @@ void PageDirectory::initWithDefaultPaging()
   createPm();
 
   // map VGA
-  mapAddrTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
+  _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
   // mapping .text and .rodata
@@ -177,12 +177,6 @@ void PageDirectory::mapPageToF(void* vaddr, physaddr_t paddr, const F& f)
   f(*page);
 }
 
-void PageDirectory::mapAddrTo(void* vaddr, physaddr_t paddr,
-    uint8_t attributes)
-{
-  _mapPageTo(vaddr, paddr, attributes);
-}
-
 void PageDirectory::mapRangeTo(void* vvastart, void* vvaend, physaddr_t pastart,
     uint8_t attributes)
 {
@@ -191,7 +185,7 @@ void PageDirectory::mapRangeTo(void* vvastart, void* vvaend, physaddr_t pastart,
 
   while (vastart < vaend)
   {
-    mapAddrTo(vastart, pastart, attributes);
+    _mapPageTo(vastart, pastart, attributes);
 
     vastart += 0x1000;
     pastart += 0x1000;
@@ -211,7 +205,7 @@ void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
     *paddr = page * 0x1000;
 }
 
-uintptr_t PageDirectory::unmapPage(void* vaddr)
+physaddr_t PageDirectory::unmapPage(void* vaddr)
 {
   assert(g_pagingReady);
 
