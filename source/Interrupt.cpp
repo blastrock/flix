@@ -47,20 +47,24 @@ void InterruptHandler::handle(InterruptState* s)
         Degf("General-Protection Exception (%d)", s->errCode);
         break;
       case 14:
-        Degf("Page fault");
+      {
+        void* address;
+        asm volatile(
+            "movq %%cr2, %0"
+            :"=r"(address)
+            );
+
+        Degf("Page fault on %p", address);
+
+        if (PageDirectory::getCurrent()->handleFault(address))
+          return;
+
         Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
         Degf("Fault on %s", s->errCode & 2 ? "write" : "read");
         Degf("Access was %s",
             s->errCode & 4 ? "unprivileged" : "privileged");
         Degf("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
-        {
-          uint64_t address;
-          asm volatile(
-              "movq %%cr2, %0"
-              :"=r"(address)
-              );
-          Degf("Fault on %x", address);
-        }
+      }
         break;
     }
 

@@ -12,6 +12,7 @@ class PageDirectory
 
     static constexpr unsigned ATTR_RW     = 0x1;
     static constexpr unsigned ATTR_PUBLIC = 0x2;
+    static constexpr unsigned ATTR_DEFER  = 0x4;
 
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;
@@ -39,6 +40,12 @@ class PageDirectory
 
     /// Unmap a page and return the physical address it pointed to
     physaddr_t unmapPage(void* vaddr);
+
+    /** Handles fault due to a deferred allocation
+     *
+     * \return true if the fault was handled, false otherwise
+     */
+    bool handleFault(void* vaddr);
 
     bool isPageMapped(void* vaddr);
 

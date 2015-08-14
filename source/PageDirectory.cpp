@@ -22,6 +22,8 @@ static const auto AttributeSetter = [](auto& e) {
     e.rw = true;
   if (Attr & PageDirectory::ATTR_PUBLIC)
     e.us = true;
+  if (Attr & PageDirectory::ATTR_DEFER)
+    e.p = false;
 };
 
 void PageDirectory::createPm()
@@ -157,6 +159,10 @@ void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes
     CASE(0x1)
     CASE(0x2)
     CASE(0x3)
+    CASE(0x4)
+    CASE(0x5)
+    CASE(0x6)
+    CASE(0x7)
 #undef CASE
   default:
     PANIC("Invalid page attributes parameter");
@@ -207,13 +213,20 @@ void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
 {
   assert(g_pagingReady);
 
-  page_t page = Memory::getFreePage();
+  physaddr_t target;
 
-  assert(page != INVALID_PAGE);
+  if (attributes & ATTR_DEFER)
+    target = INVALID_PHYS;
+  else
+  {
+    page_t page = Memory::getFreePage();
+    assert(page != INVALID_PAGE);
+    target = page * PAGE_SIZE;
+  }
 
-  mapPageTo(vaddr, page << BASE_SHIFT, attributes);
+  mapPageTo(vaddr, target, attributes);
   if (paddr)
-    *paddr = page * 0x1000;
+    *paddr = target;
 }
 
 physaddr_t PageDirectory::unmapPage(void* vaddr)
@@ -225,6 +238,24 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
   page->p = false;
 
   return page->base << BASE_SHIFT;
+}
+
+bool PageDirectory::handleFault(void* vaddr)
+{
+  PageTableEntry* entry = m_manager->getPage(vaddr);
+  if (entry->p || entry->base != INVALID_PAGE)
+  {
+    Degf("Not a deferred allocation %s %x", entry->p, entry->base);
+    return false;
+  }
+
+  page_t page = Memory::getFreePage();
+  entry->p = true;
+  entry->base = page;
+  Degf("Handled deferred allocation, mapped %p to %x",
+      vaddr, page << BASE_SHIFT);
+
+  return true;
 }
 
 bool PageDirectory::isPageMapped(void* vaddr)
