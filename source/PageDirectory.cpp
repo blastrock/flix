@@ -144,8 +144,7 @@ void PageDirectory::mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)
 void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)
 {
   if (reinterpret_cast<uintptr_t>(vaddr) < 0xffffffffc0000000 &&
-      !(attributes & ATTR_PUBLIC) &&
-      reinterpret_cast<uintptr_t>(vaddr) != 0xb8000)
+      !(attributes & ATTR_PUBLIC))
     PANIC("Mapping private page in user space");
   if (reinterpret_cast<uintptr_t>(vaddr) > 0xffffffffc0000000 &&
       (attributes & ATTR_PUBLIC))
