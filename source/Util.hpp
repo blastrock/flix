@@ -2,6 +2,7 @@
 #define UTIL_HPP
 
 #include <cstdint>
+#include "Cpu.hpp"
 
 template <typename T>
 inline T* ptrAdd(T* ptr, intptr_t val)
@@ -41,5 +42,24 @@ inline constexpr T intAlignSup(T base, uint8_t val)
 {
   return (base + val-1) & ~(T)(val-1);
 }
+
+class DisableInterrupts
+{
+public:
+  DisableInterrupts()
+  {
+    _enable = Cpu::rflags() & (1 << 9);
+    if (_enable)
+      asm volatile ("cli");
+  }
+  ~DisableInterrupts()
+  {
+    if (_enable)
+      asm volatile ("sti");
+  }
+
+private:
+  bool _enable;
+};
 
 #endif /* UTIL_HPP */

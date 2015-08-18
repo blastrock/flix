@@ -1,5 +1,6 @@
 #include "Screen.hpp"
 #include "Cpu.hpp"
+#include "Util.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -17,9 +18,7 @@ void Screen::clear()
 
 void Screen::putString(const char* c, size_t size, Color fg, Color bg)
 {
-  bool i = Cpu::rflags() & (1 << 9);
-  if (i)
-    asm volatile ("cli");
+  DisableInterrupts _;
 
   while (size--)
   {
@@ -28,15 +27,11 @@ void Screen::putString(const char* c, size_t size, Color fg, Color bg)
   }
 
   updateCursor();
-  if (i)
-    asm volatile ("sti");
 }
 
 void Screen::putString(const char* c, Color fg, Color bg)
 {
-  bool i = Cpu::rflags() & (1 << 9);
-  if (i)
-    asm volatile ("cli");
+  DisableInterrupts _;
 
   while (*c)
   {
@@ -45,15 +40,12 @@ void Screen::putString(const char* c, Color fg, Color bg)
   }
 
   updateCursor();
-  if (i)
-    asm volatile ("sti");
 }
 
 void Screen::putChar(char c, Color fg, Color bg)
 {
-  bool i = Cpu::rflags() & (1 << 9);
-  if (i)
-    asm volatile ("cli");
+  DisableInterrupts _;
+
   switch (c)
   {
     case '\n':
@@ -79,8 +71,6 @@ void Screen::putChar(char c, Color fg, Color bg)
     scrollOneLine();
     --g_cursor.y;
   }
-  if (i)
-    asm volatile ("sti");
 }
 
 void Screen::putChar(Position pos, char c, Color fg, Color bg)
