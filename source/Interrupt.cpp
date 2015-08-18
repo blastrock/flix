@@ -3,6 +3,7 @@
 #include "Debug.hpp"
 #include "TaskManager.hpp"
 #include "Syscall.hpp"
+#include "Keyboard.hpp"
 
 extern "C" void intHandler(InterruptState* s)
 {
@@ -87,7 +88,7 @@ void InterruptHandler::handle(InterruptState* s)
   {
     uint8_t intNo = s->intNo - 32;
     Degf("Int %x!", intNo);
-    if (intNo == 0) // timer interrupt
+    if (intNo == 0) // timer
     {
       // for the moment, only switch task
       Task::Context context;
@@ -114,6 +115,10 @@ void InterruptHandler::handle(InterruptState* s)
       TaskManager::get()->saveCurrentTask(context);
       TaskManager::get()->scheduleNext();
     }
+    else if (intNo == 1) // keyboard
+      Keyboard::handleInterrupt();
+    else if (intNo != 7)
+      PANIC("unhandled");
   }
   else if (s->intNo == 0x80) // syscall
   {

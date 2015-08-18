@@ -34,6 +34,7 @@ add_executable(flix
   interrupt.asm
   Interrupt.cpp
   IntUtil.cpp
+  Keyboard.cpp
   KHeap.cpp
   main.cpp
   Memory.cpp
@@ -49,6 +50,7 @@ add_executable(flix
   TaskManager.cpp
   task.asm
   Timer.cpp
+  Tty.cpp
 )
 
 set_source_files_properties(Symbols.cpp
