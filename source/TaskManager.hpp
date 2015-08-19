@@ -18,6 +18,12 @@ struct Task
     uint64_t rip, cs, rflags, rsp, ss;
   } __attribute__((packed));
 
+  enum State
+  {
+    Runnable,
+    Sleeping,
+  };
+
   // TODO try to mark this const
   pid_t tid;
   Context context;
@@ -25,6 +31,7 @@ struct Task
   char* stack;
   char* stackTop;
   FileManager fileManager;
+  State state;
 };
 
 struct TaskComparator
@@ -79,9 +86,21 @@ public:
   [[noreturn]] void scheduleNext();
   [[noreturn]] void rescheduleSelf();
 
+  bool isTaskActive();
+  /**
+   * Get the active task or 0 if kernel was sleeping
+   */
+  Task* getActive();
+  /**
+   * Get the active task.
+   *
+   * If there is no active task, the behavior is undefined.
+   */
   Task& getActiveTask();
 
 private:
+  using Tasks = std::set<Task, TaskComparator>;
+
   static TaskManager* instance;
 
   std::set<Task, TaskComparator> _tasks;
@@ -89,6 +108,8 @@ private:
   pid_t _nextTid;
 
   void updateNextTid();
+  Tasks::iterator getNext();
+  [[noreturn]] void enterSleep();
 };
 
 #endif /* TASK_HPP */

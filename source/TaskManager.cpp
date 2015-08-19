@@ -103,11 +103,56 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
   getActiveTask().context = ctx;
 }
 
+bool TaskManager::isTaskActive()
+{
+  return _activeTask;
+}
+
+Task* TaskManager::getActive()
+{
+  if (_activeTask == 0)
+    return nullptr;
+  return &getActiveTask();
+}
+
 Task& TaskManager::getActiveTask()
 {
   const auto iter = _tasks.find(_activeTask);
   assert(iter != _tasks.end());
   return const_cast<Task&>(*iter);
+}
+
+TaskManager::Tasks::iterator TaskManager::getNext()
+{
+  auto id = _activeTask;
+  bool looped = false;
+  while (true)
+  {
+    auto iter = _tasks.upper_bound(id);
+    if (iter == _tasks.end())
+    {
+      if (looped)
+        return _tasks.end();
+
+      id = 0;
+      looped = true;
+      continue;
+    }
+    if (iter->state == Task::State::Runnable)
+      return iter;
+    ++id;
+  }
+}
+
+void TaskManager::enterSleep()
+{
+  _activeTask = 0;
+  asm volatile(
+      "sti\n"
+      "hltloop: hlt\n"
+      "jmp hltloop\n"
+      );
+  PANIC("unreachable code");
 }
 
 void TaskManager::scheduleNext()
@@ -117,9 +162,13 @@ void TaskManager::scheduleNext()
   if (_tasks.empty())
     PANIC("Nothing to schedule!");
 
-  auto iter = _tasks.upper_bound(_activeTask);
+  const auto iter = getNext();
   if (iter == _tasks.end())
-    iter = _tasks.begin();
+  {
+    Degf("All processes sleeping, entering kernel sleep");
+    enterSleep();
+  }
+
   Task& nextTask = const_cast<Task&>(*iter);
   _activeTask = nextTask.tid;
   assert((nextTask.context.rflags & (1 << 9)) && "Interrupts were disabled in a task");

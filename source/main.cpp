@@ -20,9 +20,10 @@ extern "C" void panic_message(const char* msg)
   PANIC(msg);
 }
 
-void write(const char* str)
+void sleep()
 {
-  Degf(str);
+  TaskManager::get()->getActiveTask().state = Task::State::Sleeping;
+  TaskManager::get()->scheduleNext();
 }
 
 void segfault()
@@ -145,13 +146,13 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     tm->addTask(std::move(task));
   }
-#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
-    task.context.rip = reinterpret_cast<uint64_t>(&loop);
+    task.context.rip = reinterpret_cast<uint64_t>(&sleep);
     tm->addTask(std::move(task));
   }
+#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
