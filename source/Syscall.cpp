@@ -30,7 +30,7 @@ namespace hndl
 
 int open(const char* path)
 {
-  auto& task = TaskManager::get()->getCurrentTask();
+  auto& task = TaskManager::get()->getActiveTask();
   auto expfd = task.fileManager.open(path);
   if (!expfd)
     return -1;
@@ -45,7 +45,7 @@ int openat(int dirfd, const char* path)
 
 int close(int fd)
 {
-  auto& task = TaskManager::get()->getCurrentTask();
+  auto& task = TaskManager::get()->getActiveTask();
   return task.fileManager.close(fd);
 }
 
@@ -53,7 +53,7 @@ ssize_t read(int fd, void* buf, size_t count)
 {
   Degf("reading fd %d", fd);
 
-  auto& task = TaskManager::get()->getCurrentTask();
+  auto& task = TaskManager::get()->getActiveTask();
   auto handle = task.fileManager.getHandle(fd);
 
   if (!handle)
@@ -74,7 +74,7 @@ ssize_t write(int fd, const void* buf, size_t count)
       std::string(static_cast<const char*>(buf), count).c_str(),
       fd);
 
-  auto& task = TaskManager::get()->getCurrentTask();
+  auto& task = TaskManager::get()->getActiveTask();
   auto handle = task.fileManager.getHandle(fd);
 
   if (!handle)
@@ -120,7 +120,7 @@ void* mmap(void*, size_t length)
   void* start = reinterpret_cast<void*>(curPtr);
 
   size_t nbPages = (length + PAGE_SIZE - 1) / PAGE_SIZE;
-  auto& pd = TaskManager::get()->getCurrentTask().pageDirectory;
+  auto& pd = TaskManager::get()->getActiveTask().pageDirectory;
   while (nbPages--)
   {
     pd.mapPage(reinterpret_cast<void*>(curPtr),

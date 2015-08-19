@@ -2,7 +2,7 @@
 #define TASK_HPP
 
 #include <cstdint>
-#include <vector>
+#include <set>
 
 #include "PageDirectory.hpp"
 #include "FileManager.hpp"
@@ -18,11 +18,33 @@ struct Task
     uint64_t rip, cs, rflags, rsp, ss;
   } __attribute__((packed));
 
+  // TODO try to mark this const
+  pid_t tid;
   Context context;
   PageDirectory pageDirectory;
   char* stack;
   char* stackTop;
   FileManager fileManager;
+};
+
+struct TaskComparator
+{
+  using is_transparent = void;
+
+  bool operator()(const Task& t1, const Task& t2)
+  {
+    return t1.tid < t2.tid;
+  }
+  template <typename T>
+  bool operator()(const T& t1, const Task& t2)
+  {
+    return t1 < t2.tid;
+  }
+  template <typename T>
+  bool operator()(const Task& t1, const T& t2)
+  {
+    return t1.tid < t2;
+  }
 };
 
 struct TaskStateSegment
@@ -57,13 +79,16 @@ public:
   [[noreturn]] void scheduleNext();
   [[noreturn]] void rescheduleSelf();
 
-  Task& getCurrentTask();
+  Task& getActiveTask();
 
 private:
   static TaskManager* instance;
 
-  std::vector<Task> _tasks;
-  unsigned int _currentTask;
+  std::set<Task, TaskComparator> _tasks;
+  pid_t _activeTask;
+  pid_t _nextTid;
+
+  void updateNextTid();
 };
 
 #endif /* TASK_HPP */

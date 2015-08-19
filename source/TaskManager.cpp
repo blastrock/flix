@@ -4,6 +4,7 @@
 #include "Debug.hpp"
 #include "Symbols.hpp"
 #include "DescTables.hpp"
+#include "Util.hpp"
 
 TaskManager* TaskManager::instance;
 
@@ -17,7 +18,8 @@ TaskManager* TaskManager::get()
 }
 
 TaskManager::TaskManager()
-  : _currentTask(0)
+  : _activeTask(0)
+  , _nextTid(1)
 {
 }
 
@@ -36,16 +38,33 @@ void TaskManager::setUpTss()
   Cpu::setKernelStack(kernelStack + SIZE);
 }
 
+void TaskManager::updateNextTid()
+{
+  // TODO handle the case where the set is full
+  while (_tasks.find(_nextTid) != _tasks.end())
+    ++_nextTid;
+}
+
 void TaskManager::addTask(Task&& t)
 {
-  _tasks.push_back(std::move(t));
+  DisableInterrupts _;
+
+  updateNextTid();
+
+  t.tid = _nextTid;
+  ++_nextTid;
+  Degf("Adding new task with tid %d", t.tid);
+  _tasks.insert(std::move(t));
 }
 
 void TaskManager::terminateCurrentTask()
 {
-  Degf("Terminating task %d, size %d", _currentTask, _tasks.size());
-  assert(_currentTask < _tasks.size());
-  _tasks.erase(_tasks.begin() + _currentTask);
+  DisableInterrupts _;
+
+  Degf("Terminating task %d, size %d", _activeTask, _tasks.size());
+  const auto iter = _tasks.find(_activeTask);
+  assert(iter != _tasks.end());
+  _tasks.erase(iter);
   // TODO free stack
 }
 
@@ -71,37 +90,40 @@ Task TaskManager::newUserTask()
 
 void TaskManager::downgradeCurrentTask()
 {
-  assert(_currentTask < _tasks.size());
-  Task& task = _tasks[_currentTask];
+  Task& task = getActiveTask();
   task.context.cs = DescTables::USER_CS | 0x3;
   task.context.ss = DescTables::USER_DS | 0x3;
 }
 
 void TaskManager::saveCurrentTask(const Task::Context& ctx)
 {
-  Degf("Saving task %d with rip %x and rsp %x", _currentTask, ctx.rip, ctx.rsp);
-  assert(_currentTask < _tasks.size());
-  _tasks[_currentTask].context = ctx;
+  DisableInterrupts _;
+
+  Degf("Saving task %d with rip %x and rsp %x", _activeTask, ctx.rip, ctx.rsp);
+  getActiveTask().context = ctx;
 }
 
-Task& TaskManager::getCurrentTask()
+Task& TaskManager::getActiveTask()
 {
-  assert(_currentTask < _tasks.size());
-  return _tasks[_currentTask];
+  const auto iter = _tasks.find(_activeTask);
+  assert(iter != _tasks.end());
+  return const_cast<Task&>(*iter);
 }
 
 void TaskManager::scheduleNext()
 {
+  DisableInterrupts _;
+
   if (_tasks.empty())
     PANIC("Nothing to schedule!");
 
-  ++_currentTask;
-  if (_currentTask >= _tasks.size())
-    _currentTask = 0;
-
-  Task& nextTask = _tasks[_currentTask];
-  assert(nextTask.context.rflags & (1 << 9) && "Interrupts were disabled in a task");
-  Degf("Restoring task %d with rip %x and rsp %x", _currentTask,
+  auto iter = _tasks.upper_bound(_activeTask);
+  if (iter == _tasks.end())
+    iter = _tasks.begin();
+  Task& nextTask = const_cast<Task&>(*iter);
+  _activeTask = nextTask.tid;
+  assert((nextTask.context.rflags & (1 << 9)) && "Interrupts were disabled in a task");
+  Degf("Restoring task %d with rip %x and rsp %x", _activeTask,
       nextTask.context.rip, nextTask.context.rsp);
   nextTask.pageDirectory.use();
   jump(&nextTask.context);
@@ -111,8 +133,8 @@ void TaskManager::rescheduleSelf()
 {
   assert(!_tasks.empty());
 
-  Task& nextTask = _tasks[_currentTask];
-  assert(nextTask.context.rflags & (1 << 9) && "Interrupts were disabled in a task");
+  Task& nextTask = getActiveTask();
+  assert((nextTask.context.rflags & (1 << 9)) && "Interrupts were disabled in a task");
   Degf("Rescheduling self at %x", nextTask.context.rip);
   jump(&nextTask.context);
 }

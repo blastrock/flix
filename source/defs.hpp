@@ -4,5 +4,6 @@
 #include <cstdint>
 
 using off_t = uint64_t;
+using pid_t = uint32_t;
 
 #endif

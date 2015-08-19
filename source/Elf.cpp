@@ -31,7 +31,7 @@ bool exec(fs::Handle& f)
   // TODO check arch type
 
   auto tm = TaskManager::get();
-  auto& task = tm->getCurrentTask();
+  auto& task = tm->getActiveTask();
   auto& pd = task.pageDirectory;
 
   Degf("%d program headers to read", hdr.e_phnum);

@@ -145,13 +145,13 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     tm->addTask(std::move(task));
   }
+#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop);
     tm->addTask(std::move(task));
   }
-#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
