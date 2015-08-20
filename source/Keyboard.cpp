@@ -6,7 +6,7 @@ namespace Keyboard
 {
 
 static const char QwertyMap[] =
-  "\0\0001234567890-=\0\0"
+  "\0\0331234567890-=\b\t"
   "QWERTYUIOP[]\n\0AS"
   "DFGHJKL;'`\0\\ZXCV"
   "BNM,./\0*\0 \0";

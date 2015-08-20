@@ -55,6 +55,13 @@ void Screen::putChar(char c, Color fg, Color bg)
     case '\r':
       g_cursor.x = 0;
       break;
+    case '\b':
+      --g_cursor.x;
+      putChar(g_cursor, '\0', fg, bg);
+      break;
+    case '\t':
+      g_cursor.x += 8 - g_cursor.x % 8;
+      break;
     default:
       putChar(g_cursor, c, fg, bg);
 
