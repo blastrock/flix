@@ -242,9 +242,12 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
 bool PageDirectory::handleFault(void* vaddr)
 {
   PageTableEntry* entry = m_manager->getPage(vaddr);
-  if (entry->p || entry->base != INVALID_PAGE)
+  if (!entry || entry->p || entry->base != INVALID_PAGE)
   {
-    Degf("Not a deferred allocation %s %x", entry->p, entry->base);
+    if (entry)
+      Degf("Not a deferred allocation %s %x", entry->p, entry->base);
+    else
+      Degf("Not a deferred allocation (no entry)");
     return false;
   }
 
