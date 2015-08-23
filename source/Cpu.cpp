@@ -1,5 +1,7 @@
 #include "Cpu.hpp"
 
+// this variable is read from the syscall asm code to know to what stack switch
+// to on syscall fast path
 void* kernelStack;
 
 uint64_t Cpu::rflags()

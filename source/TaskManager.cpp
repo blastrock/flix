@@ -25,17 +25,10 @@ TaskManager::TaskManager()
 
 void TaskManager::setUpTss()
 {
-  // allocate a stack for interrupt handling
-  const int SIZE = 0x1000 * 4;
-  auto* kernelStack = new char[SIZE];
-
   // initialize the TSS (which is at the bottom of the current stack)
   auto* tss = reinterpret_cast<TaskStateSegment*>(
-      reinterpret_cast<uintptr_t>(Symbols::getStackBase()) - 0x4000);
+      Symbols::getStackBase() - 0x4000);
   std::memset(tss, 0, sizeof(*tss));
-  // make it point to the top of the stack
-  tss->ist1 = kernelStack + SIZE;
-  Cpu::setKernelStack(kernelStack + SIZE);
 }
 
 void TaskManager::updateNextTid()
@@ -147,6 +140,15 @@ TaskManager::Tasks::iterator TaskManager::getNext()
 void TaskManager::enterSleep()
 {
   _activeTask = 0;
+
+  // TODO do something cleaner
+  static auto* kernelStack = new char[0x4000];
+
+  auto* tss = reinterpret_cast<TaskStateSegment*>(
+      Symbols::getStackBase() - 0x4000);
+  tss->ist1 = kernelStack + 0x4000;
+  Cpu::setKernelStack(kernelStack + 0x4000);
+
   asm volatile(
       "sti\n"
       "hltloop: hlt\n"
@@ -171,10 +173,20 @@ void TaskManager::scheduleNext()
 
   Task& nextTask = const_cast<Task&>(*iter);
   _activeTask = nextTask.tid;
-  assert((nextTask.context.rflags & (1 << 9)) && "Interrupts were disabled in a task");
+  assert((nextTask.context.rflags & (1 << 9))
+      && "Interrupts were disabled in a task");
   Degf("Restoring task %d with rip %x and rsp %x", _activeTask,
       nextTask.context.rip, nextTask.context.rsp);
+
+  // set the page directory of the process
   nextTask.pageDirectory.use();
+
+  // set the kernel stack for interrupt/syscall handling
+  auto* tss = reinterpret_cast<TaskStateSegment*>(
+      Symbols::getStackBase() - 0x4000);
+  tss->ist1 = nextTask.kernelStackTop;
+  Cpu::setKernelStack(nextTask.kernelStackTop);
+
   jump(&nextTask.context);
 }
 

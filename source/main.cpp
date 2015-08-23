@@ -48,11 +48,10 @@ uint8_t getCpl()
 
 void loop()
 {
-  while (true);
-  //for (unsigned int i = 0; i < 800; ++i)
-  //  Degf("stuff %d %d", getCpl(), i++);
-  ////segfault2();
-  //sys::call(sys::exit);
+  for (unsigned int i = 0; i < 800; ++i)
+    Degf("stuff %d %d", getCpl(), i++);
+  //segfault2();
+  sys::call(sys::exit);
 }
 
 void loop2()
@@ -142,29 +141,43 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     Task task = tm->newKernelTask();
     task.stack = new char[0x4000];
     task.stackTop = task.stack + 0x4000;
+    task.kernelStack = new char[0x4000];
+    task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     tm->addTask(std::move(task));
   }
+  //{
+  //  Task task = tm->newKernelTask();
+  //  task.stack = new char[0x4000];
+  //  task.stackTop = task.stack + 0x4000;
+  //  task.kernelStack = new char[0x4000];
+  //  task.kernelStackTop = task.kernelStack + 0x4000;
+  //  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+  //  task.context.rip = reinterpret_cast<uint64_t>(&sleep);
+  //  tm->addTask(std::move(task));
+  //}
   {
     Task task = tm->newKernelTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
-    task.context.rip = reinterpret_cast<uint64_t>(&sleep);
-    tm->addTask(std::move(task));
-  }
-#if 0
-  {
-    Task task = tm->newKernelTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
+    task.stack = new char[0x4000];
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = new char[0x4000];
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&loop);
     tm->addTask(std::move(task));
   }
   {
     Task task = tm->newKernelTask();
-    task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
+    task.stack = new char[0x4000];
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = new char[0x4000];
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
     tm->addTask(std::move(task));
   }
+#if 0
   {
     Task task = tm->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;

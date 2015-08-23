@@ -30,6 +30,8 @@ struct Task
   PageDirectory pageDirectory;
   char* stack;
   char* stackTop;
+  char* kernelStack;
+  char* kernelStackTop;
   FileManager fileManager;
   State state;
 };
