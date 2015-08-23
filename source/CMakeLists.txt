@@ -48,7 +48,7 @@ add_executable(flix
   Syscall.cpp
   syscall.S
   TaskManager.cpp
-  task.asm
+  task.S
   Timer.cpp
   Tty.cpp
 )
