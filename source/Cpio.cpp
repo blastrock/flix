@@ -8,6 +8,7 @@ class CpioFileHandle : public fs::Handle
 public:
   CpioFileHandle(CpioFileInode* inode)
     : _file(inode)
+    , _pos(0)
   {}
 
   fs::IoExpected<off_t> lseek(off_t position, fs::Whence whence) override;
@@ -49,12 +50,15 @@ fs::IoExpected<off_t> CpioFileHandle::lseek(off_t position, fs::Whence whence)
     break;
   }
   // TODO handle _pos < 0 or > size
+  Degf("Seeked to %d", _pos);
 
   return _pos;
 }
 
 fs::IoExpected<off_t> CpioFileHandle::read(void* buf, off_t size)
 {
+  // TODO handle end of file
+  Degf("Reading %d bytes from %d", size, _pos);
   size = std::min(size, _file->_data.size() - _pos);
   std::memcpy(buf, &_file->_data[_pos], size);
   _pos += size;
