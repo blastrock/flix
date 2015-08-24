@@ -67,6 +67,15 @@ void loop3()
   sys::call(sys::exit);
 }
 
+void readwrite()
+{
+  char buf[100];
+  uint64_t sz = sys::call(sys::read, 0, buf, sizeof(buf));
+  sys::call(sys::write, 1, "you wrote ", sizeof("you wrote ")-1);
+  sys::call(sys::write, 1, buf, sz);
+  sys::call(sys::exit);
+}
+
 void exec()
 {
   Degf("Opening file");
@@ -175,6 +184,16 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
+    tm->addTask(std::move(task));
+  }
+  {
+    Task task = tm->newKernelTask();
+    task.stack = new char[0x4000];
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = new char[0x4000];
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+    task.context.rip = reinterpret_cast<uint64_t>(&readwrite);
     tm->addTask(std::move(task));
   }
 #if 0

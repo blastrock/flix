@@ -4,6 +4,7 @@
 #include "TaskManager.hpp"
 #include "Syscall.hpp"
 #include "Keyboard.hpp"
+#include "DescTables.hpp"
 
 extern "C" void intHandler(InterruptState* s)
 {
@@ -30,6 +31,10 @@ bool ScopedExceptionHandling::busy = false;
 
 void InterruptHandler::handle(InterruptState* s)
 {
+  assert((s->cs == DescTables::SYSTEM_CS ||
+        (s->rflags & (1 << 9))) &&
+      "Interrupts were disabled in a user task");
+
   // acknowledge interrupt
   if (s->intNo <= 47)
   {
@@ -128,4 +133,6 @@ void InterruptHandler::handle(InterruptState* s)
     Degf("syscall interrupt %d", s->rax);
     s->rax = sys::handle(*s);
   }
+
+  Degf("Returning to ip %x with sp %x", s->rip, s->rsp);
 }

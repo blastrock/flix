@@ -127,6 +127,19 @@ inline SyscallReturnType call(ScId sc)
   return out;
 }
 
+inline SyscallReturnType call(ScId sc, int fd, const void* buf, long size)
+{
+  SyscallReturnType out;
+  asm volatile (
+      "int $0x80"
+      :"=a"(out)
+      :"a"(static_cast<uint64_t>(sc)),
+      "D"((uint64_t)fd),
+      "S"((uint64_t)buf),
+      "d"((uint64_t)size));
+  return out;
+}
+
 SyscallReturnType handle(const InterruptState& st);
 
 }

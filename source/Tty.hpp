@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <queue>
 
+#include "Mutex.hpp"
+#include "CondVar.hpp"
+
 class Tty
 {
 public:
@@ -16,6 +19,8 @@ public:
 
 private:
   std::queue<char> _stdin;
+  Mutex _mutex;
+  CondVar _condvar;
 };
 
 #endif

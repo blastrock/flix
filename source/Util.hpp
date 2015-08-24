@@ -4,6 +4,14 @@
 #include <cstdint>
 #include "Cpu.hpp"
 
+#include <experimental/optional>
+
+namespace std
+{
+  using experimental::optional;
+  using experimental::nullopt;
+}
+
 template <typename T>
 inline T* ptrAdd(T* ptr, intptr_t val)
 {
@@ -43,6 +51,18 @@ inline constexpr T intAlignSup(T base, uint8_t val)
   return (base + val-1) & ~(T)(val-1);
 }
 
+// must use a memory barrier, disabling interrupts is like a lock, memory
+// accesses must not be scheduled before or after the critical section
+inline void disableInterrupts()
+{
+  asm volatile ("cli":::"memory");
+}
+
+inline void enableInterrupts()
+{
+  asm volatile ("sti":::"memory");
+}
+
 class DisableInterrupts
 {
 public:
@@ -50,16 +70,67 @@ public:
   {
     _enable = Cpu::rflags() & (1 << 9);
     if (_enable)
-      asm volatile ("cli");
+      disableInterrupts();
   }
   ~DisableInterrupts()
   {
     if (_enable)
-      asm volatile ("sti");
+      enableInterrupts();
   }
+
+  DisableInterrupts(const DisableInterrupts&) = delete;
+  DisableInterrupts(DisableInterrupts&&) = default;
+  DisableInterrupts& operator=(const DisableInterrupts&) = delete;
+  DisableInterrupts& operator=(DisableInterrupts&&) = default;
 
 private:
   bool _enable;
+};
+
+template <typename T>
+class ScopedLock
+{
+public:
+  ScopedLock(T& lock)
+    : lock(lock)
+  {
+    lock.lock();
+  }
+  ~ScopedLock()
+  {
+    lock.unlock();
+  }
+
+  ScopedLock(const ScopedLock&) = delete;
+  ScopedLock(ScopedLock&&) = default;
+  ScopedLock& operator=(const ScopedLock&) = delete;
+  ScopedLock& operator=(ScopedLock&&) = default;
+
+private:
+  T& lock;
+};
+
+template <typename T>
+class ScopedUnlock
+{
+public:
+  ScopedUnlock(T& lock)
+    : lock(lock)
+  {
+    lock.unlock();
+  }
+  ~ScopedUnlock()
+  {
+    lock.lock();
+  }
+
+  ScopedUnlock(const ScopedUnlock&) = delete;
+  ScopedUnlock(ScopedUnlock&&) = default;
+  ScopedUnlock& operator=(const ScopedUnlock&) = delete;
+  ScopedUnlock& operator=(ScopedUnlock&&) = default;
+
+private:
+  T& lock;
 };
 
 #endif /* UTIL_HPP */

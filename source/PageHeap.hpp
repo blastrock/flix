@@ -16,6 +16,12 @@ class PageHeap
 
     void init();
 
+    /**
+     * Allocate 2 pages of memory on the page heap
+     *
+     * \return the virtual address of the allocation and the physical address
+     * of the first page.
+     */
     std::pair<void*, physaddr_t> kmalloc();
     void kfree(void* ptr);
     void refillPool();

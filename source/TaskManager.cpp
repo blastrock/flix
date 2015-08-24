@@ -9,6 +9,7 @@
 TaskManager* TaskManager::instance;
 
 [[noreturn]] extern "C" void jump(Task::Context* task);
+extern "C" int task_save(Task::Context* task);
 
 TaskManager* TaskManager::get()
 {
@@ -94,6 +95,40 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
 
   Degf("Saving task %d with rip %x and rsp %x", _activeTask, ctx.rip, ctx.rsp);
   getActiveTask().context = ctx;
+
+  assert((ctx.cs == DescTables::SYSTEM_CS ||
+        (ctx.rflags & (1 << 9))) &&
+      "Interrupts were disabled in a user task");
+}
+
+void TaskManager::prepareMeForSleep()
+{
+  Task& task = getActiveTask();
+  task.state = Task::State::Sleeping;
+}
+
+void TaskManager::putMeToSleep()
+{
+  disableInterrupts();
+
+  Task& task = getActiveTask();
+  assert(task.state == Task::State::Sleeping &&
+      "task was not prepared for sleep");
+
+  if (!task_save(&task.context))
+  {
+    assert(task.context.cs == DescTables::SYSTEM_CS &&
+        "putMeToSleep called from userspace");
+
+    scheduleNext(); // going to sleep
+  }
+  else
+    return; // waking up
+}
+
+void TaskManager::wakeUpTask(Task& task)
+{
+  task.state = Task::State::Runnable;
 }
 
 bool TaskManager::isTaskActive()
@@ -173,8 +208,9 @@ void TaskManager::scheduleNext()
 
   Task& nextTask = const_cast<Task&>(*iter);
   _activeTask = nextTask.tid;
-  assert((nextTask.context.rflags & (1 << 9))
-      && "Interrupts were disabled in a task");
+  assert((nextTask.context.cs == DescTables::SYSTEM_CS ||
+        (nextTask.context.rflags & (1 << 9))) &&
+      "Interrupts were disabled in a user task");
   Degf("Restoring task %d with rip %x and rsp %x", _activeTask,
       nextTask.context.rip, nextTask.context.rsp);
 
@@ -195,7 +231,9 @@ void TaskManager::rescheduleSelf()
   assert(!_tasks.empty());
 
   Task& nextTask = getActiveTask();
-  assert((nextTask.context.rflags & (1 << 9)) && "Interrupts were disabled in a task");
+  assert((nextTask.context.cs == DescTables::SYSTEM_CS ||
+        (nextTask.context.rflags & (1 << 9))) &&
+      "Interrupts were disabled in a user task");
   Degf("Rescheduling self at %x", nextTask.context.rip);
   jump(&nextTask.context);
 }

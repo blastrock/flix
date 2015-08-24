@@ -26,14 +26,17 @@ struct Task
 
   // TODO try to mark this const
   pid_t tid;
+  State state;
   Context context;
   PageDirectory pageDirectory;
+
   char* stack;
   char* stackTop;
+
   char* kernelStack;
   char* kernelStackTop;
+
   FileManager fileManager;
-  State state;
 };
 
 struct TaskComparator
@@ -83,6 +86,10 @@ public:
   Task newUserTask();
   void downgradeCurrentTask();
   void terminateCurrentTask();
+
+  void prepareMeForSleep();
+  void putMeToSleep();
+  void wakeUpTask(Task& task);
 
   void saveCurrentTask(const Task::Context& t);
   [[noreturn]] void scheduleNext();

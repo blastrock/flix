@@ -203,6 +203,10 @@ void initSysCalls()
 
 SyscallReturnType handle(const InterruptState& st)
 {
+  assert((st.cs == DescTables::SYSTEM_CS ||
+        (st.rflags & (1 << 9))) &&
+      "Interrupts were disabled in a user task");
+
   assert(st.rax < last_id);
   if (g_syscallHandlers[st.rax])
     return g_syscallHandlers[st.rax](st);

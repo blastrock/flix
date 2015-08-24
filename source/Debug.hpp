@@ -52,6 +52,11 @@
   Degf("r15 = %x\nr14 = %x\nr13 = %x\nr12 = %x\nrbx = %x\nrbp = %x\nr11 = %x\nr10 = %x\nr9 = %x\nr8 = %x\nrax = %x\nrcx = %x\nrdx = %x\nrsi = %x\nrdi = %x\nrflags = %x\nrsp = %x\n", r15, r14, r13, r12, rbx, rbp, r11, r10, r9, r8, rax, rcx, rdx, rsi, rdi, rflags, rsp); \
 }
 
+#define dumpContextRegisters(context) \
+{ \
+  Degf("r15 = %x\nr14 = %x\nr13 = %x\nr12 = %x\nrbx = %x\nrbp = %x\nr11 = %x\nr10 = %x\nr9 = %x\nr8 = %x\nrax = %x\nrcx = %x\nrdx = %x\nrsi = %x\nrdi = %x\nrip = %x\ncs = %x\nrflags = %x\nrsp = %x\nss = %x\n", context.r15, context.r14, context.r13, context.r12, context.rbx, context.rbp, context.r11, context.r10, context.r9, context.r8, context.rax, context.rcx, context.rdx, context.rsi, context.rdi, context.rip, context.cs, context.rflags, context.rsp, context.ss); \
+}
+
 [[noreturn]] inline void PANIC(const char* str)
 {
   asm volatile ("cli");

@@ -24,6 +24,7 @@ include_directories(${LIBKCXX_INCLUDE_DIRS})
 add_executable(flix
   Assert.cpp
   boot.asm
+  CondVar.cpp
   Cpu.cpp
   Cpio.cpp
   Debug.cpp
@@ -42,6 +43,7 @@ add_executable(flix
   PageHeap.cpp
   PageDirectory.cpp
   Screen.cpp
+  Semaphore.cpp
   Serial.cpp
   StaticMemoryPool.cpp
   Symbols.cpp

@@ -1,6 +1,7 @@
 #include "FileManager.hpp"
 #include "Screen.hpp"
 #include "Debug.hpp"
+#include "Tty.hpp"
 
 class NullHandle : public fs::Handle
 {};
@@ -13,16 +14,28 @@ public:
 
 fs::IoExpected<off_t> StdOut::write(const void* buffer, off_t size)
 {
-  const char* str = static_cast<const char*>(buffer);
+  auto str = static_cast<const char*>(buffer);
   Screen::putString(str, size);
   return size;
+}
+
+class StdIn : public fs::Handle
+{
+public:
+  fs::IoExpected<off_t> read(void* buffer, off_t size) override;
+};
+
+fs::IoExpected<off_t> StdIn::read(void* buffer, off_t size)
+{
+  auto str = static_cast<char*>(buffer);
+  return Tty::getCurrent()->readInto(str, size);
 }
 
 FileManager::FileManager()
 {
   _files.clear();
   _files.reserve(3);
-  _files.push_back(std::make_shared<NullHandle>());
+  _files.push_back(std::make_shared<StdIn>());
   _files.push_back(std::make_shared<StdOut>());
   _files.push_back(std::make_shared<NullHandle>());
 }

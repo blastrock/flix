@@ -14,7 +14,12 @@ syscall_entry:
   sub    $0x8, %rsp /* cs */
   push   %rcx /* rip */
 
-  sub    $0x9,%rsp /* intNo + errCode */
+  mov    %cs, %rcx
+  mov    %rcx, 0x8(%rsp)
+  mov    %ss, %rcx
+  mov    %rcx, 0x20(%rsp)
+
+  sub    $0x9, %rsp /* intNo + errCode */
 
   push   %rdi
   push   %rsi
