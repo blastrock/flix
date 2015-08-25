@@ -26,10 +26,9 @@ TaskManager::TaskManager()
 
 void TaskManager::setUpTss()
 {
-  // initialize the TSS (which is at the bottom of the current stack)
-  auto* tss = reinterpret_cast<TaskStateSegment*>(
-      Symbols::getStackBase() - 0x4000);
-  std::memset(tss, 0, sizeof(*tss));
+  _tss = new TaskStateSegment{};
+  std::memset(_tss, 0, sizeof(*_tss));
+  DescTables::initTr(_tss);
 }
 
 void TaskManager::updateNextTid()
@@ -179,9 +178,7 @@ void TaskManager::enterSleep()
   // TODO do something cleaner
   static auto* kernelStack = new char[0x4000];
 
-  auto* tss = reinterpret_cast<TaskStateSegment*>(
-      Symbols::getStackBase() - 0x4000);
-  tss->ist1 = kernelStack + 0x4000;
+  _tss->ist1 = kernelStack + 0x4000;
   Cpu::setKernelStack(kernelStack + 0x4000);
 
   asm volatile(
@@ -218,9 +215,7 @@ void TaskManager::scheduleNext()
   nextTask.pageDirectory.use();
 
   // set the kernel stack for interrupt/syscall handling
-  auto* tss = reinterpret_cast<TaskStateSegment*>(
-      Symbols::getStackBase() - 0x4000);
-  tss->ist1 = nextTask.kernelStackTop;
+  _tss->ist1 = nextTask.kernelStackTop;
   Cpu::setKernelStack(nextTask.kernelStackTop);
 
   jump(&nextTask.context);

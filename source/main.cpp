@@ -126,11 +126,10 @@ extern "C" [[noreturn]] int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
-  Degf("Setting up TSS");
-  TaskManager::setUpTss();
+  auto taskManager = TaskManager::get();
 
-  Degf("Initializing TR");
-  DescTables::initTr();
+  Degf("Setting up TSS");
+  taskManager->setUpTss();
 
   Degf("Initializing syscall vector");
   sys::initSysCalls();
@@ -141,73 +140,71 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   Timer::init(1);
 
-  auto tm = TaskManager::get();
-
   Screen::clear();
   Screen::putString("Booting Flix\n");
 
   {
-    Task task = tm->newKernelTask();
+    Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = new char[0x4000];
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
-    tm->addTask(std::move(task));
+    taskManager->addTask(std::move(task));
   }
   //{
-  //  Task task = tm->newKernelTask();
+  //  Task task = taskManager->newKernelTask();
   //  task.stack = new char[0x4000];
   //  task.stackTop = task.stack + 0x4000;
   //  task.kernelStack = new char[0x4000];
   //  task.kernelStackTop = task.kernelStack + 0x4000;
   //  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
   //  task.context.rip = reinterpret_cast<uint64_t>(&sleep);
-  //  tm->addTask(std::move(task));
+  //  taskManager->addTask(std::move(task));
   //}
   {
-    Task task = tm->newKernelTask();
+    Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = new char[0x4000];
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&loop);
-    tm->addTask(std::move(task));
+    taskManager->addTask(std::move(task));
   }
   {
-    Task task = tm->newKernelTask();
+    Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = new char[0x4000];
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
-    tm->addTask(std::move(task));
+    taskManager->addTask(std::move(task));
   }
   {
-    Task task = tm->newKernelTask();
+    Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = new char[0x4000];
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&readwrite);
-    tm->addTask(std::move(task));
+    taskManager->addTask(std::move(task));
   }
 #if 0
   {
-    Task task = tm->newKernelTask();
+    Task task = taskManager->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
     task.context.rip = reinterpret_cast<uint64_t>(&loop3);
-    tm->addTask(std::move(task));
+    taskManager->addTask(std::move(task));
   }
 #endif
 
   Degf("End of kernel");
 
-  TaskManager::get()->scheduleNext(); // start a task, never returns
+  taskManager->scheduleNext(); // start a task, never returns
 
   // TODO this "task"'s stack now becomes useless, can we recycle it someway?
 

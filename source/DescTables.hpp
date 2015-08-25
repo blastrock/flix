@@ -13,7 +13,7 @@ class DescTables
     static constexpr unsigned TSS = 0x28;
 
     static void init();
-    static void initTr();
+    static void initTr(void* tss);
 };
 
 #endif /* DESC_TABLES_HPP */

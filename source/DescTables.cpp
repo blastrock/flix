@@ -153,15 +153,17 @@ void initIdt()
   commitIdt(&g_idtPtr);
 }
 
-void DescTables::initTr()
+void DescTables::initTr(void* tss)
 {
+  const uintptr_t itss = reinterpret_cast<uintptr_t>(tss);
+
   SystemEntry entry = {};
 
   // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
-  entry.bitfield.baseAddress3 = 0xFFFFFFFF;
-  entry.bitfield.baseAddress2 = 0xCF;
-  entry.bitfield.baseAddress1 = 0xFF;
-  entry.bitfield.baseAddress0 = 0xC000;
+  entry.bitfield.baseAddress3 = itss >> 32;
+  entry.bitfield.baseAddress2 = itss >> 24;
+  entry.bitfield.baseAddress1 = itss >> 16;
+  entry.bitfield.baseAddress0 = itss;
 
   entry.bitfield.segmentLimit0 = 0x67;
   entry.bitfield.segmentLimit1 = 0x0;
@@ -173,6 +175,8 @@ void DescTables::initTr()
   g_gdtEntries[TSS / 8] = entry.value[0];
   g_gdtEntries[TSS / 8 + 1] = entry.value[1];
 
+  Degf("Loading TR");
+
   asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(TSS)));
 }
 
@@ -181,7 +185,7 @@ void DescTables::initTr()
 // TODO is the selector argument useful? it's always equal to 0x08
 IdtEntry makeIdtGate(void* offset, uint16_t selector, bool pub)
 {
-  uint64_t ioff = reinterpret_cast<uint64_t>(offset);
+  const uint64_t ioff = reinterpret_cast<uint64_t>(offset);
 
   IdtEntry entry;
   entry.targetLow = ioff & 0xFFFF;

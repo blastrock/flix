@@ -79,7 +79,7 @@ public:
 
   TaskManager();
 
-  static void setUpTss();
+  void setUpTss();
 
   void addTask(Task&& t);
   Task newKernelTask();
@@ -111,6 +111,8 @@ private:
   using Tasks = std::set<Task, TaskComparator>;
 
   static TaskManager* instance;
+
+  TaskStateSegment* _tss;
 
   std::set<Task, TaskComparator> _tasks;
   pid_t _activeTask;
