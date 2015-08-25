@@ -19,8 +19,36 @@ struct IdtEntry
   uint32_t reserved;
 } __attribute__((packed));
 
+union SystemEntry
+{
+  struct Bitfield
+  {
+    unsigned segmentLimit0 : 16;
+    unsigned baseAddress0  : 16;
+    unsigned baseAddress1  :  8;
+    unsigned type          :  4;
+    unsigned mbz0          :  1;
+    unsigned dpl           :  2;
+    unsigned present       :  1;
+    unsigned segmentLimit1 :  4;
+    unsigned available     :  1;
+    unsigned reserved1     :  2;
+    unsigned granularity   :  1;
+    unsigned baseAddress2  :  8;
+    unsigned baseAddress3  : 32;
+    unsigned reserved2     :  8;
+    unsigned mbz1          :  5;
+    unsigned reserved3     : 19;
+  } __attribute__((packed)) bitfield;
+
+  uint64_t value[2];
+} __attribute__((packed));
+
+static_assert(sizeof(SystemEntry) == 16, "SystemEntry is not 128 bits");
+
 // WARNING: if you change things in there, update the header
 // the GDT must not be marked const because the ltr instruction writes in there
+// it is also accessed to set the TSS address in the TR
 // the data and code segments in ring3 are inverted because of how sysret works
 static uint64_t g_gdtEntries[] = {
   // null descriptor
@@ -33,10 +61,9 @@ static uint64_t g_gdtEntries[] = {
   0x0000F20000000000,
   // code segment (ring3)
   0x0020F80000000000,
-  // task segment (128bits, LE)
-  // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
-  0xCF0089FFC0000067,
-  0x00000000FFFFFFFF,
+  // task segment (128bits, filled later)
+  0x0000000000000000,
+  0x0000000000000000,
 };
 
 static const GdtPtr g_gdtPtr = {
@@ -128,14 +155,31 @@ void initIdt()
 
 void DescTables::initTr()
 {
+  SystemEntry entry = {};
+
+  // points to the bottom of the kernel stack (0xffffffffd0000000 - 0x4000)
+  entry.bitfield.baseAddress3 = 0xFFFFFFFF;
+  entry.bitfield.baseAddress2 = 0xCF;
+  entry.bitfield.baseAddress1 = 0xFF;
+  entry.bitfield.baseAddress0 = 0xC000;
+
+  entry.bitfield.segmentLimit0 = 0x67;
+  entry.bitfield.segmentLimit1 = 0x0;
+
+  entry.bitfield.type = 0x9;
+  entry.bitfield.present = true;
+  entry.bitfield.granularity = false;
+
+  g_gdtEntries[TSS / 8] = entry.value[0];
+  g_gdtEntries[TSS / 8 + 1] = entry.value[1];
+
   asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(TSS)));
 }
 
 // Make gate that points to code at offset. If pub is true, the gate is
 // accessible from unpriviledged code
 // TODO is the selector argument useful? it's always equal to 0x08
-IdtEntry makeIdtGate(void* offset, uint16_t selector,
-    bool pub)
+IdtEntry makeIdtGate(void* offset, uint16_t selector, bool pub)
 {
   uint64_t ioff = reinterpret_cast<uint64_t>(offset);
 
