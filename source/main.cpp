@@ -12,7 +12,10 @@
 #include "Syscall.hpp"
 #include "Fs.hpp"
 #include "Elf.hpp"
+#include "io.hpp"
 #include "Symbols.hpp"
+
+XLL_LOG_CATEGORY("core/main");
 
 // needed by libkcxx
 extern "C" void panic_message(const char* msg)
@@ -49,7 +52,7 @@ uint8_t getCpl()
 void loop()
 {
   for (unsigned int i = 0; i < 800; ++i)
-    Degf("stuff %d %d", getCpl(), i++);
+    xDeb("stuff %d %d", getCpl(), i++);
   //segfault2();
   sys::call(sys::exit);
 }
@@ -57,7 +60,7 @@ void loop()
 void loop2()
 {
   for (unsigned int i = 0; i < 800; ++i)
-    Degf("different stuff %d", i++);
+    xDeb("different stuff %d", i++);
   sys::call(sys::exit);
 }
 
@@ -78,15 +81,44 @@ void readwrite()
 
 void exec()
 {
-  Degf("Opening file");
+  xDeb("Opening file");
   auto einode = fs::getRootInode()->lookup("init");
   auto ehndl = (*einode)->open();
-  Degf("Execing");
+  xDeb("Execing");
   // FIXME exec never returns so hndl leaks
   elf::exec(**ehndl);
 
   PANIC("init exec failed");
 }
+
+class LogHandler : public xll::log::Handler
+{
+public:
+  void beginLog(
+      int level,
+      const char* category,
+      const char* file,
+      unsigned int line) override
+  {
+    (void)level;
+    (void)file;
+    (void)line;
+
+    while (*category)
+      io::outb(0xe9, *category++);
+    io::outb(0xe9, ':');
+    io::outb(0xe9, ' ');
+  }
+  void feed(const char* s, std::size_t n) override
+  {
+    while (n--)
+      io::outb(0xe9, *s++);
+  }
+  void endLog() override
+  {
+    io::outb(0xe9, '\n');
+  }
+};
 
 void enableSSEInstructions()
 {
@@ -99,43 +131,48 @@ void enableSSEInstructions()
       :"rax");
 }
 
+static LogHandler loghandler;
+
 extern "C" [[noreturn]] int kmain(void* mboot)
 {
   enableSSEInstructions();
 
-  Degf("Booting Flix");
+  xll::log::setLevel(xll::log::LEVEL_DEBUG);
+  xll::log::setHandler(&loghandler);
 
-  Degf("Initializing GDT and IDT");
+  xInf("Booting Flix");
+
+  xInf("Initializing GDT and IDT");
   DescTables::init();
 
   // first we need a heap (which is preallocated)
-  Degf("Heap init");
+  xInf("Heap init");
   KHeap::get().init();
 
   // second we need to prepare the heap which will be used for pagination
-  Degf("PageHeap init");
+  xInf("PageHeap init");
   PageHeap::get().init();
 
   // third we need pagination
-  Degf("Paging init");
+  xInf("Paging init");
   PageDirectory* pd = PageDirectory::initKernelDirectory();
   pd->use();
 
   // finally we need to keep track of used pages to be able to get new pages
-  Degf("Memory init");
+  xInf("Memory init");
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
   auto taskManager = TaskManager::get();
 
-  Degf("Setting up TSS");
+  xInf("Setting up TSS");
   taskManager->setUpTss();
 
-  Degf("Initializing syscall vector");
+  xInf("Initializing syscall vector");
   sys::initSysCalls();
 
   // then we load our module to have a file system
-  Degf("Loading module");
+  xInf("Loading module");
   mbl.handle(mboot);
 
   Timer::init(1);
@@ -202,7 +239,7 @@ extern "C" [[noreturn]] int kmain(void* mboot)
   }
 #endif
 
-  Degf("End of kernel");
+  xInf("End of kernel");
 
   taskManager->scheduleNext(); // start a task, never returns
 

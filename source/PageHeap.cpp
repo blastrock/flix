@@ -5,6 +5,8 @@
 #include "Memory.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/memory/pageheap");
+
 static constexpr unsigned BLOCK_SIZE = 2; // in pages
 
 static PageHeap g_pageHeap;
@@ -31,7 +33,7 @@ std::pair<PageHeap::page_index_t, physaddr_t> PageHeap::allocBlock()
   // if we are reentering, use pool
   if (m_allocating)
   {
-    Degf("Nested page allocation, taking from pool");
+    xDeb("Nested page allocation, taking from pool");
     assert(!m_pool.empty());
 
     std::pair<page_index_t, physaddr_t> ret = m_pool.back();
@@ -104,7 +106,7 @@ void PageHeap::refillPool()
   // the pool may be used while we refill it
   while (m_pool.size() < 16)
   {
-    Degf("Refilling page pool");
+    xDeb("Refilling page pool");
     auto block = allocBlock();
     m_pool.push_back(block);
   }

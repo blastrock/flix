@@ -3,6 +3,8 @@
 #include "io.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/desctables");
+
 struct GdtPtr
 {
   uint16_t limit;
@@ -175,7 +177,7 @@ void DescTables::initTr(void* tss)
   g_gdtEntries[TSS / 8] = entry.value[0];
   g_gdtEntries[TSS / 8 + 1] = entry.value[1];
 
-  Degf("Loading TR");
+  xDeb("Loading TR");
 
   asm volatile("ltr %0" : :"r"(static_cast<uint16_t>(TSS)));
 }

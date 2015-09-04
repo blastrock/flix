@@ -16,3 +16,6 @@
 [submodule "external/xllpnt"]
 	path = external/xllpnt
 	url = https://github.com/blastrock/xllpnt
+[submodule "external/xlllog"]
+	path = external/xlllog
+	url = https://bitbucket.org/BlastRock/xlllog

@@ -6,6 +6,8 @@
 #include "DescTables.hpp"
 #include "Util.hpp"
 
+XLL_LOG_CATEGORY("core/taskmanager");
+
 TaskManager* TaskManager::instance;
 
 [[noreturn]] extern "C" void jump(Task::Context* task);
@@ -46,7 +48,7 @@ void TaskManager::addTask(Task&& t)
 
   t.tid = _nextTid;
   ++_nextTid;
-  Degf("Adding new task with tid %d", t.tid);
+  xDeb("Adding new task with tid %d", t.tid);
   _tasks.insert(std::move(t));
 }
 
@@ -54,7 +56,7 @@ void TaskManager::terminateCurrentTask()
 {
   DisableInterrupts _;
 
-  Degf("Terminating task %d, size %d", _activeTask, _tasks.size());
+  xDeb("Terminating task %d, size %d", _activeTask, _tasks.size());
   const auto iter = _tasks.find(_activeTask);
   assert(iter != _tasks.end());
   _tasks.erase(iter);
@@ -92,7 +94,7 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
 {
   DisableInterrupts _;
 
-  Degf("Saving task %d with rip %x and rsp %x", _activeTask, ctx.rip, ctx.rsp);
+  xDeb("Saving task %d with rip %x and rsp %x", _activeTask, ctx.rip, ctx.rsp);
   getActiveTask().context = ctx;
 
   assert((ctx.cs == DescTables::SYSTEM_CS ||
@@ -199,7 +201,7 @@ void TaskManager::scheduleNext()
   const auto iter = getNext();
   if (iter == _tasks.end())
   {
-    Degf("All processes sleeping, entering kernel sleep");
+    xDeb("All processes sleeping, entering kernel sleep");
     enterSleep();
   }
 
@@ -208,7 +210,7 @@ void TaskManager::scheduleNext()
   assert((nextTask.context.cs == DescTables::SYSTEM_CS ||
         (nextTask.context.rflags & (1 << 9))) &&
       "Interrupts were disabled in a user task");
-  Degf("Restoring task %d with rip %x and rsp %x", _activeTask,
+  xDeb("Restoring task %d with rip %x and rsp %x", _activeTask,
       nextTask.context.rip, nextTask.context.rsp);
 
   // set the page directory of the process
@@ -229,6 +231,6 @@ void TaskManager::rescheduleSelf()
   assert((nextTask.context.cs == DescTables::SYSTEM_CS ||
         (nextTask.context.rflags & (1 << 9))) &&
       "Interrupts were disabled in a user task");
-  Degf("Rescheduling self at %x", nextTask.context.rip);
+  xDeb("Rescheduling self at %x", nextTask.context.rip);
   jump(&nextTask.context);
 }

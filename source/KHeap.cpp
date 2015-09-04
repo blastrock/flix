@@ -4,6 +4,8 @@
 #include "Symbols.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/memory/kheap");
+
 static KHeap g_heap;
 
 class KHeap::HeapBlock
@@ -127,7 +129,7 @@ void* KHeap::kmalloc(uint32_t size)
     ptr += blockSize;
   }
 
-  Degf("Heap enlarge");
+  xDeb("Heap enlarge");
 
   // count last block size if it's free
   uint32_t blockSize = block->getUsed() ? 0 : block->getSize();

@@ -1,6 +1,8 @@
 #include "Semaphore.hpp"
 #include "TaskManager.hpp"
 
+XLL_LOG_CATEGORY("support/sync/semaphore");
+
 struct Semaphore::Waiter
 {
   Waiter(Task& task)
@@ -13,18 +15,18 @@ struct Semaphore::Waiter
 
 void Semaphore::down()
 {
-  Degf("Semaphore down");
+  xDeb("Semaphore down");
 
   auto _ = _spinlock.getScoped();
 
   if (_count)
   {
-    Degf("No contetion");
+    xDeb("No contetion");
     --_count;
   }
   else
   {
-    Degf("There is contention");
+    xDeb("There is contention");
     // FIXME what if the task finishes before the wait is finished?
     auto& tm = *TaskManager::get();
     Waiter waiter{ tm.getActiveTask() };
@@ -43,18 +45,18 @@ void Semaphore::down()
 
 void Semaphore::up()
 {
-  Degf("Semaphore up");
+  xDeb("Semaphore up");
 
   auto _ = _spinlock.getScoped();
 
   if (_waiters.empty())
   {
-    Degf("No waiters");
+    xDeb("No waiters");
     ++_count;
   }
   else
   {
-    Degf("There are waiters");
+    xDeb("There are waiters");
     Waiter* waiter = _waiters.front();
     _waiters.pop();
     waiter->up = true;

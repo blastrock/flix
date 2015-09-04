@@ -47,21 +47,21 @@ struct Handle {
   virtual ~Handle() {}
   virtual IoExpected<off_t> lseek(off_t position, Whence whence)
   {
-    Degf("lseek stub called");
+    xDebC("core/vfs/filemanage", "lseek stub called");
     (void)position;
     (void)whence;
     return xll::make_unexpected(IoError_NotSeekable{});
   }
   virtual IoExpected<off_t> read(void* buffer, off_t size)
   {
-    Degf("read stub called");
+    xDebC("core/vfs/filemanage", "read stub called");
     (void)buffer;
     (void)size;
     return xll::make_unexpected(IoError_NotReadable{});
   }
   virtual IoExpected<off_t> write (const void* buffer, off_t size)
   {
-    Degf("write stub called");
+    xDebC("core/vfs/filemanage", "write stub called");
     (void)buffer;
     (void)size;
     return xll::make_unexpected(IoError_NotWritable{});

@@ -6,6 +6,8 @@
 #include "Keyboard.hpp"
 #include "DescTables.hpp"
 
+XLL_LOG_CATEGORY("core/interrupt");
+
 extern "C" void intHandler(InterruptState* s)
 {
   InterruptHandler::handle(s);
@@ -45,12 +47,12 @@ void InterruptHandler::handle(InterruptState* s)
 
   if (s->intNo < 32) // CPU exception
   {
-    Degf("Isr %d!", s->intNo);
+    xDeb("Isr %d!", s->intNo);
 
     switch (s->intNo)
     {
       case 13:
-        Degf("General-Protection Exception (%d)", s->errCode);
+        xDeb("General-Protection Exception (%d)", s->errCode);
         break;
       case 14:
       {
@@ -60,22 +62,22 @@ void InterruptHandler::handle(InterruptState* s)
             :"=r"(address)
             );
 
-        Degf("Page fault on %p", address);
+        xDeb("Page fault on %p", address);
 
         if (PageDirectory::getCurrent()->handleFault(address))
           return;
 
-        Degf("Page was %s", s->errCode & 1 ? "present" : "not present");
-        Degf("Fault on %s", s->errCode & 2 ? "write" : "read");
-        Degf("Access was %s",
+        xDeb("Page was %s", s->errCode & 1 ? "present" : "not present");
+        xDeb("Fault on %s", s->errCode & 2 ? "write" : "read");
+        xDeb("Access was %s",
             s->errCode & 4 ? "unprivileged" : "privileged");
-        Degf("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
+        xDeb("Fault on %s", s->errCode & 8 ? "fetch" : "execute");
       }
         break;
     }
 
-    Degf("RIP: %x", s->rip);
-    Degf("RSP: %x", s->rsp);
+    xDeb("RIP: %x", s->rip);
+    xDeb("RSP: %x", s->rsp);
 
     {
       ScopedExceptionHandling scope;
@@ -92,7 +94,7 @@ void InterruptHandler::handle(InterruptState* s)
   else if (s->intNo < 48) // PIC interrupt
   {
     uint8_t intNo = s->intNo - 32;
-    Degf("Int %x!", intNo);
+    xDeb("Int %x!", intNo);
     if (intNo == 0) // timer
     {
       if (TaskManager::get()->isTaskActive())
@@ -130,9 +132,9 @@ void InterruptHandler::handle(InterruptState* s)
   }
   else if (s->intNo == 0x80) // syscall
   {
-    Degf("syscall interrupt %d", s->rax);
+    xDeb("syscall interrupt %d", s->rax);
     s->rax = sys::handle(*s);
   }
 
-  Degf("Returning to ip %x with sp %x", s->rip, s->rsp);
+  xDeb("Returning to ip %x with sp %x", s->rip, s->rsp);
 }

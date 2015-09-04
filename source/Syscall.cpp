@@ -5,6 +5,8 @@
 #include <array>
 #include <functional>
 
+XLL_LOG_CATEGORY("core/syscall");
+
 extern "C" void syscall_entry();
 
 namespace sys
@@ -51,14 +53,14 @@ int close(int fd)
 
 ssize_t read(int fd, void* buf, size_t count)
 {
-  Degf("reading fd %d", fd);
+  xDeb("reading fd %d", fd);
 
   auto& task = TaskManager::get()->getActiveTask();
   auto handle = task.fileManager.getHandle(fd);
 
   if (!handle)
   {
-    Degf("fd not found");
+    xDeb("fd not found");
     return -1;
   }
 
@@ -70,7 +72,7 @@ ssize_t read(int fd, void* buf, size_t count)
 
 ssize_t write(int fd, const void* buf, size_t count)
 {
-  Degf("writing \"%s\" on fd %d",
+  xDeb("writing \"%s\" on fd %d",
       std::string(static_cast<const char*>(buf), count).c_str(),
       fd);
 
@@ -79,7 +81,7 @@ ssize_t write(int fd, const void* buf, size_t count)
 
   if (!handle)
   {
-    Degf("fd not found");
+    xDeb("fd not found");
     return -1;
   }
 
@@ -94,7 +96,7 @@ int arch_prctl(int code, unsigned long addr)
   static constexpr uint32_t MSR_FS = 0xC0000100;
   if (code == 0x1002)
   {
-    Degf("arch_prctl: set fs to %x", addr);
+    xDeb("arch_prctl: set fs to %x", addr);
     asm volatile (
         "wrmsr\n"
         :
@@ -104,13 +106,13 @@ int arch_prctl(int code, unsigned long addr)
         );
   }
   else
-    Degf("arch_prctl: unknown code 0x%x", code);
+    xDeb("arch_prctl: unknown code 0x%x", code);
   return 0;
 }
 
 void* mmap(void*, size_t length)
 {
-  Degf("mmap: size %x", length);
+  xDeb("mmap: size %x", length);
 
   if (length == 0)
     return nullptr;
@@ -129,7 +131,7 @@ void* mmap(void*, size_t length)
     curPtr += PAGE_SIZE;
   }
 
-  Degf("returning %p", start);
+  xDeb("returning %p", start);
   return start;
 }
 
@@ -144,7 +146,7 @@ void exit()
 
 void print(const char* buf)
 {
-  Degf("sysprint: %s", buf);
+  xDeb("sysprint: %s", buf);
 }
 
 }
@@ -212,7 +214,7 @@ SyscallReturnType handle(const InterruptState& st)
     return g_syscallHandlers[st.rax](st);
   else
   {
-    Degf("Unknown syscall %d", st.rax);
+    xDeb("Unknown syscall %d", st.rax);
     return 0;
   }
 }
@@ -221,6 +223,6 @@ SyscallReturnType handle(const InterruptState& st)
 
 extern "C" void syscallHandler(InterruptState* s)
 {
-  Degf("syscall %d", s->rax);
+  xDeb("syscall %d", s->rax);
   s->rax = sys::handle(*s);
 }

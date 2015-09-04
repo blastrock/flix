@@ -1,6 +1,8 @@
 #include "Cpio.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/vfs/cpio");
+
 class CpioFileInode;
 
 class CpioFileHandle : public fs::Handle
@@ -50,7 +52,7 @@ fs::IoExpected<off_t> CpioFileHandle::lseek(off_t position, fs::Whence whence)
     break;
   }
   // TODO handle _pos < 0 or > size
-  Degf("Seeked to %d", _pos);
+  xDeb("Seeked to %d", _pos);
 
   return _pos;
 }
@@ -58,7 +60,7 @@ fs::IoExpected<off_t> CpioFileHandle::lseek(off_t position, fs::Whence whence)
 fs::IoExpected<off_t> CpioFileHandle::read(void* buf, off_t size)
 {
   // TODO handle end of file
-  Degf("Reading %d bytes from %d", size, _pos);
+  xDeb("Reading %d bytes from %d", size, _pos);
   size = std::min(size, _file->_data.size() - _pos);
   std::memcpy(buf, &_file->_data[_pos], size);
   _pos += size;
@@ -94,7 +96,7 @@ public:
 
   std::shared_ptr<CpioFileInode> makeFile(const char* path)
   {
-    Degf("Making file %s", path);
+    xDeb("Making file %s", path);
     std::shared_ptr<CpioFolderInode> curInode = _root;
     const char* start = path;
     while(*path != '\0')
@@ -105,7 +107,7 @@ public:
 
         auto newFolder = std::make_shared<CpioFolderInode>();
         newFolder->_name = std::string(start, path);
-        Degf("Inode %s", newFolder->_name);
+        xDeb("Inode %s", newFolder->_name);
         curInode->_children.push_back(newFolder);
         curInode = newFolder;
         start = path+1;
@@ -118,7 +120,7 @@ public:
 
     auto finalInode = std::make_shared<CpioFileInode>();
     finalInode->_name = std::string(start, path);
-    Degf("Final inode %s", finalInode->_name);
+    xDeb("Final inode %s", finalInode->_name);
     curInode->_children.push_back(finalInode);
 
     return finalInode;
@@ -163,7 +165,7 @@ std::shared_ptr<fs::SuperBlock> readArchive(void* data)
     char* name = reinterpret_cast<char*>(ptr);
     std::string sname(name, curfile->namesize - 1); // remove the \0
 
-    Degf("Found file %s of size %d", sname, filesize);
+    xDeb("Found file %s of size %d", sname, filesize);
 
     if (sname == "TRAILER!!!")
       break;

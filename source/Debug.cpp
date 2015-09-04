@@ -1,6 +1,8 @@
 #include "Debug.hpp"
 #include "PageDirectory.hpp"
 
+XLL_LOG_CATEGORY("support/debug");
+
 void printStackTrace()
 {
   uint64_t rbp;
@@ -14,23 +16,23 @@ void printStackTrace(uint64_t stackPointer)
   // instraction pointer
   void** stackFrame = reinterpret_cast<void**>(stackPointer);
 
-  Degf("Stack trace:");
+  xDeb("Stack trace:");
   while (true)
   {
     if (!PageDirectory::getCurrent()->isPageMapped(stackFrame) ||
         !PageDirectory::getCurrent()->isPageMapped(stackFrame+1))
     {
-      Degf("Invalid pointer: %p", stackFrame);
+      xDeb("Invalid pointer: %p", stackFrame);
       return;
     }
 
     if (!stackFrame[1])
       break;
 
-    Degf("%p", stackFrame[1]);
+    xDeb("%p", stackFrame[1]);
     if (stackFrame >= stackFrame[0])
     {
-      Degf("Stack going backward, aborting");
+      xDeb("Stack going backward, aborting");
       return;
     }
 

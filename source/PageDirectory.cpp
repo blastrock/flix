@@ -4,6 +4,8 @@
 #include "Memory.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/memory/pagedirectory");
+
 PageDirectory* PageDirectory::g_kernelDirectory = nullptr;
 
 PageDirectory* PageDirectory::initKernelDirectory()
@@ -121,7 +123,7 @@ void PageDirectory::use()
   g_pagingReady = true;
 #endif
 
-  Degf("Changing pagetable to %x", m_directory.value);
+  xDeb("Changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
   g_currentPageDirectory = this;
 }
@@ -171,7 +173,7 @@ void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes
 template <typename F>
 void PageDirectory::mapPageToF(void* vaddr, physaddr_t paddr, const F& f)
 {
-  Degf("Mapping %p to %x", vaddr, paddr);
+  xDeb("Mapping %p to %x", vaddr, paddr);
 
   // map intermediate pages with all rights and limit permissions only on last
   // level
@@ -245,16 +247,16 @@ bool PageDirectory::handleFault(void* vaddr)
   if (!entry || entry->p || entry->base != INVALID_PAGE)
   {
     if (entry)
-      Degf("Not a deferred allocation %s %x", entry->p, entry->base);
+      xDeb("Not a deferred allocation %s %x", entry->p, entry->base);
     else
-      Degf("Not a deferred allocation (no entry)");
+      xDeb("Not a deferred allocation (no entry)");
     return false;
   }
 
   page_t page = Memory::getFreePage();
   entry->p = true;
   entry->base = page;
-  Degf("Handled deferred allocation, mapped %p to %x",
+  xDeb("Handled deferred allocation, mapped %p to %x",
       vaddr, page << BASE_SHIFT);
 
   return true;

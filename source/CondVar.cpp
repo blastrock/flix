@@ -2,6 +2,8 @@
 #include "Mutex.hpp"
 #include "TaskManager.hpp"
 
+XLL_LOG_CATEGORY("support/sync/condvar");
+
 struct CondVar::Waiter
 {
   Waiter(Task& task)
@@ -14,7 +16,7 @@ struct CondVar::Waiter
 
 void CondVar::wait(Mutex& waitMutex)
 {
-  Degf("Waiting on condvar");
+  xDeb("Waiting on condvar");
 
   // FIXME what if the task finishes before the wait is finished?
   auto& tm = *TaskManager::get();
@@ -30,26 +32,26 @@ void CondVar::wait(Mutex& waitMutex)
     _waiters.push_back(&waiter);
 
     {
-      Degf("Going to sleep");
+      xDeb("Going to sleep");
 
       tm.prepareMeForSleep();
       waitMutex.unlock();
       auto _ = _lock.getScopedUnlock();
       tm.putMeToSleep();
-      Degf("Woke up");
+      xDeb("Woke up");
     }
   } while (!waiter.up);
 
-  Degf("Cond triggered");
+  xDeb("Cond triggered");
 
   waitMutex.lock();
 
-  Degf("Mutex relocked");
+  xDeb("Mutex relocked");
 }
 
 void CondVar::notify_one()
 {
-  Degf("Notifying one");
+  xDeb("Notifying one");
 
   Waiter* curWaiter;
   {
@@ -64,7 +66,7 @@ void CondVar::notify_one()
 
 void CondVar::notify_all()
 {
-  Degf("Notifying all");
+  xDeb("Notifying all");
 
   std::vector<Waiter*> curWaiters;
   // we are going to wake up a lot of threads, release the lock as soon as

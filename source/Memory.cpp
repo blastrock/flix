@@ -2,20 +2,22 @@
 #include "Util.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/memory/memorymap");
+
 std::vector<bool> Memory::g_frames;
 
 page_t Memory::getFreePage()
 {
-  Degf("Free page request");
+  xDeb("Free page request");
 
   for (page_t i = 0; i < g_frames.size(); ++i)
     if (!g_frames[i])
     {
-      Degf("Free page got");
+      xDeb("Free page got");
       g_frames[i] = true;
       return i;
     }
-  Degf("No more freepage, enlaring...");
+  xDeb("No more freepage, enlaring...");
   page_t i = g_frames.size();
   g_frames.resize(i+16, false);
   g_frames[i] = true;

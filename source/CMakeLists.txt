@@ -4,6 +4,7 @@ enable_language(ASM)
 include_directories(
   SYSTEM
   ${PROJECT_SOURCE_DIR}/external/xllpnt/include
+  ${PROJECT_SOURCE_DIR}/external/xlllog/include
   ${PROJECT_SOURCE_DIR}/external/variant/include
   ${PROJECT_SOURCE_DIR}/external/expected/include
   )

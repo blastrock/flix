@@ -3,6 +3,8 @@
 #include "Debug.hpp"
 #include "Tty.hpp"
 
+XLL_LOG_CATEGORY("core/vfs/filemanager");
+
 class NullHandle : public fs::Handle
 {};
 
@@ -42,7 +44,7 @@ FileManager::FileManager()
 
 xll::expected<int, fs::IoError> FileManager::open(const char* path)
 {
-  Degf("opening %s", path);
+  xDeb("opening %s", path);
 
   auto ehandle =
     fs::lookup(path).bind([](auto&& inode)
@@ -65,7 +67,7 @@ xll::expected<int, fs::IoError> FileManager::open(const char* path)
 
 int FileManager::close(int fd)
 {
-  Degf("closing %d", fd);
+  xDeb("closing %d", fd);
 
   assert(fd >= 0);
   if (static_cast<unsigned int>(fd) >= _files.size())

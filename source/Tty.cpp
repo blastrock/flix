@@ -3,6 +3,8 @@
 #include "Util.hpp"
 #include "Debug.hpp"
 
+XLL_LOG_CATEGORY("core/tty");
+
 Tty* Tty::getCurrent()
 {
   static Tty* tty = new Tty();
@@ -11,7 +13,7 @@ Tty* Tty::getCurrent()
 
 void Tty::feedInput(char data)
 {
-  Degf("Got input");
+  xDeb("Got input");
 
   auto _ = _mutex.getScoped();
 
@@ -21,7 +23,7 @@ void Tty::feedInput(char data)
   if (data == '\n')
     _condvar.notify_all();
 
-  Degf("Notified");
+  xDeb("Notified");
 }
 
 void Tty::print(const char* buf, size_t size)
@@ -34,17 +36,17 @@ size_t Tty::readInto(char* buf, size_t size)
   if (size == 0)
     return 0;
 
-  Degf("Reading %d bytes from TTY", size);
+  xDeb("Reading %d bytes from TTY", size);
 
   auto _ = _mutex.getScoped();
 
   while (_stdin.empty())
   {
-    Degf("TTY empty, waiting");
+    xDeb("TTY empty, waiting");
     _condvar.wait(_mutex);
   }
 
-  Degf("Starting read");
+  xDeb("Starting read");
 
   size_t toRead = std::min(size, _stdin.size());
   for (char* ptr = buf, * end = buf + toRead;
@@ -54,6 +56,6 @@ size_t Tty::readInto(char* buf, size_t size)
     *ptr = _stdin.front();
     _stdin.pop();
   }
-  Degf("Read %d bytes", toRead);
+  xDeb("Read %d bytes", toRead);
   return toRead;
 }
