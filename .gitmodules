@@ -13,6 +13,6 @@
 [submodule "external/expected"]
 	path = external/expected
 	url = https://BlastRock@bitbucket.org/BlastRock/expected.git
-[submodule "external/pnt"]
-	path = external/pnt
-	url = https://github.com/blastrock/pnt
+[submodule "external/xllpnt"]
+	path = external/xllpnt
+	url = https://github.com/blastrock/xllpnt
