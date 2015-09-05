@@ -247,7 +247,7 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   taskManager->scheduleNext(); // start a task, never returns
 
-  // TODO this "task"'s stack now becomes useless, can we recycle it someway?
+  // this stack will be reused for interrupts when there is no active task
 
   PANIC("Reached end of main!");
 }

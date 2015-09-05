@@ -185,11 +185,10 @@ TaskManager::Tasks::iterator TaskManager::getNext()
 
 void TaskManager::setKernelStack()
 {
-  // TODO do something cleaner
-  static auto* kernelStack = new char[0x4000];
+  auto kernelStack = Symbols::getStackBase();
 
-  _tss->ist1 = kernelStack + 0x4000;
-  Cpu::setKernelStack(kernelStack + 0x4000);
+  _tss->ist1 = kernelStack;
+  Cpu::setKernelStack(kernelStack);
 }
 
 void TaskManager::enterSleep()
