@@ -52,6 +52,8 @@ void TaskManager::addTask(Task&& t)
   ++_nextTid;
   xDeb("Adding new task with tid %d", t.tid);
   _tasks.insert(std::move(t));
+
+  doInterruptMasking();
 }
 
 void TaskManager::terminateCurrentTask()
@@ -63,6 +65,8 @@ void TaskManager::terminateCurrentTask()
   assert(iter != _tasks.end());
   _tasks.erase(iter);
   // TODO free stack
+
+  doInterruptMasking();
 }
 
 Task TaskManager::newKernelTask()
@@ -123,6 +127,8 @@ void TaskManager::putMeToSleep()
     assert(task.context.cs == DescTables::SYSTEM_CS &&
         "putMeToSleep called from userspace");
 
+    doInterruptMasking();
+
     scheduleNext(); // going to sleep
   }
   else
@@ -132,6 +138,8 @@ void TaskManager::putMeToSleep()
 void TaskManager::wakeUpTask(Task& task)
 {
   task.state = Task::State::Runnable;
+
+  doInterruptMasking();
 }
 
 bool TaskManager::isTaskActive()
@@ -194,13 +202,12 @@ void TaskManager::enterSleep()
   {
     {
       EnableInterrupts _;
-      asm volatile("hlt");
+      asm volatile("hlt":::"memory");
     }
     // we are woken up on interrupt, maybe it woke a process up, try to
     // schedule one
     tryScheduleNext();
   }
-  PANIC("unreachable code");
 }
 
 void TaskManager::tryScheduleNext()
@@ -247,4 +254,18 @@ void TaskManager::rescheduleSelf()
       "Interrupts were disabled in a user task");
   xDeb("Rescheduling self at %x", nextTask.context.rip);
   jump(&nextTask.context);
+}
+
+void TaskManager::doInterruptMasking()
+{
+  DisableInterrupts _;
+
+  for (const auto& task : _tasks)
+    if (task.state == Task::Runnable)
+    {
+      Interrupt::unmask(IRQ_TIMER);
+      return;
+    }
+
+  Interrupt::mask(IRQ_TIMER);
 }

@@ -123,6 +123,7 @@ private:
   void tryScheduleNext();
   Tasks::iterator getNext();
   [[noreturn]] void enterSleep();
+  void doInterruptMasking();
 };
 
 #endif /* TASK_HPP */

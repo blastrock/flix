@@ -14,11 +14,19 @@ struct InterruptState
   uint64_t rip, cs, rflags, rsp, ss;
 } __attribute__((packed));
 
+enum Interrupts
+{
+  IRQ_TIMER = 0,
+  IRQ_KEYBOARD,
+};
+
 class Interrupt
 {
   public:
     static void initPic();
     static void handle(InterruptState* s);
+    static void mask(uint8_t nb);
+    static void unmask(uint8_t nb);
 };
 
 #endif /* INTERRUPT_HPP */

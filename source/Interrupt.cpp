@@ -163,3 +163,30 @@ void Interrupt::initPic()
   io::outb(PIC1_DATA, 0x0);
   io::outb(PIC2_DATA, 0x0);
 }
+
+template <typename F>
+inline static void updateMask(uint8_t nb, F&& op)
+{
+  uint16_t port;
+  uint8_t value;
+
+  if(nb < 8)
+    port = PIC1_DATA;
+  else
+  {
+    port = PIC2_DATA;
+    nb -= 8;
+  }
+  value = op(io::inb(port), (1 << nb));
+  io::outb(port, value);
+}
+
+void Interrupt::mask(uint8_t nb)
+{
+  updateMask(nb, [](auto x, auto y) { return x | y; });
+}
+
+void Interrupt::unmask(uint8_t nb)
+{
+  updateMask(nb, [](auto x, auto y) { return x & ~y; });
+}
