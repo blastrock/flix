@@ -14,9 +14,10 @@ struct InterruptState
   uint64_t rip, cs, rflags, rsp, ss;
 } __attribute__((packed));
 
-class InterruptHandler
+class Interrupt
 {
   public:
+    static void initPic();
     static void handle(InterruptState* s);
 };
 

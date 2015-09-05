@@ -1,5 +1,6 @@
 #include "Screen.hpp"
 #include "DescTables.hpp"
+#include "Interrupt.hpp"
 #include "Timer.hpp"
 #include "Memory.hpp"
 #include "Multiboot.hpp"
@@ -144,6 +145,9 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   xInf("Initializing GDT and IDT");
   DescTables::init();
+
+  xInf("Remapping IRQs");
+  Interrupt::initPic();
 
   // first we need a heap (which is preallocated)
   xInf("Heap init");

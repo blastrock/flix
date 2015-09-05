@@ -1,6 +1,5 @@
 #include "DescTables.hpp"
 #include <cstring>
-#include "io.hpp"
 #include "Debug.hpp"
 
 XLL_LOG_CATEGORY("core/desctables");
@@ -129,23 +128,6 @@ void initGdt()
 void initIdt()
 {
   std::memset(&g_idtEntries, 0, sizeof(g_idtEntries));
-
-  // Remap the irq table.
-  // init
-  io::outb(0x20, 0x11);
-  io::outb(0xA0, 0x11);
-  // offsets
-  io::outb(0x21, 0x20);
-  io::outb(0xA1, 0x28);
-  // connections
-  io::outb(0x21, 0x04);
-  io::outb(0xA1, 0x02);
-  // environment
-  io::outb(0x21, 0x01);
-  io::outb(0xA1, 0x01);
-  // reset masks
-  io::outb(0x21, 0x0);
-  io::outb(0xA1, 0x0);
 
   for (short i = 0; i < 48; ++i)
     g_idtEntries[i] = makeIdtGate(intVectors[i], 0x08, false);

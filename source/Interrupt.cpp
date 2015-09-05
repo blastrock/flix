@@ -10,7 +10,7 @@ XLL_LOG_CATEGORY("core/interrupt");
 
 extern "C" void intHandler(InterruptState* s)
 {
-  InterruptHandler::handle(s);
+  Interrupt::handle(s);
 }
 
 struct ScopedExceptionHandling
@@ -31,7 +31,7 @@ struct ScopedExceptionHandling
 
 bool ScopedExceptionHandling::busy = false;
 
-void InterruptHandler::handle(InterruptState* s)
+void Interrupt::handle(InterruptState* s)
 {
   assert((s->cs == DescTables::SYSTEM_CS ||
         (s->rflags & (1 << 9))) &&
@@ -137,4 +137,29 @@ void InterruptHandler::handle(InterruptState* s)
   }
 
   xDeb("Returning to ip %x with sp %x", s->rip, s->rsp);
+}
+
+static constexpr uint16_t PIC1_CMD = 0x20;
+static constexpr uint16_t PIC1_DATA = 0x21;
+static constexpr uint16_t PIC2_CMD = 0xA0;
+static constexpr uint16_t PIC2_DATA = 0xA1;
+
+void Interrupt::initPic()
+{
+  // Remap the irq table.
+  // init
+  io::outb(PIC1_CMD, 0x11);
+  io::outb(PIC2_CMD, 0x11);
+  // offsets
+  io::outb(PIC1_DATA, 0x20);
+  io::outb(PIC2_DATA, 0x28);
+  // connections
+  io::outb(PIC1_DATA, 0x04);
+  io::outb(PIC2_DATA, 0x02);
+  // environment
+  io::outb(PIC1_DATA, 0x01);
+  io::outb(PIC2_DATA, 0x01);
+  // reset masks
+  io::outb(PIC1_DATA, 0x0);
+  io::outb(PIC2_DATA, 0x0);
 }
