@@ -189,7 +189,7 @@ IdtEntry makeIdtGate(void* offset, uint16_t selector, bool pub)
 {
   const uint64_t ioff = reinterpret_cast<uint64_t>(offset);
 
-  IdtEntry entry;
+  IdtEntry entry = {};
   entry.targetLow = ioff & 0xFFFF;
   entry.targetMid = (ioff >> 16) & 0xFFFF;
   entry.targetHigh = (ioff >> 32) & 0xFFFFFFFF;
