@@ -87,6 +87,30 @@ private:
   bool _enable;
 };
 
+class EnableInterrupts
+{
+public:
+  EnableInterrupts()
+  {
+    _disable = !(Cpu::rflags() & (1 << 9));
+    if (_disable)
+      enableInterrupts();
+  }
+  ~EnableInterrupts()
+  {
+    if (_disable)
+      disableInterrupts();
+  }
+
+  EnableInterrupts(const EnableInterrupts&) = delete;
+  EnableInterrupts(EnableInterrupts&&) = default;
+  EnableInterrupts& operator=(const EnableInterrupts&) = delete;
+  EnableInterrupts& operator=(EnableInterrupts&&) = default;
+
+private:
+  bool _disable;
+};
+
 template <typename T>
 class ScopedLock
 {

@@ -120,6 +120,7 @@ private:
 
   void setKernelStack();
   void updateNextTid();
+  void tryScheduleNext();
   Tasks::iterator getNext();
   [[noreturn]] void enterSleep();
 };

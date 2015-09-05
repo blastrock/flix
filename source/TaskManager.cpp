@@ -190,27 +190,27 @@ void TaskManager::enterSleep()
 
   setKernelStack();
 
-  asm volatile(
-      "sti\n"
-      "hltloop: hlt\n"
-      "jmp hltloop\n"
-      );
+  while (true)
+  {
+    {
+      EnableInterrupts _;
+      asm volatile("hlt");
+    }
+    // we are woken up on interrupt, maybe it woke a process up, try to
+    // schedule one
+    tryScheduleNext();
+  }
   PANIC("unreachable code");
 }
 
-void TaskManager::scheduleNext()
+void TaskManager::tryScheduleNext()
 {
-  DisableInterrupts _;
-
   if (_tasks.empty())
     PANIC("Nothing to schedule!");
 
   const auto iter = getNext();
   if (iter == _tasks.end())
-  {
-    xDeb("All processes sleeping, entering kernel sleep");
-    enterSleep();
-  }
+    return;
 
   Task& nextTask = const_cast<Task&>(*iter);
   _activeTask = nextTask.tid;
@@ -228,6 +228,13 @@ void TaskManager::scheduleNext()
   Cpu::setKernelStack(nextTask.kernelStackTop);
 
   jump(&nextTask.context);
+}
+
+void TaskManager::scheduleNext()
+{
+  tryScheduleNext();
+  xDeb("All processes sleeping, entering kernel sleep");
+  enterSleep();
 }
 
 void TaskManager::rescheduleSelf()
