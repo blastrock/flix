@@ -118,6 +118,7 @@ private:
   pid_t _activeTask;
   pid_t _nextTid;
 
+  void setKernelStack();
   void updateNextTid();
   Tasks::iterator getNext();
   [[noreturn]] void enterSleep();

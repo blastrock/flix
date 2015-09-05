@@ -31,6 +31,8 @@ void TaskManager::setUpTss()
   _tss = new TaskStateSegment{};
   std::memset(_tss, 0, sizeof(*_tss));
   DescTables::initTr(_tss);
+
+  setKernelStack();
 }
 
 void TaskManager::updateNextTid()
@@ -173,15 +175,20 @@ TaskManager::Tasks::iterator TaskManager::getNext()
   }
 }
 
-void TaskManager::enterSleep()
+void TaskManager::setKernelStack()
 {
-  _activeTask = 0;
-
   // TODO do something cleaner
   static auto* kernelStack = new char[0x4000];
 
   _tss->ist1 = kernelStack + 0x4000;
   Cpu::setKernelStack(kernelStack + 0x4000);
+}
+
+void TaskManager::enterSleep()
+{
+  _activeTask = 0;
+
+  setKernelStack();
 
   asm volatile(
       "sti\n"
