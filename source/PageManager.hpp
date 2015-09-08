@@ -207,7 +207,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
                  NextLayout().template getEntryImpl<RevLevel-1>(0))
            >::type
 {
-  uintptr_t index = indexFromAddress(address);
+  const uintptr_t index = indexFromAddress(address);
   NextLayout*& nextLayout = m_nextLayouts[index];
 
   // if not present
@@ -218,8 +218,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     return {nullptr, nullptr};
   }
 
-  return m_nextLayouts[index]
-    ->template getEntryImpl<RevLevel-1>(address);
+  return nextLayout->template getEntryImpl<RevLevel-1>(address);
 }
 
 template <typename Allocator, typename CurLevel, typename... NextLevels>
@@ -231,7 +230,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
                  NextLayout().template getEntryImpl<RevLevel-1>(0, init))
            >::type
 {
-  uintptr_t index = indexFromAddress(address);
+  const uintptr_t index = indexFromAddress(address);
   NextLayout*& nextLayout = m_nextLayouts[index];
 
   // if not present
@@ -247,8 +246,7 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     init(m_entries[index]);
   }
 
-  return m_nextLayouts[index]
-    ->template getEntryImpl<RevLevel-1>(address, init);
+  return nextLayout->template getEntryImpl<RevLevel-1>(address, init);
 }
 
 template <typename Allocator, typename CurLevel, typename... NextLevels>
