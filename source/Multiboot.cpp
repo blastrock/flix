@@ -6,6 +6,8 @@
 #include "PageDirectory.hpp"
 #include "Cpio.hpp"
 
+XLL_LOG_CATEGORY("boot/multiboot");
+
 // memory tag must be handled very early during boot and it's hard to handle
 // other tags without making memory allocations, so memory tag handling is a
 // special case
@@ -114,6 +116,9 @@ void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
   // if the segment is free to use, skip it
   if (entry->type == 1)
     return;
+
+  xDeb("Reserved memory chunk: %x-%x", entry->base_addr,
+      entry->base_addr + entry->length);
 
   for (uint64_t page = entry->base_addr / 0x1000,
       lastPage = page + (entry->length + 0xFFF) / 0x1000;
