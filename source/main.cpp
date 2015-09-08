@@ -167,6 +167,11 @@ extern "C" [[noreturn]] int kmain(void* mboot)
   MultibootLoader mbl;
   mbl.prepareMemory(mboot);
 
+  // declare A20 and stuff
+  // TODO: map this in kernel memory, could be useful
+  Memory::setRangeUsed(0xa0000 / 0x1000, 0xb8000 / 0x1000);
+  Memory::setRangeUsed(0xb9000 / 0x1000, 0xe8000 / 0x1000);
+
   auto taskManager = TaskManager::get();
 
   xInf("Setting up TSS");
