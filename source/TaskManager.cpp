@@ -116,7 +116,8 @@ void TaskManager::prepareMeForSleep()
 
 void TaskManager::putMeToSleep()
 {
-  disableInterrupts();
+  if (Cpu::rflags() & (1 << 9))
+    disableInterrupts();
 
   Task& task = getActiveTask();
   assert(task.state == Task::State::Sleeping &&

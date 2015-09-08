@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "Cpu.hpp"
+#include "Debug.hpp"
 
 #include <experimental/optional>
 
@@ -55,11 +56,15 @@ inline constexpr T intAlignSup(T base, uint8_t val)
 // accesses must not be scheduled before or after the critical section
 inline void disableInterrupts()
 {
+  xDebC("support/utils", "Disabling interrupts");
+  assert((Cpu::rflags() & (1 << 9)) && "interrupts were already off");
   asm volatile ("cli":::"memory");
 }
 
 inline void enableInterrupts()
 {
+  xDebC("support/utils", "Enabling interrupts");
+  assert(!(Cpu::rflags() & (1 << 9)) && "interrupts were already on");
   asm volatile ("sti":::"memory");
 }
 
@@ -79,9 +84,18 @@ public:
   }
 
   DisableInterrupts(const DisableInterrupts&) = delete;
-  DisableInterrupts(DisableInterrupts&&) = default;
+  DisableInterrupts(DisableInterrupts&& other)
+    : _enable(other._enable)
+  {
+    other._enable = false;
+  }
   DisableInterrupts& operator=(const DisableInterrupts&) = delete;
-  DisableInterrupts& operator=(DisableInterrupts&&) = default;
+  DisableInterrupts& operator=(DisableInterrupts&& other)
+  {
+    _enable = other._enable;
+    other._enable = false;
+    return *this;
+  }
 
 private:
   bool _enable;
@@ -103,9 +117,18 @@ public:
   }
 
   EnableInterrupts(const EnableInterrupts&) = delete;
-  EnableInterrupts(EnableInterrupts&&) = default;
+  EnableInterrupts(EnableInterrupts&& other)
+    : _disable(other._disable)
+  {
+    other._disable = false;
+  }
   EnableInterrupts& operator=(const EnableInterrupts&) = delete;
-  EnableInterrupts& operator=(EnableInterrupts&&) = default;
+  EnableInterrupts& operator=(EnableInterrupts&& other)
+  {
+    _disable = other._disable;
+    other._disable = false;
+    return *this;
+  }
 
 private:
   bool _disable;
@@ -122,15 +145,25 @@ public:
   }
   ~ScopedLock()
   {
-    lock.unlock();
+    if (!_dead)
+      lock.unlock();
   }
 
   ScopedLock(const ScopedLock&) = delete;
-  ScopedLock(ScopedLock&&) = default;
+  ScopedLock(ScopedLock&& other)
+    : lock(other.lock)
+  {
+    other._dead = true;
+  }
   ScopedLock& operator=(const ScopedLock&) = delete;
-  ScopedLock& operator=(ScopedLock&&) = default;
+  ScopedLock& operator=(ScopedLock&& other)
+  {
+    other._dead = true;
+    return *this;
+  }
 
 private:
+  bool _dead = false;
   T& lock;
 };
 
@@ -145,15 +178,25 @@ public:
   }
   ~ScopedUnlock()
   {
-    lock.lock();
+    if (!_dead)
+      lock.lock();
   }
 
   ScopedUnlock(const ScopedUnlock&) = delete;
-  ScopedUnlock(ScopedUnlock&&) = default;
+  ScopedUnlock(ScopedUnlock&& other)
+    : lock(other.lock)
+  {
+    other._dead = true;
+  }
   ScopedUnlock& operator=(const ScopedUnlock&) = delete;
-  ScopedUnlock& operator=(ScopedUnlock&&) = default;
+  ScopedUnlock& operator=(ScopedUnlock&& other)
+  {
+    other._dead = true;
+    return *this;
+  }
 
 private:
+  bool _dead = false;
   T& lock;
 };
 
