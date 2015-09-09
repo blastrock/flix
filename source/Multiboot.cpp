@@ -76,6 +76,7 @@ char* MultibootLoader::handleModule(Module* mod, const F& cb)
 
 void MultibootLoader::prehandleModule(Module* mod)
 {
+  xDeb("Reserved memory for module: %x-%x", mod->mod_start, mod->mod_end);
   handleModule(mod,
       [](auto, auto paddr) {
         Memory::setPageUsed(paddr / PAGE_SIZE);
@@ -87,6 +88,7 @@ void MultibootLoader::handleModule(Module* mod)
   if (_moduleRead)
     PANIC("More than one module specified on boot");
 
+  xDeb("Mapping module %x-%x", mod->mod_start, mod->mod_end);
   char* basePtr = handleModule(mod,
       [](auto curPtr, auto paddr) {
         PageDirectory::getKernelDirectory()->mapPageTo(curPtr, paddr, 0);

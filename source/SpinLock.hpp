@@ -2,6 +2,7 @@
 #define SPIN_LOCK_HPP
 
 #include "Util.hpp"
+#include "Debug.hpp"
 
 // no need to spin, SMP not supported yet
 class SpinLock
@@ -28,12 +29,14 @@ public:
 
   void lock()
   {
+    xDebC("support/sync/spinlock", "SpinLock lock");
     assert(!_disableInterrupts);
     _disableInterrupts = DisableInterrupts();
   }
 
   void unlock()
   {
+    xDebC("support/sync/spinlock", "SpinLock unlock");
     assert(_disableInterrupts);
     _disableInterrupts = std::nullopt;
   }

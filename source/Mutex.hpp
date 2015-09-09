@@ -3,6 +3,7 @@
 
 #include "Semaphore.hpp"
 #include "Util.hpp"
+#include "Debug.hpp"
 
 class Mutex
 {
@@ -25,10 +26,12 @@ public:
 
   void lock()
   {
+    xDebC("support/sync/mutex", "Mutex lock");
     _semaphore.down();
   }
   void unlock()
   {
+    xDebC("support/sync/mutex", "Mutex unlock");
     _semaphore.up();
   }
 

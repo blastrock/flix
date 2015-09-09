@@ -92,9 +92,24 @@ void exec()
   PANIC("init exec failed");
 }
 
+static bool ready = false;
+
 class LogHandler : public xll::log::Handler
 {
 public:
+  using char_type = char;
+  using traits_type = std::char_traits<char_type>;
+
+  void sputc(char_type ch)
+  {
+    io::outb(0xe9, ch);
+  }
+  void sputn(const char_type* s, std::streamsize count)
+  {
+    while (count--)
+      sputc(*s++);
+  }
+
   void beginLog(
       int level,
       const char* category,
@@ -105,19 +120,19 @@ public:
     (void)file;
     (void)line;
 
-    while (*category)
-      io::outb(0xe9, *category++);
-    io::outb(0xe9, ':');
-    io::outb(0xe9, ' ');
+    if (ready && TaskManager::get()->isTaskActive())
+      xll::pnt::writef(*this, "%d: %s: ", TaskManager::get()->getActive()->tid,
+          category);
+    else
+      xll::pnt::writef(*this, "0: %s: ", category);
   }
   void feed(const char* s, std::size_t n) override
   {
-    while (n--)
-      io::outb(0xe9, *s++);
+    sputn(s, n);
   }
   void endLog() override
   {
-    io::outb(0xe9, '\n');
+    sputc('\n');
   }
 };
 
@@ -176,6 +191,8 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   xInf("Setting up TSS");
   taskManager->setUpTss();
+
+  ready = true;
 
   xInf("Initializing syscall vector");
   sys::initSysCalls();

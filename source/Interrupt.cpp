@@ -33,6 +33,8 @@ bool ScopedExceptionHandling::busy = false;
 
 void Interrupt::handle(InterruptState* s)
 {
+  xDeb("Interrupt from ip %x with sp %x", s->rip, s->rsp);
+
   assert((s->cs == DescTables::SYSTEM_CS ||
         (s->rflags & (1 << 9))) &&
       "Interrupts were disabled in a user task");
@@ -136,7 +138,8 @@ void Interrupt::handle(InterruptState* s)
     s->rax = sys::handle(*s);
   }
 
-  xDeb("Returning to ip %x with sp %x", s->rip, s->rsp);
+  xDeb("Returning to ip %x with sp %x (int: %s)", s->rip, s->rsp,
+      !!(s->rflags & (1 << 9)));
 }
 
 static constexpr uint16_t PIC1_CMD = 0x20;

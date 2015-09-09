@@ -116,6 +116,8 @@ void TaskManager::prepareMeForSleep()
 
 void TaskManager::putMeToSleep()
 {
+  xDeb("Putting task to sleep");
+
   if (Cpu::rflags() & (1 << 9))
     disableInterrupts();
 
@@ -224,8 +226,9 @@ void TaskManager::tryScheduleNext()
   assert((nextTask.context.cs == DescTables::SYSTEM_CS ||
         (nextTask.context.rflags & (1 << 9))) &&
       "Interrupts were disabled in a user task");
-  xDeb("Restoring task %d with rip %x and rsp %x", _activeTask,
-      nextTask.context.rip, nextTask.context.rsp);
+  xDeb("Restoring task %d with rip %x and rsp %x (int: %s)", _activeTask,
+      nextTask.context.rip, nextTask.context.rsp,
+      !!(nextTask.context.rflags & (1 << 9)));
 
   // set the page directory of the process
   nextTask.pageDirectory.use();
