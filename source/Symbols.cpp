@@ -24,6 +24,8 @@ DECLARE_PHYS_SYMBOL(kernelBootstrapStart, KernelBootstrapStart)
 DECLARE_PHYS_SYMBOL(kernelTextStart, KernelTextStart)
 DECLARE_PHYS_SYMBOL(kernelRodataStart, KernelRodataStart)
 DECLARE_PHYS_SYMBOL(kernelDataStart, KernelDataStart)
+DECLARE_PHYS_SYMBOL(kernelBssEnd, KernelBssEnd)
+DECLARE_PHYS_SYMBOL(kernelPageHeapStart, KernelPageHeapStart)
 
 DECLARE_VIRT_SYMBOL(kernelVTextStart, KernelVTextStart)
 DECLARE_VIRT_SYMBOL(kernelVTextEnd, KernelVTextEnd);

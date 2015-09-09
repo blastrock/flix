@@ -48,6 +48,8 @@ void Memory::setPageUsed(page_t page)
 
 void Memory::setRangeUsed(page_t from, page_t to)
 {
+  assert(from <= to);
+
   for (; from < to; ++from)
     setPageUsed(from);
 }

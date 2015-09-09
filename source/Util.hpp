@@ -33,7 +33,7 @@ inline uintptr_t ptrDiff(T1* ptr1, T2* ptr2)
  * \warning val must be a power of two
  */
 template <typename T>
-inline T* ptrAlignSup(T* ptr, uint8_t val)
+inline T* ptrAlignSup(T* ptr, uint32_t val)
 {
   return reinterpret_cast<T*>((reinterpret_cast<uintptr_t>(ptr) + val-1)
       & ~(uintptr_t)(val-1));
@@ -47,7 +47,7 @@ inline T* ptrAlignSup(T* ptr, uint8_t val)
  * \warning val must be a power of two
  */
 template <typename T>
-inline constexpr T intAlignSup(T base, uint8_t val)
+inline constexpr T intAlignSup(T base, uint32_t val)
 {
   return (base + val-1) & ~(T)(val-1);
 }

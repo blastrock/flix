@@ -11,6 +11,8 @@ public:
   static uintptr_t getKernelTextStart();
   static uintptr_t getKernelRodataStart();
   static uintptr_t getKernelDataStart();
+  static uintptr_t getKernelBssEnd();
+  static uintptr_t getKernelPageHeapStart();
   static char* getKernelVBase()
   {
     return getKernelVTextStart();

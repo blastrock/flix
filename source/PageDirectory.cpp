@@ -2,6 +2,7 @@
 #include "KHeap.hpp"
 #include "Symbols.hpp"
 #include "Memory.hpp"
+#include "Util.hpp"
 #include "Debug.hpp"
 
 XLL_LOG_CATEGORY("core/memory/pagedirectory");
@@ -58,11 +59,12 @@ void PageDirectory::initWithDefaultPaging()
 {
   createPm();
 
-  // map VGA
+  xDeb("Mapping VGA");
   _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
-  // mapping .text and .rodata
+  xDeb("Mapping .text and .rodata (size: %x)",
+      Symbols::getKernelVRodataEnd() - Symbols::getKernelVTextStart());
   mapRangeTo(
       Symbols::getKernelVTextStart(),
       Symbols::getKernelVRodataEnd(),
@@ -73,7 +75,8 @@ void PageDirectory::initWithDefaultPaging()
       (Symbols::getKernelTextStart() +
        Symbols::getKernelVRodataEnd() - Symbols::getKernelVTextStart()) / 0x1000);
 
-  // mapping .data and .bss
+  xDeb("Mapping .data and .bss (size: %x)",
+      Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart());
   mapRangeTo(
       Symbols::getKernelVDataStart(),
       Symbols::getKernelVBssEnd(),
@@ -84,35 +87,42 @@ void PageDirectory::initWithDefaultPaging()
       (Symbols::getKernelDataStart() +
        Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart()) / 0x1000);
 
-  // mapping stack
+  uintptr_t addr = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
+  addr = intAlignSup(addr, 0x200000);
+
+  xDeb("Mapping kernel stack (size: %x)", 0x4000);
   mapRangeTo(
       Symbols::getStackBase() - 0x4000,
       Symbols::getStackBase(),
-      0x800000 + 0x200000 - 0x4000,
+      addr + 0x200000 - 0x4000,
       ATTR_RW);
   Memory::setRangeUsed(
-      (0x800000 + 0x200000 - 0x4000) / 0x1000,
-      0x4000 / 0x1000);
+      (addr + 0x200000 - 0x4000) / 0x1000,
+      (addr + 0x200000) / 0x1000);
 
-  // mapping page heap
+  addr += 0x200000;
+
+  xDeb("Mapping page heap (size: %x)", 32*0x1000);
   mapRangeTo(
       Symbols::getPageHeapBase(),
       Symbols::getPageHeapBase() + 32*0x1000,
-      0xa00000,
+      addr,
       ATTR_RW);
   Memory::setRangeUsed(
-      0xa00000 / 0x1000,
-      (0xa00000 + 32*0x1000) / 0x1000);
+      addr / 0x1000,
+      (addr + 32*0x1000) / 0x1000);
 
-  // mapping heap
+  addr += 0x200000;
+
+  xDeb("Mapping kernel heap (size: %x)", 0x200000);
   mapRangeTo(
       Symbols::getHeapBase(),
       Symbols::getHeapBase() + 0x200000,
-      0xc00000,
+      addr,
       ATTR_RW);
   Memory::setRangeUsed(
-      0xc00000 / 0x1000,
-      (0xc00000 + 0x200000) / 0x1000);
+      addr / 0x1000,
+      (addr + 0x200000) / 0x1000);
 }
 
 static PageDirectory* g_currentPageDirectory = 0;

@@ -78,6 +78,15 @@ SECTIONS
     . = ALIGN(0x1000);
     _kernelBssEnd = ABSOLUTE(. - SHIFT);
     _kernelVBssEnd = ABSOLUTE(.);
+
+    /* reserve space for the stuff below so that the boot loader does not use
+     * this memory for something else */
+    . = ALIGN(0x200000);
+    . += 0x200000;
+    _kernelPageHeapStart = ABSOLUTE(. - SHIFT);
+    . += 0x200000;
+    _kernelHeapStart = ABSOLUTE(. - SHIFT);
+    . += 0x200000;
   }
 
   . = VIRTUAL_STACK;

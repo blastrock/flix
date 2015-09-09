@@ -14,6 +14,7 @@ MB2_CHECKSUM       equ -(MB2_HEADER_MAGIC + MB2_ARCHITECTURE + MB2_LENGTH) & 0xF
 [EXTERN _kernelBootstrapStart]
 [EXTERN _kernelBssStart]
 [EXTERN _kernelBssEnd]
+[EXTERN _kernelHeapStart]
 
 ALIGN 8
 MB2_HEADER_START:
@@ -60,7 +61,8 @@ start:
 .LMBCopyF:
   mov ecx, DWORD [ebx]
   add ecx, ebx
-  mov edx, 0xc00008
+  mov edx, _kernelHeapStart
+  add edx, 8 ; heap block header size
 .LMBCopyFLoop:
   cmp ebx, ecx
   jge .LMBCopyEnd
@@ -69,8 +71,8 @@ start:
   inc ebx
   inc edx
   jmp .LMBCopyFLoop
-
 .LMBCopyEnd:
+
   ; bss section isn't 0-filled with grub2, do it now
   mov eax, _kernelBssStart
   cmp eax, _kernelBssEnd
@@ -113,19 +115,26 @@ start:
   mov dword [Pd     ], 0x00000083
   mov dword [Pd +  4], 0x0
   ; map 2MB+ (the part after the bootstrap) to 0xffffffffc0000000
-  mov dword [Pd + 0x1000], 0x00200083
-  mov dword [Pd + 0x1004], 0x0
-  mov dword [Pd + 0x1008], 0x00400083
-  mov dword [Pd + 0x100C], 0x0
-  mov dword [Pd + 0x1010], 0x00600083
-  mov dword [Pd + 0x1014], 0x0
+  mov eax, 0x00200083
+  mov ebx, 0x1000
+.LmapLoop:
+  cmp eax, _kernelBssEnd
+  jge .LendMap
+  mov dword [Pd + ebx], eax
+  mov dword [Pd + ebx + 4], 0x0
+  add eax, 0x200000
+  add ebx, 0x8
+  jmp .LmapLoop
+.LendMap:
   ; map stack to 0xffffffffd0000000 (and lower)
-  mov dword [Pd + 0x13F8], 0x00800083
+  mov dword [Pd + 0x13F8], eax
   mov dword [Pd + 0x13FC], 0x0
+  add eax, 0x200000
   ; map heaps to 0xffffffffe0000000 and 0xfffffffff0000000
-  mov dword [Pd + 0x1800], 0x00A00083
+  mov dword [Pd + 0x1800], eax
   mov dword [Pd + 0x1804], 0x0
-  mov dword [Pd + 0x1C00], 0x00C00083
+  add eax, 0x200000
+  mov dword [Pd + 0x1C00], eax
   mov dword [Pd + 0x1C04], 0x0
 
   ; Load CR3 with PML4

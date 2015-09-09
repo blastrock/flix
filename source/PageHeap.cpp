@@ -80,7 +80,7 @@ std::pair<PageHeap::page_index_t, physaddr_t>
           PageDirectory::ATTR_RW);
   }
   else
-    phys = 0xa00000 + index * PAGE_SIZE * BLOCK_SIZE;
+    phys = Symbols::getKernelPageHeapStart() + index * PAGE_SIZE * BLOCK_SIZE;
 
   m_allocating = false;
 
