@@ -24,6 +24,8 @@ TaskManager::TaskManager()
   : _activeTask(0)
   , _nextTid(1)
 {
+  // for the moment there are 0 task, so we don't need to tick
+  Interrupt::mask(IRQ_TIMER);
 }
 
 void TaskManager::setUpTss()
@@ -260,9 +262,11 @@ void TaskManager::doInterruptMasking()
   for (const auto& task : _tasks)
     if (task.state == Task::Runnable)
     {
+      xDeb("Ticking disabled");
       Interrupt::unmask(IRQ_TIMER);
       return;
     }
 
+  xDeb("Ticking enabled");
   Interrupt::mask(IRQ_TIMER);
 }
