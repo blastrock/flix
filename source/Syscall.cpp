@@ -128,7 +128,7 @@ void* mmap(void*, size_t length)
   {
     pd.mapPage(reinterpret_cast<void*>(curPtr),
         PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC |
-        PageDirectory::ATTR_DEFER);
+        PageDirectory::ATTR_DEFER | PageDirectory::ATTR_NOEXEC);
     curPtr += PAGE_SIZE;
   }
 

@@ -73,11 +73,11 @@ std::pair<PageHeap::page_index_t, physaddr_t>
   if (index * BLOCK_SIZE >= 32)
   {
     PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index),
-        PageDirectory::ATTR_RW, &phys);
+        PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC, &phys);
     for (unsigned n = 1; n < BLOCK_SIZE; ++n)
       PageDirectory::getKernelDirectory()->mapPage(
           static_cast<char*>(pageToPtr(index)) + n * PAGE_SIZE,
-          PageDirectory::ATTR_RW);
+          PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
   }
   else
     phys = Symbols::getKernelPageHeapStart() + index * PAGE_SIZE * BLOCK_SIZE;

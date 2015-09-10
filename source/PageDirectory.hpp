@@ -12,7 +12,8 @@ class PageDirectory
 
     static constexpr unsigned ATTR_RW     = 0x1;
     static constexpr unsigned ATTR_PUBLIC = 0x2;
-    static constexpr unsigned ATTR_DEFER  = 0x4;
+    static constexpr unsigned ATTR_NOEXEC = 0x4;
+    static constexpr unsigned ATTR_DEFER  = 0x8;
 
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;

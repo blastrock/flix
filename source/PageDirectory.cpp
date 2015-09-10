@@ -11,6 +11,9 @@ PageDirectory* PageDirectory::g_kernelDirectory = nullptr;
 
 PageDirectory* PageDirectory::initKernelDirectory()
 {
+  // enable NXE
+  Cpu::writeMsr(Cpu::MSR_EFER, Cpu::readMsr(Cpu::MSR_EFER) | 1 << 11);
+
   if (!g_kernelDirectory)
   {
     g_kernelDirectory = new PageDirectory();
@@ -25,6 +28,8 @@ static const auto AttributeSetter = [](auto& e) {
     e.rw = true;
   if (Attr & PageDirectory::ATTR_PUBLIC)
     e.us = true;
+  if (Attr & PageDirectory::ATTR_NOEXEC)
+    e.nx = true;
   if (Attr & PageDirectory::ATTR_DEFER)
     e.p = false;
 };
@@ -63,17 +68,29 @@ void PageDirectory::initWithDefaultPaging()
   _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
-  xDeb("Mapping .text and .rodata (size: %x)",
-      Symbols::getKernelVRodataEnd() - Symbols::getKernelVTextStart());
+  xDeb("Mapping .text (size: %x)",
+      Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart());
   mapRangeTo(
       Symbols::getKernelVTextStart(),
-      Symbols::getKernelVRodataEnd(),
+      Symbols::getKernelVTextEnd(),
       Symbols::getKernelTextStart(),
       0);
   Memory::setRangeUsed(
       Symbols::getKernelTextStart() / 0x1000,
       (Symbols::getKernelTextStart() +
-       Symbols::getKernelVRodataEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+       Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+
+  xDeb("Mapping .rodata (size: %x)",
+      Symbols::getKernelVRodataEnd() - Symbols::getKernelVRodataStart());
+  mapRangeTo(
+      Symbols::getKernelVRodataStart(),
+      Symbols::getKernelVRodataEnd(),
+      Symbols::getKernelRodataStart(),
+      ATTR_NOEXEC);
+  Memory::setRangeUsed(
+      Symbols::getKernelRodataStart() / 0x1000,
+      (Symbols::getKernelRodataStart() +
+       Symbols::getKernelVRodataEnd() - Symbols::getKernelVRodataStart()) / 0x1000);
 
   xDeb("Mapping .data and .bss (size: %x)",
       Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart());
@@ -81,7 +98,7 @@ void PageDirectory::initWithDefaultPaging()
       Symbols::getKernelVDataStart(),
       Symbols::getKernelVBssEnd(),
       Symbols::getKernelDataStart(),
-      ATTR_RW);
+      ATTR_NOEXEC | ATTR_RW);
   Memory::setRangeUsed(
       Symbols::getKernelDataStart() / 0x1000,
       (Symbols::getKernelDataStart() +
@@ -95,7 +112,7 @@ void PageDirectory::initWithDefaultPaging()
       Symbols::getStackBase() - 0x4000,
       Symbols::getStackBase(),
       addr + 0x200000 - 0x4000,
-      ATTR_RW);
+      ATTR_NOEXEC | ATTR_RW);
   Memory::setRangeUsed(
       (addr + 0x200000 - 0x4000) / 0x1000,
       (addr + 0x200000) / 0x1000);
@@ -107,7 +124,7 @@ void PageDirectory::initWithDefaultPaging()
       Symbols::getPageHeapBase(),
       Symbols::getPageHeapBase() + 32*0x1000,
       addr,
-      ATTR_RW);
+      ATTR_NOEXEC | ATTR_RW);
   Memory::setRangeUsed(
       addr / 0x1000,
       (addr + 32*0x1000) / 0x1000);
@@ -119,7 +136,7 @@ void PageDirectory::initWithDefaultPaging()
       Symbols::getHeapBase(),
       Symbols::getHeapBase() + 0x200000,
       addr,
-      ATTR_RW);
+      ATTR_NOEXEC | ATTR_RW);
   Memory::setRangeUsed(
       addr / 0x1000,
       (addr + 0x200000) / 0x1000);
@@ -174,6 +191,14 @@ void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes
     CASE(0x5)
     CASE(0x6)
     CASE(0x7)
+    CASE(0x8)
+    CASE(0x9)
+    CASE(0xa)
+    CASE(0xb)
+    CASE(0xc)
+    CASE(0xd)
+    CASE(0xe)
+    CASE(0xf)
 #undef CASE
   default:
     PANIC("Invalid page attributes parameter");

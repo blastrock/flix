@@ -91,7 +91,8 @@ void MultibootLoader::handleModule(Module* mod)
   xDeb("Mapping module %x-%x", mod->mod_start, mod->mod_end);
   char* basePtr = handleModule(mod,
       [](auto curPtr, auto paddr) {
-        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, paddr, 0);
+        PageDirectory::getKernelDirectory()->mapPageTo(curPtr, paddr,
+            PageDirectory::ATTR_NOEXEC);
       });
 
   fs::setRoot(readArchive(basePtr));
