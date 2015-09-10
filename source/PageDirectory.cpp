@@ -68,78 +68,47 @@ void PageDirectory::initWithDefaultPaging()
   _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
   Memory::setPageUsed(0xB8000 / 0x1000);
 
-  xDeb("Mapping .text (size: %x)",
-      Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart());
-  mapRangeTo(
-      Symbols::getKernelVTextStart(),
-      Symbols::getKernelVTextEnd(),
-      Symbols::getKernelTextStart(),
-      0);
-  Memory::setRangeUsed(
-      Symbols::getKernelTextStart() / 0x1000,
-      (Symbols::getKernelTextStart() +
-       Symbols::getKernelVTextEnd() - Symbols::getKernelVTextStart()) / 0x1000);
+#define MAP_RANGE(name, from, to, phys, attr)         \
+  xDeb("Mapping " name " (size: %x)", (to) - (from)); \
+  mapRangeTo((from), (to), (phys), (attr));           \
+  Memory::setRangeUsed((phys) / 0x1000, ((phys) + ((to) - (from))) / 0x1000);
 
-  xDeb("Mapping .rodata (size: %x)",
-      Symbols::getKernelVRodataEnd() - Symbols::getKernelVRodataStart());
-  mapRangeTo(
-      Symbols::getKernelVRodataStart(),
-      Symbols::getKernelVRodataEnd(),
-      Symbols::getKernelRodataStart(),
-      ATTR_NOEXEC);
-  Memory::setRangeUsed(
-      Symbols::getKernelRodataStart() / 0x1000,
-      (Symbols::getKernelRodataStart() +
-       Symbols::getKernelVRodataEnd() - Symbols::getKernelVRodataStart()) / 0x1000);
+#define MAP_RANGE_SYM(name, from, to, phys, attr)                       \
+  MAP_RANGE(name, Symbols::getKernel##from(), Symbols::getKernel##to(), \
+      Symbols::getKernel##phys(), attr)
 
-  xDeb("Mapping .data and .bss (size: %x)",
-      Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart());
-  mapRangeTo(
-      Symbols::getKernelVDataStart(),
-      Symbols::getKernelVBssEnd(),
-      Symbols::getKernelDataStart(),
-      ATTR_NOEXEC | ATTR_RW);
-  Memory::setRangeUsed(
-      Symbols::getKernelDataStart() / 0x1000,
-      (Symbols::getKernelDataStart() +
-       Symbols::getKernelVBssEnd() - Symbols::getKernelVDataStart()) / 0x1000);
+  MAP_RANGE_SYM(".text", VTextStart, VTextEnd, TextStart, 0)
+  MAP_RANGE_SYM(".text", VRodataStart, VRodataEnd, RodataStart, ATTR_NOEXEC)
+  MAP_RANGE_SYM(".data and .bss", VDataStart, VBssEnd, DataStart,
+      ATTR_NOEXEC | ATTR_RW)
 
   uintptr_t addr = reinterpret_cast<uintptr_t>(Symbols::getKernelBssEnd());
   addr = intAlignSup(addr, 0x200000);
 
-  xDeb("Mapping kernel stack (size: %x)", 0x4000);
-  mapRangeTo(
+  MAP_RANGE("kernel stack",
       Symbols::getStackBase() - 0x4000,
       Symbols::getStackBase(),
       addr + 0x200000 - 0x4000,
       ATTR_NOEXEC | ATTR_RW);
-  Memory::setRangeUsed(
-      (addr + 0x200000 - 0x4000) / 0x1000,
-      (addr + 0x200000) / 0x1000);
 
   addr += 0x200000;
 
-  xDeb("Mapping page heap (size: %x)", 32*0x1000);
-  mapRangeTo(
+  MAP_RANGE("page heap",
       Symbols::getPageHeapBase(),
       Symbols::getPageHeapBase() + 32*0x1000,
       addr,
       ATTR_NOEXEC | ATTR_RW);
-  Memory::setRangeUsed(
-      addr / 0x1000,
-      (addr + 32*0x1000) / 0x1000);
 
   addr += 0x200000;
 
-  xDeb("Mapping kernel heap (size: %x)", 0x200000);
-  mapRangeTo(
+  MAP_RANGE("kernel heap",
       Symbols::getHeapBase(),
       Symbols::getHeapBase() + 0x200000,
       addr,
       ATTR_NOEXEC | ATTR_RW);
-  Memory::setRangeUsed(
-      addr / 0x1000,
-      (addr + 0x200000) / 0x1000);
+
+#undef MAP_RANGE_SYM
+#undef MAP_RANGE
 }
 
 static PageDirectory* g_currentPageDirectory = 0;
