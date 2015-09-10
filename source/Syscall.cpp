@@ -2,6 +2,7 @@
 #include "PageDirectory.hpp"
 #include "TaskManager.hpp"
 #include "DescTables.hpp"
+#include "Cpu.hpp"
 #include <array>
 #include <functional>
 
@@ -151,10 +152,6 @@ void print(const char* buf)
 
 }
 
-static constexpr uint32_t MSR_EFER = 0xC0000080;
-static constexpr uint32_t MSR_STAR = 0xC0000081;
-static constexpr uint32_t MSR_LSTAR = 0xC0000082;
-
 static void initSysCallGate()
 {
   // sysret sets the cs to SYSTEM_CS + 16, don't know why...
@@ -162,30 +159,15 @@ static void initSysCallGate()
     (static_cast<uint64_t>(DescTables::USER_CS - 16) << 48) |
     (static_cast<uint64_t>(DescTables::SYSTEM_CS) << 32);
 
-  asm volatile ("wrmsr"
-      :
-      :"c"(MSR_STAR)
-      ,"d"(static_cast<uint32_t>(star >> 32))
-      ,"a"(static_cast<uint32_t>(star))
-     );
+  Cpu::writeMsr(Cpu::MSR_STAR, star);
 
   uint64_t lstar = reinterpret_cast<uint64_t>(&syscall_entry);
 
-  asm volatile ("wrmsr"
-      :
-      :"c"(MSR_LSTAR)
-      ,"d"(static_cast<uint32_t>(lstar >> 32))
-      ,"a"(static_cast<uint32_t>(lstar))
-     );
+  Cpu::writeMsr(Cpu::MSR_LSTAR, lstar);
 
-  asm volatile (
-      "rdmsr\n"
-      "btsl $0, %%eax\n"
-      "wrmsr\n"
-      :
-      :"c"(MSR_EFER)
-      :"ecx", "eax", "flags"
-      );
+  uint64_t efer = Cpu::readMsr(Cpu::MSR_EFER);
+  efer |= 0x1; // enable syscall/sysret
+  Cpu::writeMsr(Cpu::MSR_EFER, efer);
 }
 
 void initSysCalls()
