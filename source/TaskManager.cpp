@@ -110,26 +110,31 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
       "Interrupts were disabled in a user task");
 }
 
-void TaskManager::prepareMeForSleep()
+void TaskManager::prepareMeForSleep(bool interrupts)
 {
   Task& task = getActiveTask();
   task.state = Task::State::Sleeping;
+  task.context.rflags |= interrupts ? 1 << 9 : 0;
+
+  doInterruptMasking();
 }
 
 void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
-  const bool intactive = Cpu::rflags() & (1 << 9);
-  if (intactive)
-    disableInterrupts();
+  disableInterrupts();
 
   Task& task = getActiveTask();
-
   xDeb("Task rip:%x rsp:%x", task.context.rip, task.context.rsp);
 
-  assert(task.state == Task::State::Sleeping &&
-      "task was not prepared for sleep");
+  if (task.state != Task::State::Sleeping)
+  {
+    xDeb("Task has been woken up before going to sleep");
+    return;
+  }
+
+  const bool intactive = task.context.rflags & (1 << 9);
 
   if (!task_save(&task.context))
   {
@@ -138,8 +143,6 @@ void TaskManager::putMeToSleep()
 
     if (intactive)
       task.context.rflags |= (1 << 9);
-
-    doInterruptMasking();
 
     scheduleNext(); // going to sleep
   }

@@ -34,7 +34,7 @@ void CondVar::wait(Mutex& waitMutex)
     {
       xDeb("Going to sleep");
 
-      tm.prepareMeForSleep();
+      tm.prepareMeForSleep(true);
       waitMutex.unlock();
       auto _ = _lock.getScopedUnlock();
       tm.putMeToSleep();
