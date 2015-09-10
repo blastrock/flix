@@ -200,16 +200,10 @@ void TaskManager::enterSleep()
 
   setKernelStack();
 
-  while (true)
-  {
-    {
-      EnableInterrupts _;
-      asm volatile("hlt":::"memory");
-    }
-    // we are woken up on interrupt, maybe it woke a process up, try to
-    // schedule one
-    tryScheduleNext();
-  }
+  enableInterrupts();
+  asm volatile("hlt":::"memory");
+
+  PANIC("returned from hlt in enterSleep");
 }
 
 void TaskManager::tryScheduleNext()

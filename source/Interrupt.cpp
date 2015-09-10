@@ -47,6 +47,8 @@ void Interrupt::handle(InterruptState* s)
     io::outb(0x20, 0x20);
   }
 
+  auto tm = TaskManager::get();
+
   if (s->intNo < 32) // CPU exception
   {
     xDeb("Isr %d!", s->intNo);
@@ -88,10 +90,10 @@ void Interrupt::handle(InterruptState* s)
 
       PageDirectory::getKernelDirectory()->use();
 
-      TaskManager::get()->terminateCurrentTask();
+      tm->terminateCurrentTask();
     }
 
-    TaskManager::get()->scheduleNext();
+    tm->scheduleNext();
   }
   else if (s->intNo < 48) // PIC interrupt
   {
@@ -99,7 +101,7 @@ void Interrupt::handle(InterruptState* s)
     xDeb("Int %x!", intNo);
     if (intNo == 0) // timer
     {
-      if (TaskManager::get()->isTaskActive())
+      if (tm->isTaskActive())
       {
         // for the moment, only switch task
         Task::Context context;
@@ -123,9 +125,9 @@ void Interrupt::handle(InterruptState* s)
         context.rflags = s->rflags;
         context.rsp = s->rsp;
         context.ss = s->ss;
-        TaskManager::get()->saveCurrentTask(context);
+        tm->saveCurrentTask(context);
       }
-      TaskManager::get()->scheduleNext();
+      tm->scheduleNext();
     }
     else if (intNo == 1) // keyboard
       Keyboard::handleInterrupt();
@@ -137,6 +139,9 @@ void Interrupt::handle(InterruptState* s)
     xDeb("syscall interrupt %d", s->rax);
     s->rax = sys::handle(*s);
   }
+
+  if (!tm->isTaskActive())
+    tm->scheduleNext();
 
   xDeb("Returning to ip %x with sp %x (int: %s)", s->rip, s->rsp,
       !!(s->rflags & (1 << 9)));
