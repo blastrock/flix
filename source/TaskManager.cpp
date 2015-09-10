@@ -120,10 +120,14 @@ void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
-  if (Cpu::rflags() & (1 << 9))
+  const bool intactive = Cpu::rflags() & (1 << 9);
+  if (intactive)
     disableInterrupts();
 
   Task& task = getActiveTask();
+
+  xDeb("Task rip:%x rsp:%x", task.context.rip, task.context.rsp);
+
   assert(task.state == Task::State::Sleeping &&
       "task was not prepared for sleep");
 
@@ -131,6 +135,9 @@ void TaskManager::putMeToSleep()
   {
     assert(task.context.cs == DescTables::SYSTEM_CS &&
         "putMeToSleep called from userspace");
+
+    if (intactive)
+      task.context.rflags |= (1 << 9);
 
     doInterruptMasking();
 
