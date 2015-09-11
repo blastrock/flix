@@ -271,12 +271,19 @@ void TaskManager::doInterruptMasking()
 {
   DisableInterrupts _;
 
+  bool foundFirst = false;
+
   for (const auto& task : _tasks)
     if (task.state == Task::Runnable)
     {
-      xDeb("Ticking disabled");
-      Interrupt::unmask(IRQ_TIMER);
-      return;
+      if (foundFirst)
+      {
+        xDeb("Ticking disabled");
+        Interrupt::unmask(IRQ_TIMER);
+        return;
+      }
+      else
+        foundFirst = true;
     }
 
   xDeb("Ticking enabled");
