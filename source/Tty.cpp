@@ -17,7 +17,17 @@ void Tty::feedInput(char data)
 
   auto _ = _mutex.getScoped();
 
-  _stdin.push(data);
+  if (data == '\b')
+  {
+    if (!_stdin.empty())
+    {
+      _stdin.pop_back();
+      Screen::putChar(data);
+    }
+    return;
+  }
+
+  _stdin.push_back(data);
   Screen::putChar(data);
 
   if (data == '\n')
@@ -54,7 +64,7 @@ size_t Tty::readInto(char* buf, size_t size)
       ++ptr)
   {
     *ptr = _stdin.front();
-    _stdin.pop();
+    _stdin.pop_front();
   }
   xDeb("Read %d bytes", toRead);
   return toRead;

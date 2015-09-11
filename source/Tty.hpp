@@ -2,7 +2,7 @@
 #define TTY_HPP
 
 #include <stddef.h>
-#include <queue>
+#include <deque>
 
 #include "Mutex.hpp"
 #include "CondVar.hpp"
@@ -18,7 +18,7 @@ public:
   size_t readInto(char* buf, size_t size);
 
 private:
-  std::queue<char> _stdin;
+  std::deque<char> _stdin;
   Mutex _mutex;
   CondVar _condvar;
 };
