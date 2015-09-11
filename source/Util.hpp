@@ -56,14 +56,14 @@ inline constexpr T intAlignSup(T base, uint32_t val)
 // accesses must not be scheduled before or after the critical section
 inline void disableInterrupts()
 {
-  xDebC("support/utils", "Disabling interrupts");
+  xDebC("support/utils/interrupts", "Disabling interrupts");
   assert((Cpu::rflags() & (1 << 9)) && "interrupts were already off");
   asm volatile ("cli":::"memory");
 }
 
 inline void enableInterrupts()
 {
-  xDebC("support/utils", "Enabling interrupts");
+  xDebC("support/utils/interrupts", "Enabling interrupts");
   assert(!(Cpu::rflags() & (1 << 9)) && "interrupts were already on");
   asm volatile ("sti":::"memory");
 }
