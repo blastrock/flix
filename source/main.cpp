@@ -136,22 +136,11 @@ public:
   }
 };
 
-void enableSSEInstructions()
-{
-  asm volatile (
-      "mov %%cr4, %%rax\n"
-      "btsq $9, %%rax\n"
-      "mov %%rax, %%cr4\n"
-      :
-      :
-      :"rax");
-}
-
 static LogHandler loghandler;
 
 extern "C" [[noreturn]] int kmain(void* mboot)
 {
-  enableSSEInstructions();
+  Cpu::enableSSEInstructions();
 
   xll::log::setLevel(xll::log::LEVEL_DEBUG);
   xll::log::setHandler(&loghandler);

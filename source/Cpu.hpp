@@ -35,6 +35,17 @@ inline uint64_t readMsr(uint32_t msr)
   return static_cast<uint64_t>(high) << 32 | low;
 }
 
+inline void enableSSEInstructions()
+{
+  asm volatile (
+      "mov %%cr4, %%rax\n"
+      "btsq $9, %%rax\n"
+      "mov %%rax, %%cr4\n"
+      :
+      :
+      :"rax");
+}
+
 void setKernelStack(void* stack);
 
 }
