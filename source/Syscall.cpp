@@ -150,6 +150,11 @@ void print(const char* buf)
   xDeb("sysprint: %s", buf);
 }
 
+int not_implemented()
+{
+  return -1;
+}
+
 }
 
 static void initSysCallGate()
@@ -178,6 +183,7 @@ void initSysCalls()
   registerHandler(write, hndl::write);
   registerHandler(open, hndl::open);
   registerHandler(close, hndl::close);
+  registerHandler(fstat, hndl::not_implemented);
   registerHandler(mmap, hndl::mmap);
   registerHandler(arch_prctl, hndl::arch_prctl);
   registerHandler(exit, hndl::exit);

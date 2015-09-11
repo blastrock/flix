@@ -17,6 +17,7 @@ enum ScId
   write = 1,
   open = 2,
   close = 3,
+  fstat = 5,
   mmap = 9,
   arch_prctl = 158,
   exit = 231,
