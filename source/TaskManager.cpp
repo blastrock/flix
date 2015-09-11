@@ -123,7 +123,9 @@ void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
-  disableInterrupts();
+  // interrupts may already be disabled if we come from a syscall/interrupt
+  if (Cpu::rflags() & (1 << 9))
+    disableInterrupts();
 
   Task& task = getActiveTask();
   xDeb("Task rip:%x rsp:%x", task.context.rip, task.context.rsp);
