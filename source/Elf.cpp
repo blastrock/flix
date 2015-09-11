@@ -19,8 +19,10 @@ bool exec(fs::Handle& f)
 {
   xDeb("Reading header");
   ElfHeader hdr;
-    f.lseek(0, fs::Whence::Begin);
-  f.read(static_cast<void*>(&hdr), sizeof(hdr));
+  if (!f.lseek(0, fs::Whence::Begin))
+    return false;
+  if (!f.read(static_cast<void*>(&hdr), sizeof(hdr)))
+    return false;
 
   if (!checkHeader(hdr))
   {
@@ -42,11 +44,13 @@ bool exec(fs::Handle& f)
       i < hdr.e_phnum;
       ++i, currentOffset += hdr.e_phentsize)
   {
-    f.lseek(currentOffset, fs::Whence::Begin);
+    if (!f.lseek(currentOffset, fs::Whence::Begin))
+      return false;
 
     xDeb("Reading program header %d", i);
     ElfProgramHeader prgHdr;
-    f.read(&prgHdr, sizeof(prgHdr));
+    if (!f.read(&prgHdr, sizeof(prgHdr)))
+      return false;
 
     xDeb("Type is 0x%x", prgHdr.p_type);
     if (prgHdr.p_type != PT_LOAD)
@@ -66,9 +70,11 @@ bool exec(fs::Handle& f)
     xDeb("Loading segment in file at %x of size %x",
         prgHdr.p_offset, prgHdr.p_filesz);
     // FIXME what should we do if filesz > memsz??
-    f.lseek(prgHdr.p_offset, fs::Whence::Begin);
-    f.read(reinterpret_cast<char*>(prgHdr.p_vaddr),
-        prgHdr.p_filesz);
+    if (!f.lseek(prgHdr.p_offset, fs::Whence::Begin))
+      return false;
+    if (!f.read(reinterpret_cast<char*>(prgHdr.p_vaddr),
+        prgHdr.p_filesz))
+      return false;
   }
 
   xDeb("Allocating new stack");
