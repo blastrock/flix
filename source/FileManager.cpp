@@ -39,12 +39,12 @@ FileManager::FileManager()
   _files.reserve(3);
   _files.push_back(std::make_shared<StdIn>());
   _files.push_back(std::make_shared<StdOut>());
-  _files.push_back(std::make_shared<NullHandle>());
+  _files.push_back(std::make_shared<StdOut>());
 }
 
 xll::expected<int, fs::IoError> FileManager::open(const char* path)
 {
-  xDeb("opening %s", path);
+  xDeb("Opening %s", path);
 
   auto ehandle =
     fs::lookup(path).bind([](auto&& inode)
@@ -67,7 +67,7 @@ xll::expected<int, fs::IoError> FileManager::open(const char* path)
 
 int FileManager::close(int fd)
 {
-  xDeb("closing %d", fd);
+  xDeb("Closing %d", fd);
 
   assert(fd >= 0);
   if (static_cast<unsigned int>(fd) >= _files.size())
