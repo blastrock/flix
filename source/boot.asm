@@ -62,7 +62,7 @@ start:
   mov ecx, DWORD [ebx]
   add ecx, ebx
   mov edx, _kernelHeapStart
-  add edx, 8 ; heap block header size
+  add edx, 8 ; heap block header size + align to 8
 .LMBCopyFLoop:
   cmp ebx, ecx
   jge .LMBCopyEnd

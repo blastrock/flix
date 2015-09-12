@@ -6,6 +6,11 @@
 
 XLL_LOG_CATEGORY("core/memory/kheap");
 
+static constexpr unsigned HEADER_SIZE = 4;
+static constexpr unsigned BLOCK_ALIGN_SHIFT = 2;
+static constexpr unsigned BLOCK_ALIGN = 1 << BLOCK_ALIGN_SHIFT;
+static constexpr unsigned BLOCK_MIN_SIZE = HEADER_SIZE + 4;
+
 static KHeap g_heap;
 
 class KHeap::HeapBlock
@@ -13,17 +18,19 @@ class KHeap::HeapBlock
   public:
     uint8_t* getData()
     {
+      assert(&data - reinterpret_cast<uint8_t*>(this) == HEADER_SIZE &&
+          "HEADER_SIZE is incorrect");
       return &data;
     }
 
     uint32_t getSize()
     {
-      return state.sizeUpper << 2;
+      return state.sizeUpper << BLOCK_ALIGN_SHIFT;
     }
     void setSize(uint32_t asize)
     {
-      assert(asize % 4 == 0);
-      state.sizeUpper = asize >> 2;
+      assert(asize % BLOCK_ALIGN == 0);
+      state.sizeUpper = asize >> BLOCK_ALIGN_SHIFT;
     }
 
     bool getUsed()
@@ -42,6 +49,8 @@ class KHeap::HeapBlock
       unsigned avl : 1;
       unsigned sizeUpper : 30;
     };
+
+    static_assert(sizeof(State) == 4, "sizeof(State) != 4");
 
     union
     {
@@ -64,16 +73,20 @@ void KHeap::init()
   m_heapEnd = m_heapStart + initialSize;
   HeapBlock* block = reinterpret_cast<HeapBlock*>(m_heapStart);
 
-  // multiboot header is at heap + 4, treat it as a block
+  // multiboot header is at heap + 4 aligned to 8, treat it as a block
   {
-    uint32_t mbSize = *reinterpret_cast<uint32_t*>(m_heapStart + 8);
-    mbSize = intAlignSup(mbSize, 4) + 8;
-    block->setSize(mbSize);
+    const uint32_t mbSize =
+      *reinterpret_cast<uint32_t*>(ptrAlignSup(m_heapStart + HEADER_SIZE, 8));
+    const uint32_t blockSize =
+      intAlignSup(mbSize, BLOCK_ALIGN) + HEADER_SIZE;
+    xDeb("Multiboot header size is %d bytes", mbSize);
+    assert(blockSize > BLOCK_MIN_SIZE);
+    block->setSize(blockSize);
     block->setUsed(true);
 
-    block = reinterpret_cast<HeapBlock*>(m_heapStart + mbSize);
+    block = reinterpret_cast<HeapBlock*>(m_heapStart + blockSize);
 
-    initialSize -= mbSize;
+    initialSize -= blockSize;
   }
 
   block->setSize(initialSize);
@@ -84,9 +97,9 @@ void KHeap::init()
 void* KHeap::kmalloc(uint32_t size)
 {
   // count header
-  size += 4;
-  // ceil to 4 bytes
-  size = intAlignSup(size, 4);
+  size += HEADER_SIZE;
+  // ceil to align
+  size = intAlignSup(size, BLOCK_ALIGN);
 
   HeapBlock* block;
   char* ptr = m_heapStart;
@@ -95,13 +108,12 @@ void* KHeap::kmalloc(uint32_t size)
     block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->getSize();
 
-    assert(blockSize > 8);
+    assert(blockSize > BLOCK_MIN_SIZE);
 
     if (!block->getUsed())
     {
-      // if block has exact needed size or block is non splittable (minimal
-      // block size is 8)
-      if (size < blockSize && size >= blockSize - 8)
+      // if block has exact needed size or block is non splittable
+      if (size < blockSize && size >= blockSize - BLOCK_MIN_SIZE)
       {
         block->setUsed(true);
         assert(block->getSize() >= size);
@@ -162,7 +174,7 @@ void* KHeap::kmalloc(uint32_t size)
 
   assert(size <= block->getSize());
 
-  if (size <= block->getSize() - 8)
+  if (size <= block->getSize() - BLOCK_MIN_SIZE)
     block = splitBlock(block, size).first;
 
   block->setUsed(true);
@@ -177,7 +189,8 @@ void KHeap::kfree(void* ptr)
   if (!ptr)
     return;
 
-  HeapBlock* block = reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -4));
+  HeapBlock* block =
+    reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -(int)HEADER_SIZE));
   block->setUsed(false);
   // TODO merge free blocks
 }
@@ -188,7 +201,7 @@ std::pair<KHeap::HeapBlock*, KHeap::HeapBlock*> KHeap::splitBlock(
   assert(!block->getUsed());
 
   // block is too small to be split!
-  assert(size <= block->getSize() - 8);
+  assert(size <= block->getSize() - BLOCK_MIN_SIZE);
 
   uint32_t fullSize = block->getSize();
   HeapBlock* nextBlock = ptrAdd(block, size);
