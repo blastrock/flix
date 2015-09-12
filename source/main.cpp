@@ -83,7 +83,7 @@ void readwrite()
 void exec()
 {
   xDeb("Opening file");
-  auto einode = fs::getRootInode()->lookup("init");
+  auto einode = fs::getRootInode()->lookup("busybox");
   auto ehndl = (*einode)->open();
   xDeb("Execing");
   // FIXME exec never returns so hndl leaks
@@ -205,16 +205,17 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     taskManager->addTask(std::move(task));
   }
-  //{
-  //  Task task = taskManager->newKernelTask();
-  //  task.stack = new char[0x4000];
-  //  task.stackTop = task.stack + 0x4000;
-  //  task.kernelStack = new char[0x4000];
-  //  task.kernelStackTop = task.kernelStack + 0x4000;
-  //  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
-  //  task.context.rip = reinterpret_cast<uint64_t>(&sleep);
-  //  taskManager->addTask(std::move(task));
-  //}
+#if 0
+  {
+    Task task = taskManager->newKernelTask();
+    task.stack = new char[0x4000];
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = new char[0x4000];
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+    task.context.rip = reinterpret_cast<uint64_t>(&sleep);
+    taskManager->addTask(std::move(task));
+  }
   {
     Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];
@@ -245,7 +246,6 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&readwrite);
     taskManager->addTask(std::move(task));
   }
-#if 0
   {
     Task task = taskManager->newKernelTask();
     task.context.rsp = reinterpret_cast<uint64_t>(new char[0x1000])+0x1000;
