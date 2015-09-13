@@ -87,7 +87,7 @@ public:
   void downgradeCurrentTask();
   void terminateCurrentTask();
 
-  void prepareMeForSleep(bool interrupts);
+  void prepareMeForSleep();
   void putMeToSleep();
   void wakeUpTask(Task& task);
 

@@ -31,7 +31,6 @@ TaskManager::TaskManager()
 void TaskManager::setUpTss()
 {
   _tss = new TaskStateSegment{};
-  std::memset(_tss, 0, sizeof(*_tss));
   DescTables::initTr(_tss);
 
   setKernelStack();
@@ -110,11 +109,10 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
       "Interrupts were disabled in a user task");
 }
 
-void TaskManager::prepareMeForSleep(bool interrupts)
+void TaskManager::prepareMeForSleep()
 {
   Task& task = getActiveTask();
   task.state = Task::State::Sleeping;
-  task.context.rflags |= interrupts ? 1 << 9 : 0;
 
   doInterruptMasking();
 }
@@ -123,12 +121,12 @@ void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
-  // interrupts may already be disabled if we come from a syscall/interrupt
-  if (Cpu::rflags() & (1 << 9))
-    disableInterrupts();
+  // this function is dangerous when interrupts are enabled because an
+  // interrupt might trigger and use the stack we are currently using.
+  assert(!(Cpu::rflags() & (1 << 9)) &&
+      "putMeToSleep called with interrupts enabled");
 
   Task& task = getActiveTask();
-  xDeb("Task rip:%x rsp:%x", task.context.rip, task.context.rsp);
 
   if (task.state != Task::State::Sleeping)
   {
@@ -136,15 +134,12 @@ void TaskManager::putMeToSleep()
     return;
   }
 
-  const bool intactive = task.context.rflags & (1 << 9);
-
   if (!task_save(&task.context))
   {
+    xDeb("Task rip:%x rsp:%x", task.context.rip, task.context.rsp);
+
     assert(task.context.cs == DescTables::SYSTEM_CS &&
         "putMeToSleep called from userspace");
-
-    if (intactive)
-      task.context.rflags |= (1 << 9);
 
     scheduleNext(); // going to sleep
   }
@@ -278,7 +273,7 @@ void TaskManager::doInterruptMasking()
     {
       if (foundFirst)
       {
-        xDeb("Ticking disabled");
+        xDeb("Ticking enabled");
         Interrupt::unmask(IRQ_TIMER);
         return;
       }
@@ -286,6 +281,6 @@ void TaskManager::doInterruptMasking()
         foundFirst = true;
     }
 
-  xDeb("Ticking enabled");
+  xDeb("Ticking disabled");
   Interrupt::mask(IRQ_TIMER);
 }

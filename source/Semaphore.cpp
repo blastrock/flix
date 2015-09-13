@@ -35,7 +35,7 @@ void Semaphore::down()
       _waiters.push(&waiter);
 
       {
-        tm.prepareMeForSleep(true);
+        tm.prepareMeForSleep();
         auto _ = _spinlock.getScopedUnlock();
         tm.putMeToSleep();
       }
