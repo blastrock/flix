@@ -62,10 +62,13 @@ void TaskManager::terminateCurrentTask()
   DisableInterrupts _;
 
   xDeb("Terminating task %d, size %d", _activeTask, _tasks.size());
+
   const auto iter = _tasks.find(_activeTask);
+  _activeTask = 0;
   assert(iter != _tasks.end());
   _tasks.erase(iter);
   // TODO free stack
+  // FIXME freeing the stack will free the stack we are currently using though!
 
   doInterruptMasking();
 }
@@ -245,6 +248,7 @@ void TaskManager::tryScheduleNext()
 
 void TaskManager::scheduleNext()
 {
+  xDeb("Schedule next");
   tryScheduleNext();
   xDeb("All processes sleeping, entering kernel sleep");
   enterSleep();
