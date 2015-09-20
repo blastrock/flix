@@ -119,19 +119,17 @@ void PageHeap::kfree(void* ptr)
 
   page_index_t index = ptrToPage(ptr);
 
+  assert(index < m_map.size());
   assert(m_map[index]);
 
   // first 32 pages are always mapped
   if (index * BLOCK_SIZE >= 32)
-  {
-    physaddr_t phys = PageDirectory::getKernelDirectory()->unmapPage(ptr);
-    Memory::setPageFree(phys / PAGE_SIZE);
-    for (unsigned n = 1; n < BLOCK_SIZE; ++n)
+    for (unsigned n = 0; n < BLOCK_SIZE; ++n)
     {
-      phys = PageDirectory::getKernelDirectory()->unmapPage(
+      physaddr_t phys = PageDirectory::getKernelDirectory()->unmapPage(
           static_cast<char*>(ptr) + n * PAGE_SIZE);
       Memory::setPageFree(phys / PAGE_SIZE);
     }
-  }
+
   m_map[index] = false;
 }

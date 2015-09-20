@@ -27,8 +27,8 @@ class PageHeap
     void refillPool();
 
   private:
-    bool m_allocating;
-    char* m_heapStart;
+    bool m_allocating = false;
+    char* m_heapStart = nullptr;
 
     std::vector<bool> m_map;
     std::vector<std::pair<page_index_t, physaddr_t>> m_pool;
