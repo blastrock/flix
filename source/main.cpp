@@ -197,10 +197,14 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   {
     Task task = taskManager->newKernelTask();
-    task.stack = new char[0x4000];
+    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
     task.stackTop = task.stack + 0x4000;
-    task.kernelStack = new char[0x4000];
+    task.kernelStack = reinterpret_cast<char*>(0xffffffffb0000000 - 0x4000);
     task.kernelStackTop = task.kernelStack + 0x4000;
+    task.pageDirectory.mapRange(task.stack, task.stackTop,
+        PageDirectory::ATTR_RW);
+    task.pageDirectory.mapRange(task.kernelStack, task.kernelStackTop,
+        PageDirectory::ATTR_RW);
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     taskManager->addTask(std::move(task));

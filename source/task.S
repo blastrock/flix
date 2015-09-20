@@ -1,5 +1,5 @@
-.global jump
-jump:
+.global jump_to_task
+jump_to_task:
   mov %rdi, %rsp
 
   pop %r15
@@ -20,6 +20,18 @@ jump:
   pop %rdi
 
   iretq
+
+.global jump_to_address
+/* rdi: target */
+/* rsi: arg1 */
+/* rdx: stack pointer */
+jump_to_address:
+  mov %rdi, %rax
+
+  mov %rsi, %rdi
+  mov %rdx, %rsp
+
+  jmpq *%rax
 
 /*
  * saves the current task in the struct pointed by the first argument (rdi)

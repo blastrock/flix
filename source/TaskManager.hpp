@@ -85,7 +85,7 @@ public:
   Task newKernelTask();
   Task newUserTask();
   void downgradeCurrentTask();
-  void terminateCurrentTask();
+  [[noreturn]] void terminateCurrentTask();
 
   void prepareMeForSleep();
   void putMeToSleep();
@@ -117,6 +117,9 @@ private:
   std::set<Task, TaskComparator> _tasks;
   pid_t _activeTask;
   pid_t _nextTid;
+
+  [[noreturn]] static void terminateCurrentTaskCont_C(TaskManager* tm);
+  [[noreturn]] void terminateCurrentTaskCont();
 
   void setKernelStack();
   void updateNextTid();

@@ -10,7 +10,9 @@ XLL_LOG_CATEGORY("core/taskmanager");
 
 TaskManager* TaskManager::instance;
 
-[[noreturn]] extern "C" void jump(Task::Context* task);
+[[noreturn]] extern "C" void jump_to_task(Task::Context* task);
+[[noreturn]] extern "C" void jump_to_address(
+    void* addr, void* arg1, void* stack);
 extern "C" int task_save(Task::Context* task);
 
 TaskManager* TaskManager::get()
@@ -59,18 +61,38 @@ void TaskManager::addTask(Task&& t)
 
 void TaskManager::terminateCurrentTask()
 {
-  DisableInterrupts _;
-
   xDeb("Terminating task %d, size %d", _activeTask, _tasks.size());
+
+  assert(!(Cpu::rflags() & (1 << 9)));
+
+  // terminating a task will free its page directory and this stack, so we need
+  // to switch to the kernel stack before and then switch to the kernel page
+  // directory
+  xDeb("Changing stack");
+  jump_to_address(reinterpret_cast<void*>(&terminateCurrentTaskCont_C),
+      this,
+      Symbols::getStackBase());
+}
+
+void TaskManager::terminateCurrentTaskCont_C(TaskManager* tm)
+{
+  tm->terminateCurrentTaskCont();
+}
+
+void TaskManager::terminateCurrentTaskCont()
+{
+  PageDirectory::getKernelDirectory()->use();
+
+  xDeb("Removing task");
 
   const auto iter = _tasks.find(_activeTask);
   _activeTask = 0;
   assert(iter != _tasks.end());
   _tasks.erase(iter);
-  // TODO free stack
-  // FIXME freeing the stack will free the stack we are currently using though!
 
   doInterruptMasking();
+
+  scheduleNext();
 }
 
 Task TaskManager::newKernelTask()
@@ -243,7 +265,7 @@ void TaskManager::tryScheduleNext()
   _tss->ist1 = nextTask.kernelStackTop;
   Cpu::setKernelStack(nextTask.kernelStackTop);
 
-  jump(&nextTask.context);
+  jump_to_task(&nextTask.context);
 }
 
 void TaskManager::scheduleNext()
@@ -263,7 +285,7 @@ void TaskManager::rescheduleSelf()
         (nextTask.context.rflags & (1 << 9))) &&
       "Interrupts were disabled in a user task");
   xDeb("Rescheduling self at %x", nextTask.context.rip);
-  jump(&nextTask.context);
+  jump_to_task(&nextTask.context);
 }
 
 void TaskManager::doInterruptMasking()

@@ -138,11 +138,7 @@ void* mmap(void*, size_t length)
 
 void exit()
 {
-  // terminating a task will free its page directory, so we need to switch
-  // to the kernel one before we do that
-  PageDirectory::getKernelDirectory()->use();
   TaskManager::get()->terminateCurrentTask();
-  TaskManager::get()->scheduleNext();
 }
 
 void print(const char* buf)
