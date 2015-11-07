@@ -142,7 +142,7 @@ class PageDirectory
 };
 
 inline PageDirectory::PageDirectory() :
-  m_manager(nullptr, [](auto){})
+  m_manager(nullptr, [](X86_64PageManager*){})
 {
   m_directory.value = 0;
 }
