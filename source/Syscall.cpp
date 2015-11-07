@@ -146,7 +146,7 @@ void print(const char* buf)
   xDeb("sysprint: %s", buf);
 }
 
-int not_implemented()
+int fstat()
 {
   return -1;
 }
@@ -175,16 +175,7 @@ void initSysCalls()
 {
   initSysCallGate();
 
-  registerHandler(read, hndl::read);
-  registerHandler(write, hndl::write);
-  registerHandler(open, hndl::open);
-  registerHandler(close, hndl::close);
-  registerHandler(fstat, hndl::not_implemented);
-  registerHandler(mmap, hndl::mmap);
-  registerHandler(arch_prctl, hndl::arch_prctl);
-  registerHandler(exit, hndl::exit);
-  registerHandler(openat, hndl::openat);
-  registerHandler(print, hndl::print);
+#include "syscalls/syscall_register.hxx"
 }
 
 SyscallReturnType handle(const InterruptState& st)

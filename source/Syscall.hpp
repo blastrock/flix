@@ -13,16 +13,7 @@ namespace sys
 
 enum ScId
 {
-  read = 0,
-  write = 1,
-  open = 2,
-  close = 3,
-  fstat = 5,
-  mmap = 9,
-  arch_prctl = 158,
-  exit = 231,
-  openat = 257,
-  print = 300,
+#include "syscalls/syscall_enum.hxx"
 
   last_id,
 };

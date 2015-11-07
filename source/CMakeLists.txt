@@ -1,3 +1,9 @@
+set(SYSCALL_ENUM syscall_enum.hxx)
+set(SYSCALL_REGISTER syscall_register.hxx)
+set(SYSCALL_GLIBC_DEFINES syscall_glibc_defines.h)
+
+add_subdirectory(syscalls)
+
 enable_language(ASM_NASM)
 enable_language(ASM)
 
@@ -21,8 +27,13 @@ set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "")
 set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
 include_directories(${LIBKCXX_INCLUDE_DIRS})
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(flix
+  ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_ENUM}
+  ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_REGISTER}
+  ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_GLIBC_DEFINES}
+
   Assert.cpp
   boot.asm
   CondVar.cpp
@@ -55,6 +66,12 @@ add_executable(flix
   Timer.cpp
   Tty.cpp
 )
+
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_ENUM} PROPERTIES GENERATED 1)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_REGISTER} PROPERTIES GENERATED 1)
+set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_GLIBC_DEFINES} PROPERTIES GENERATED 1)
+
+add_dependencies(flix SyscallGen)
 
 set_source_files_properties(Symbols.cpp
   PROPERTIES COMPILE_FLAGS -mcmodel=large
