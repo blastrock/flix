@@ -89,8 +89,6 @@ void Interrupt::handle(InterruptState* s)
       printStackTrace(s->rbp);
     }
 
-    PageDirectory::getKernelDirectory()->use();
-
     tm->terminateCurrentTask();
   }
   else if (s->intNo < 48) // PIC interrupt
