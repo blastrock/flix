@@ -110,6 +110,8 @@ isr_common_stub:
   fxsave [rsp]
 
   push rcx
+  ; keep 16 bytes alignment
+  sub    rsp, 0x8
 
   ;mov ax, ds               ; Lower 16-bits of eax = ds.
   ;push eax                 ; save the data segment descriptor
@@ -122,6 +124,7 @@ isr_common_stub:
 
   call intHandler
 
+  add    rsp, 0x8
   pop rcx
 
   fxrstor [rsp]

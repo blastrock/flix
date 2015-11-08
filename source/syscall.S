@@ -49,9 +49,12 @@ syscall_entry:
   fxsave (%rsp)
 
   push   %rcx
+  /* keep 16 bytes alignment */
+  sub    $0x8, %rsp
 
   callq  syscallHandler
 
+  add    $0x8, %rsp
   pop    %rcx
 
   fxrstor (%rsp)
