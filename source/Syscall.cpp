@@ -5,6 +5,7 @@
 #include "Cpu.hpp"
 #include <array>
 #include <functional>
+#include <flix/stat.h>
 
 XLL_LOG_CATEGORY("core/syscall");
 
@@ -148,7 +149,67 @@ void print(const char* buf)
 
 int fstat()
 {
+  xErr("fstat not implemented");
   return -1;
+}
+
+int newfstatat(int dirfd, const char* pathname, struct stat* buf, int)
+{
+  xDeb("newfstatat(%d, \"%s\")", dirfd, pathname);
+
+  fs::IoExpected<std::shared_ptr<fs::Inode>> exptarget;
+  if (pathname[0] == '/')
+  {
+    exptarget = fs::lookup(nullptr, pathname);
+  }
+  else if (dirfd >= 0)
+  {
+    if (*pathname == '\0')
+    {
+      xErr("empty pathname not supported in newfstatat");
+      return -1;
+    }
+
+    auto& task = TaskManager::get()->getActiveTask();
+    auto handle = task.fileManager.getHandle(dirfd);
+    if (!handle)
+    {
+      xDeb("fd not found");
+      return -1;
+    }
+
+    auto expinode = handle->getInode();
+    if (!expinode)
+    {
+      xDeb("No inode associated");
+      return -1;
+    }
+
+    auto inode = *expinode;
+    exptarget = fs::lookup(inode, pathname);
+  }
+  else
+  {
+    xDeb("newfstatat with negative fd and relative path");
+    return -1;
+  }
+
+  if (!exptarget)
+  {
+    xDeb("Can't get target inode");
+    return -1;
+  }
+
+  auto target = *exptarget;
+
+  *buf = {};
+  buf->st_nlink = 1;
+  buf->st_size = target->i_size;
+  buf->st_mode = target->i_mode;
+  buf->st_blksize = 1;
+  buf->st_blocks = (target->i_size + 511) / 512;
+
+  return 0;
 }
 
 }

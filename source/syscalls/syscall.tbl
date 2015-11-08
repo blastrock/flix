@@ -5,8 +5,10 @@
 2 open
 3 close
 5 fstat
+5 fstat
 9 mmap
 158 arch_prctl
 231 exit
 257 openat
+262 newfstatat
 300 print

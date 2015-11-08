@@ -38,16 +38,17 @@ static std::vector<std::string> split(
   return out;
 }
 
-IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path)
+IoExpected<std::shared_ptr<Inode>> lookup(
+    const std::shared_ptr<Inode>& inode, const std::string& path)
 {
   if (path.empty())
-    return xll::make_unexpected(IoError_InvalidPath{});
+    return inode;
 
-  if (path[0] != '/')
-    return xll::make_unexpected(IoError_InvalidPath{});
+  auto curInode = inode;
+  if (path[0] == '/')
+    curInode = getRootInode();
 
   const auto splitted = split(path, '/', true);
-  auto curInode = getRootInode();
   for (const auto& part : splitted)
   {
     auto expCurInode = curInode->lookup(part.c_str());
@@ -57,6 +58,18 @@ IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path)
   }
 
   return curInode;
+}
+
+IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path)
+{
+  if (path.empty())
+    return xll::make_unexpected(IoError_InvalidPath{});
+
+  if (path[0] != '/')
+    return xll::make_unexpected(IoError_InvalidPath{});
+
+  // TODO use string_view
+  return lookup(getRootInode(), path.c_str()+1);
 }
 
 }

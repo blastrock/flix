@@ -43,8 +43,17 @@ using IoError = eggs::variant<
 template <typename T>
 using IoExpected = xll::expected<T, IoError>;
 
+struct Inode;
+
 struct Handle {
-  virtual ~Handle() {}
+  virtual ~Handle() = default;
+
+  virtual IoExpected<std::shared_ptr<Inode>> getInode()
+  {
+    xDebC("core/vfs/filemanager", "getInode stub called");
+    return xll::make_unexpected(IoError_NotFound{});
+  }
+
   virtual IoExpected<off_t> lseek(off_t position, Whence whence)
   {
     xDebC("core/vfs/filemanager", "lseek stub called");
@@ -83,7 +92,7 @@ struct Inode {
   //uid_t i_uid;
   //gid_t i_gid;
   //kdev_t i_rdev;
-  //loff_t i_size;
+  loff_t i_size;
   //struct timespec i_atime;
   //struct timespec i_ctime;
   //struct timespec i_mtime;
@@ -147,6 +156,8 @@ struct SuperBlock {
 
 void setRoot(std::shared_ptr<SuperBlock> root);
 std::shared_ptr<Inode> getRootInode();
+IoExpected<std::shared_ptr<Inode>> lookup(
+    const std::shared_ptr<Inode>& inode, const std::string& path);
 IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path);
 
 }

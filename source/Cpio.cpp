@@ -8,15 +8,16 @@ class CpioFileInode;
 class CpioFileHandle : public fs::Handle
 {
 public:
-  CpioFileHandle(CpioFileInode* inode)
+  CpioFileHandle(std::shared_ptr<CpioFileInode> inode)
     : _file(inode)
     , _pos(0)
   {}
 
+  fs::IoExpected<std::shared_ptr<fs::Inode>> getInode() override;
   fs::IoExpected<off_t> lseek(off_t position, fs::Whence whence) override;
   fs::IoExpected<off_t> read(void* buffer, off_t size) override;
 
-  CpioFileInode* _file;
+  std::shared_ptr<CpioFileInode> _file;
   off_t _pos;
 };
 
@@ -26,16 +27,22 @@ public:
   std::string _name;
 };
 
-class CpioFileInode : public CpioInode
+class CpioFileInode : public CpioInode,
+                      public std::enable_shared_from_this<CpioFileInode>
 {
 public:
   fs::IoExpected<std::unique_ptr<fs::Handle>> open() override
   {
-    return std::make_unique<CpioFileHandle>(this);
+    return std::make_unique<CpioFileHandle>(shared_from_this());
   }
 
   std::vector<uint8_t> _data;
 };
+
+fs::IoExpected<std::shared_ptr<fs::Inode>> CpioFileHandle::getInode()
+{
+  return _file;
+}
 
 fs::IoExpected<off_t> CpioFileHandle::lseek(off_t position, fs::Whence whence)
 {
@@ -177,6 +184,7 @@ std::shared_ptr<fs::SuperBlock> readArchive(void* data)
 
     auto file = cpiofs->makeFile(sname.c_str());
     file->_data = std::vector<uint8_t>(ptr, ptr + filesize);
+    file->i_size = filesize;
 
     ptr += filesize;
     // round up

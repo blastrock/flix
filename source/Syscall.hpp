@@ -90,6 +90,18 @@ struct SysCallExecutor<R, A1, A2, A3>
   }
 };
 
+template <typename R, typename A1, typename A2, typename A3, typename A4>
+struct SysCallExecutor<R, A1, A2, A3, A4>
+{
+  std::function<R(A1, A2, A3, A4)> handler;
+
+  SyscallReturnType operator()(const InterruptState& st)
+  {
+    return HandlerCaller<R, A1, A2, A3, A4>::call(handler,
+        (A1)st.rdi, (A2)st.rsi, (A3)st.rdx, (A4)st.rcx);
+  }
+};
+
 void registerHandler(ScId id, SyscallHandler handler);
 
 }

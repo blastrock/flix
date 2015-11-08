@@ -28,6 +28,7 @@ set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 
 include_directories(${LIBKCXX_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_executable(flix
   ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_ENUM}
