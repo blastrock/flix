@@ -1,5 +1,6 @@
 #include "Cpio.hpp"
 #include "Debug.hpp"
+#include <flix/stat.h>
 
 XLL_LOG_CATEGORY("core/vfs/cpio");
 
@@ -112,11 +113,31 @@ public:
       {
         assert(start < path);
 
-        auto newFolder = std::make_shared<CpioFolderInode>();
-        newFolder->_name = std::string(start, path);
-        xDeb("Inode %s", newFolder->_name);
-        curInode->_children.push_back(newFolder);
-        curInode = newFolder;
+        // TODO use string_view
+        const std::string name(start, path);
+
+        auto expChild = curInode->lookup(name.c_str());
+        if (expChild)
+        {
+          xDeb("Found inode %s", name);
+          auto child = *expChild;
+          if ((child->i_mode & S_IFMT) != S_IFDIR)
+          {
+            xDeb("not a directory", name);
+            return nullptr;
+          }
+          curInode = std::static_pointer_cast<CpioFolderInode>(*expChild);
+        }
+        else
+        {
+          xDeb("Creating inode %s", name);
+          auto newFolder = std::make_shared<CpioFolderInode>();
+          newFolder->_name = name;
+          newFolder->i_mode = S_IFDIR;
+          curInode->_children.push_back(newFolder);
+          curInode = newFolder;
+        }
+
         start = path+1;
       }
 
@@ -136,7 +157,7 @@ public:
   std::shared_ptr<CpioFolderInode> _root;
 };
 
-struct CpioFile
+struct CpioFileBlock
 {
   uint16_t magic;
   uint16_t dev;
@@ -160,12 +181,12 @@ std::shared_ptr<fs::SuperBlock> readArchive(void* data)
   uint8_t* ptr = static_cast<uint8_t*>(data);
   for (;;)
   {
-    const CpioFile* curfile = reinterpret_cast<CpioFile*>(ptr);
+    const CpioFileBlock* curfile = reinterpret_cast<CpioFileBlock*>(ptr);
 
     if (curfile->magic != 070707)
       PANIC("invalid magic number in cpio file");
 
-    ptr += sizeof(CpioFile);
+    ptr += sizeof(CpioFileBlock);
 
     const uint32_t filesize = curfile->filesize_hi << 16 | curfile->filesize_lo;
 
@@ -183,8 +204,14 @@ std::shared_ptr<fs::SuperBlock> readArchive(void* data)
       ptr += 1;
 
     auto file = cpiofs->makeFile(sname.c_str());
-    file->_data = std::vector<uint8_t>(ptr, ptr + filesize);
-    file->i_size = filesize;
+    if (file)
+    {
+      file->_data = std::vector<uint8_t>(ptr, ptr + filesize);
+      file->i_size = filesize;
+      file->i_mode = curfile->mode;
+    }
+    else
+      xDeb("Failed to create %s", sname);
 
     ptr += filesize;
     // round up

@@ -88,7 +88,7 @@ struct Handle {
 
 struct Inode {
   uint64_t i_ino;
-  //umode_t i_mode;
+  mode_t i_mode;
   //uid_t i_uid;
   //gid_t i_gid;
   //kdev_t i_rdev;
