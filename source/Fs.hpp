@@ -154,12 +154,19 @@ struct SuperBlock {
   //virtual int show_options(struct seq_file *, struct vfsmount *) = 0;
 };
 
+enum LookupOptions {
+  LookupOptions_None = 0x0,
+  LookupOptions_NoFollowSymlink = 0x1,
+};
+
 void setRoot(std::shared_ptr<SuperBlock> root);
 std::shared_ptr<Inode> getRootInode();
+IoExpected<std::shared_ptr<Inode>> lookup(const std::shared_ptr<Inode>& inode,
+    const std::string& path,
+    LookupOptions options = LookupOptions_None,
+    uint8_t indirectionLeft = MAX_SYMLINK_INDIRECTIONS);
 IoExpected<std::shared_ptr<Inode>> lookup(
-    const std::shared_ptr<Inode>& inode, const std::string& path);
-IoExpected<std::shared_ptr<Inode>> lookup(const std::string& path);
-
+    const std::string& path, LookupOptions options = LookupOptions_None);
 }
 
 #endif

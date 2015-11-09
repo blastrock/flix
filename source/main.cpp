@@ -83,7 +83,12 @@ void readwrite()
 void exec()
 {
   xDeb("Opening file");
-  auto einode = fs::getRootInode()->lookup("busybox");
+  auto einode = fs::lookup("/bin/sh");
+  if (!einode)
+  {
+    xErr("failed to open file");
+    sys::call(sys::exit);
+  }
   auto ehndl = (*einode)->open();
   xDeb("Execing");
   // FIXME exec never returns so hndl leaks

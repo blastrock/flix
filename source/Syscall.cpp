@@ -153,14 +153,18 @@ int fstat()
   return -1;
 }
 
-int newfstatat(int dirfd, const char* pathname, struct stat* buf, int)
+int newfstatat(int dirfd, const char* pathname, struct stat* buf, int flags)
 {
-  xDeb("newfstatat(%d, \"%s\")", dirfd, pathname);
+  xDeb("newfstatat(%d, \"%s\", %p, %d)", dirfd, pathname, buf, flags);
+
+  const fs::LookupOptions options = (flags & AT_SYMLINK_NOFOLLOW)
+                                        ? fs::LookupOptions_NoFollowSymlink
+                                        : fs::LookupOptions_None;
 
   fs::IoExpected<std::shared_ptr<fs::Inode>> exptarget;
   if (pathname[0] == '/')
   {
-    exptarget = fs::lookup(nullptr, pathname);
+    exptarget = fs::lookup(nullptr, pathname, options);
   }
   else if (dirfd >= 0)
   {
@@ -186,7 +190,7 @@ int newfstatat(int dirfd, const char* pathname, struct stat* buf, int)
     }
 
     auto inode = *expinode;
-    exptarget = fs::lookup(inode, pathname);
+    exptarget = fs::lookup(inode, pathname, options);
   }
   else
   {
