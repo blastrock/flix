@@ -216,6 +216,23 @@ int newfstatat(int dirfd, const char* pathname, struct stat* buf, int flags)
   return 0;
 }
 
+long clone(unsigned long flags,
+    void* child_stack,
+    void* ptid,
+    void* ctid,
+    struct pt_regs* regs)
+{
+  xDeb("clone(%#016x, %p, %p, %p, %p)", flags, child_stack, ptid, ctid, regs);
+
+  if (ptid || regs)
+  {
+    xErr("unsupported arguments ptid or regs");
+    return -1;
+  }
+
+  return -1;
+}
+
 }
 
 static void initSysCallGate()
