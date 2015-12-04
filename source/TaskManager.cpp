@@ -59,6 +59,33 @@ void TaskManager::addTask(Task&& t)
   doInterruptMasking();
 }
 
+pid_t TaskManager::clone()
+{
+  xDeb("Cloning task");
+
+  xDeb("Showing memory map");
+  auto& pd = getActiveTask().pageDirectory;
+  for (auto& level4entry : pd.getManager())
+  {
+    auto level3 = *std::get<1>(level4entry);
+    if (level3)
+      for (auto& level3entry : *level3)
+      {
+        auto level2 = *std::get<1>(level3entry);
+        if (level2)
+          for (auto& level2entry : *level2)
+          {
+            auto level1 = *std::get<1>(level2entry);
+            if (level1)
+              for (auto& entry : *level1)
+                xDeb("Entry %p", &entry);
+          }
+      }
+  }
+
+  return -1;
+}
+
 void TaskManager::terminateCurrentTask()
 {
   xDeb("Terminating task %d, size %d", _activeTask, _tasks.size());

@@ -87,6 +87,8 @@ public:
   void downgradeCurrentTask();
   [[noreturn]] void terminateCurrentTask();
 
+  pid_t clone();
+
   void prepareMeForSleep();
   void putMeToSleep();
   void wakeUpTask(Task& task);

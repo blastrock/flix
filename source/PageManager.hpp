@@ -78,6 +78,75 @@ class PageManager
       *thisPair.second = *otherPair.second;
     }
 
+    class Iterator
+    {
+    public:
+      const std::tuple<Entry*, NextLayout**>& operator*() const
+      {
+        return m_ptr;
+      }
+      const std::tuple<Entry*, NextLayout**>* operator->() const
+      {
+        return &m_ptr;
+      }
+
+      Iterator& operator++()
+      {
+        assert(*this);
+        ++std::get<0>(m_ptr);
+        ++std::get<1>(m_ptr);
+        return *this;
+      }
+      Iterator operator+(int skip) const
+      {
+        assert(*this);
+        Iterator out = *this;
+        std::get<0>(out->m_ptr) += skip;
+        std::get<1>(out->m_ptr) += skip;
+        return out;
+      }
+
+      bool operator==(const Iterator& other) const
+      {
+        // if one pointer is equal, both should be
+        assert((std::get<0>(m_ptr) == std::get<0>(other.m_ptr)) ==
+               (std::get<1>(m_ptr) == std::get<1>(other.m_ptr)));
+        return std::get<0>(m_ptr) == std::get<0>(other.m_ptr);
+      }
+      bool operator!=(const Iterator& other) const
+      {
+        return !(*this == other);
+      }
+
+      explicit operator bool() const
+      {
+        assert(!!std::get<0>(m_ptr) == !!std::get<1>(m_ptr));
+        return std::get<0>(m_ptr);
+      }
+
+    private:
+      std::tuple<Entry*, NextLayout**> m_ptr = {nullptr, nullptr};
+
+      Iterator(Entry* entry, NextLayout** layout)
+        : m_ptr{entry, layout}
+      {
+        assert(!!std::get<0>(m_ptr) == !!std::get<1>(m_ptr));
+      }
+
+      friend ThisLayout;
+    };
+
+    Iterator begin()
+    {
+      return Iterator(&m_entries[0], &m_nextLayouts[0]);
+    }
+
+    Iterator end()
+    {
+      return Iterator(
+          &m_entries[1 << ADD_BITS], &m_nextLayouts[1 << ADD_BITS]);
+    }
+
   private:
     Entry m_entries[1 << ADD_BITS];
     NextLayout* m_nextLayouts[1 << ADD_BITS];
@@ -105,7 +174,7 @@ class PageManager
       typename std::enable_if<RevLevel == 0, std::pair<Entry*, NextLayout**>>
       ::type;
 
-    inline uintptr_t indexFromAddress(uintptr_t address)
+    static uintptr_t indexFromAddress(uintptr_t address)
     {
       return (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
     }
@@ -120,6 +189,7 @@ class PageManager<Allocator, CurLevel>
   public:
     using Entry = CurLevel;
     using PageType = CurLevel;
+    using ThisLayout = PageManager<Allocator, CurLevel>;
 
     static constexpr uint8_t ADD_BITS = CurLevel::ADD_BITS;
     static constexpr uint8_t TOTAL_BITS = ADD_BITS + CurLevel::BASE_SHIFT;
@@ -127,6 +197,66 @@ class PageManager<Allocator, CurLevel>
     static constexpr uint8_t Levels = 1;
 
     PageManager();
+
+    class Iterator
+    {
+    public:
+      Iterator() = default;
+
+      Entry& operator*() const
+      {
+        return *m_ptr;
+      }
+      Entry* operator->() const
+      {
+        return m_ptr;
+      }
+
+      Iterator& operator++()
+      {
+        ++m_ptr;
+        return *this;
+      }
+      Iterator operator+(int skip) const
+      {
+        Iterator out = *this;
+        out->m_ptr += skip;
+        return out;
+      }
+
+      bool operator==(const Iterator& other) const
+      {
+        return m_ptr == other.m_ptr;
+      }
+      bool operator!=(const Iterator& other) const
+      {
+        return !(*this == other);
+      }
+
+      explicit operator bool() const
+      {
+        return m_ptr;
+      }
+
+    private:
+      Entry* m_ptr = nullptr;
+
+      Iterator(Entry* entry)
+        : m_ptr(entry)
+      {}
+
+      friend ThisLayout;
+    };
+
+    Iterator begin()
+    {
+      return Iterator(&m_entries[0]);
+    }
+
+    Iterator end()
+    {
+      return Iterator(&m_entries[1 << ADD_BITS]);
+    }
 
   private:
     Entry m_entries[1 << ADD_BITS];
@@ -137,7 +267,7 @@ class PageManager<Allocator, CurLevel>
     typename std::enable_if<RevLevel == 0, std::pair<Entry*, void**>>::type
       getEntryImpl(uintptr_t address, Initializer& initializer);
 
-    inline uintptr_t indexFromAddress(uintptr_t address)
+    static uintptr_t indexFromAddress(uintptr_t address)
     {
       return (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
     }
@@ -239,6 +369,8 @@ auto PageManager<Allocator, CurLevel, NextLevels...>::getEntryImpl(
     assert(!m_entries[index].p
         && "Incoherence between layouts and page directory");
     // create it
+    // TODO this allocates two pages, but on the last layer, PageManager only
+    // takes one, we should instantiate two of them to avoid wasting memory
     std::pair<void*, physaddr_t> memory = Allocator::get().kmalloc();
     nextLayout = new (memory.first) NextLayout();
     m_entries[index].p = true;

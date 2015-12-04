@@ -15,6 +15,40 @@ class PageDirectory
     static constexpr unsigned ATTR_NOEXEC = 0x4;
     static constexpr unsigned ATTR_DEFER  = 0x8;
 
+    struct PageTableEntry
+    {
+      static constexpr uint8_t ADD_BITS = 9;
+      static constexpr uint8_t BASE_SHIFT = ::PageDirectory::BASE_SHIFT;
+
+      unsigned long long p    : 1; ///< Present
+      unsigned long long rw   : 1; ///< Read/Write
+      unsigned long long us   : 1; ///< User/Supervisor
+      unsigned long long pwt  : 1; ///< Page-Level Writethrough
+      unsigned long long pcd  : 1; ///< Page-Level Cache Disable
+      unsigned long long a    : 1; ///< Accessed
+      unsigned long long d    : 1; ///< Dirty
+      unsigned long long pat  : 1; ///< Page-Attribute Table
+      unsigned long long g    : 1; ///< Global Page
+      unsigned long long avl  : 3; ///< Available to Software
+      unsigned long long base : 40; ///< Page Base Address
+      unsigned long long avl2 : 11; ///< Available
+      unsigned long long nx   : 1; ///< No Execute
+    };
+
+    static_assert(sizeof(PageTableEntry) == 8, "sizeof(PageTableEntry) != 8");
+
+    typedef PageTableEntry PageDirectoryEntry;
+    typedef PageTableEntry PageDirectoryPointerEntry;
+    typedef PageTableEntry PageMapLevel4Entry;
+
+    typedef PageManager<
+      PageHeap,
+      PageMapLevel4Entry,
+      PageDirectoryPointerEntry,
+      PageDirectoryEntry,
+      PageTableEntry>
+        X86_64PageManager;
+
     PageDirectory();
     PageDirectory(const PageDirectory& pd) = delete;
     PageDirectory(PageDirectory&& pd) noexcept;
@@ -26,6 +60,11 @@ class PageDirectory
     static PageDirectory* getKernelDirectory();
 
     static PageDirectory* getCurrent();
+
+    X86_64PageManager& getManager()
+    {
+      return *m_manager;
+    }
 
     void mapKernel();
 
@@ -55,34 +94,6 @@ class PageDirectory
     static void flushTlb();
 
   private:
-    static PageDirectory* g_kernelDirectory;
-
-    struct PageTableEntry
-    {
-      static constexpr uint8_t ADD_BITS = 9;
-      static constexpr uint8_t BASE_SHIFT = ::PageDirectory::BASE_SHIFT;
-
-      unsigned long long p    : 1; ///< Present
-      unsigned long long rw   : 1; ///< Read/Write
-      unsigned long long us   : 1; ///< User/Supervisor
-      unsigned long long pwt  : 1; ///< Page-Level Writethrough
-      unsigned long long pcd  : 1; ///< Page-Level Cache Disable
-      unsigned long long a    : 1; ///< Accessed
-      unsigned long long d    : 1; ///< Dirty
-      unsigned long long pat  : 1; ///< Page-Attribute Table
-      unsigned long long g    : 1; ///< Global Page
-      unsigned long long avl  : 3; ///< Available to Software
-      unsigned long long base : 40; ///< Page Base Address
-      unsigned long long avl2 : 11; ///< Available
-      unsigned long long nx   : 1; ///< No Execute
-    };
-
-    static_assert(sizeof(PageTableEntry) == 8, "sizeof(PageTableEntry) != 8");
-
-    typedef PageTableEntry PageDirectoryEntry;
-    typedef PageTableEntry PageDirectoryPointerEntry;
-    typedef PageTableEntry PageMapLevel4Entry;
-
     union CR3
     {
       struct CR3Bitfield
@@ -103,13 +114,7 @@ class PageDirectory
 
     static_assert(sizeof(CR3) == 8, "sizeof(CR3) != 8");
 
-    typedef PageManager<
-      PageHeap,
-      PageMapLevel4Entry,
-      PageDirectoryPointerEntry,
-      PageDirectoryEntry,
-      PageTableEntry>
-        X86_64PageManager;
+    static PageDirectory* g_kernelDirectory;
 
     CR3 m_directory;
     std::unique_ptr<X86_64PageManager, X86_64PageManager::Deleter> m_manager;

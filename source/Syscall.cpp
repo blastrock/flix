@@ -230,7 +230,7 @@ long clone(unsigned long flags,
     return -1;
   }
 
-  return -1;
+  return TaskManager::get()->clone();
 }
 
 }
