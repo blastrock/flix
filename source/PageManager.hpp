@@ -147,6 +147,11 @@ class PageManager
           &m_entries[1 << ADD_BITS], &m_nextLayouts[1 << ADD_BITS]);
     }
 
+    uintptr_t getAddress(const Entry& entry) const
+    {
+      return addressFromIndex(&entry - m_entries);
+    }
+
   private:
     Entry m_entries[1 << ADD_BITS];
     NextLayout* m_nextLayouts[1 << ADD_BITS];
@@ -177,6 +182,10 @@ class PageManager
     static uintptr_t indexFromAddress(uintptr_t address)
     {
       return (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
+    }
+    static uintptr_t addressFromIndex(uintptr_t index)
+    {
+      return (index << (TOTAL_BITS - ADD_BITS));
     }
 
     template <typename A, typename Clv, typename... Lv>
@@ -258,6 +267,11 @@ class PageManager<Allocator, CurLevel>
       return Iterator(&m_entries[1 << ADD_BITS]);
     }
 
+    uintptr_t getAddress(const Entry& entry) const
+    {
+      return addressFromIndex(&entry - m_entries);
+    }
+
   private:
     Entry m_entries[1 << ADD_BITS];
     template <unsigned RevLevel>
@@ -271,6 +285,11 @@ class PageManager<Allocator, CurLevel>
     {
       return (address >> (TOTAL_BITS - ADD_BITS)) & ((1 << ADD_BITS) - 1);
     }
+    static uintptr_t addressFromIndex(uintptr_t index)
+    {
+      return (index << (TOTAL_BITS - ADD_BITS));
+    }
+
 
     template <typename A, typename Clv, typename... Lv>
     friend class PageManager;

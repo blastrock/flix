@@ -33,6 +33,25 @@ class PageDirectory
       unsigned long long base : 40; ///< Page Base Address
       unsigned long long avl2 : 11; ///< Available
       unsigned long long nx   : 1; ///< No Execute
+
+      uint8_t getAttributes() const
+      {
+        uint8_t attr = 0;
+        if (rw)
+          attr |= ATTR_RW;
+        if (us)
+          attr |= ATTR_PUBLIC;
+        if (nx)
+          attr |= ATTR_NOEXEC;
+        if (!p && base == INVALID_PAGE)
+          attr |= ATTR_DEFER;
+        return attr;
+      }
+
+      bool isValid() const
+      {
+        return p || base == INVALID_PAGE;
+      }
     };
 
     static_assert(sizeof(PageTableEntry) == 8, "sizeof(PageTableEntry) != 8");
