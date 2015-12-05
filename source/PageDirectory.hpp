@@ -100,6 +100,8 @@ class PageDirectory
     /// Unmap a page and return the physical address it pointed to
     physaddr_t unmapPage(void* vaddr);
 
+    physaddr_t resolve(void* vaddr);
+
     /** Handles fault due to a deferred allocation
      *
      * \return true if the fault was handled, false otherwise

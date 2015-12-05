@@ -215,6 +215,30 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     taskManager->addTask(std::move(task));
   }
+  {
+    Task task = taskManager->newKernelTask();
+    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.pageDirectory.mapRange(task.stack, task.stackTop,
+        PageDirectory::ATTR_RW);
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+    task.context.rip = reinterpret_cast<uint64_t>(&loop);
+    taskManager->addTask(std::move(task));
+  }
+  {
+    Task task = taskManager->newKernelTask();
+    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
+    task.stackTop = task.stack + 0x4000;
+    task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
+    task.kernelStackTop = task.kernelStack + 0x4000;
+    task.pageDirectory.mapRange(task.stack, task.stackTop,
+        PageDirectory::ATTR_RW);
+    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+    task.context.rip = reinterpret_cast<uint64_t>(&loop2);
+    taskManager->addTask(std::move(task));
+  }
 #if 0
   {
     Task task = taskManager->newKernelTask();
@@ -224,26 +248,6 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&sleep);
-    taskManager->addTask(std::move(task));
-  }
-  {
-    Task task = taskManager->newKernelTask();
-    task.stack = new char[0x4000];
-    task.stackTop = task.stack + 0x4000;
-    task.kernelStack = new char[0x4000];
-    task.kernelStackTop = task.kernelStack + 0x4000;
-    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
-    task.context.rip = reinterpret_cast<uint64_t>(&loop);
-    taskManager->addTask(std::move(task));
-  }
-  {
-    Task task = taskManager->newKernelTask();
-    task.stack = new char[0x4000];
-    task.stackTop = task.stack + 0x4000;
-    task.kernelStack = new char[0x4000];
-    task.kernelStackTop = task.kernelStack + 0x4000;
-    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
-    task.context.rip = reinterpret_cast<uint64_t>(&loop2);
     taskManager->addTask(std::move(task));
   }
   {

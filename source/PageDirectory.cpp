@@ -115,11 +115,20 @@ static PageDirectory* g_currentPageDirectory = 0;
 
 void PageDirectory::use()
 {
+  xDeb("Changing pagetable to %x", m_directory.value);
+
 #ifndef NDEBUG
-  g_pagingReady = true;
+  if (g_pagingReady)
+  {
+    int var;
+    // check that we keep the same stack before and after the change
+    assert((!g_pagingReady || getCurrent()->resolve(&var) == resolve(&var)) &&
+        "Changing page directory would mess up the stack!");
+  }
+  else
+    g_pagingReady = true;
 #endif
 
-  xDeb("Changing pagetable to %x", m_directory.value);
   asm volatile("mov %0, %%cr3":: "r"(m_directory.value));
   g_currentPageDirectory = this;
 }
@@ -247,6 +256,17 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
   page->base = 0;
 
   return base << BASE_SHIFT;
+}
+
+physaddr_t PageDirectory::resolve(void* vaddr)
+{
+  assert(g_pagingReady);
+
+  PageTableEntry* page = m_manager->getPage(vaddr);
+  if (!page || !page->p)
+    return INVALID_PHYS;
+
+  return page->base << BASE_SHIFT;
 }
 
 bool PageDirectory::handleFault(void* vaddr)
