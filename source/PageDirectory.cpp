@@ -243,8 +243,10 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
   PageTableEntry* page = m_manager->getPage(vaddr);
   assert(page && page->p && "Unmapping page that was not mapped");
   page->p = false;
+  const auto base = page->base;
+  page->base = 0;
 
-  return page->base << BASE_SHIFT;
+  return base << BASE_SHIFT;
 }
 
 bool PageDirectory::handleFault(void* vaddr)
