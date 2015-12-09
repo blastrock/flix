@@ -26,6 +26,7 @@ public:
   static char* getKernelVBssEnd();
   static char* getStackBase();
   static char* getPageHeapBase();
+  static char* getStackPageHeapBase();
   static char* getHeapBase();
 };
 

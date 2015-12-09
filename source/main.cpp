@@ -164,7 +164,7 @@ extern "C" [[noreturn]] int kmain(void* mboot)
 
   // second we need to prepare the heap which will be used for pagination
   xInf("PageHeap init");
-  PageHeap::get().init();
+  getPdPageHeap();
 
   // third we need pagination
   xInf("Paging init");
@@ -180,6 +180,9 @@ extern "C" [[noreturn]] int kmain(void* mboot)
   // TODO: map this in kernel memory, could be useful
   Memory::setRangeUsed(0xa0000 / 0x1000, 0xb8000 / 0x1000);
   Memory::setRangeUsed(0xb9000 / 0x1000, 0xe8000 / 0x1000);
+
+  xInf("StackPageHeap init");
+  getStackPageHeap();
 
   auto taskManager = TaskManager::get();
 
@@ -204,11 +207,9 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     Task task = taskManager->newKernelTask();
     task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
     task.stackTop = task.stack + 0x4000;
-    task.kernelStack = reinterpret_cast<char*>(0xffffffffb0000000 - 0x4000);
+    task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.pageDirectory.mapRange(task.stack, task.stackTop,
-        PageDirectory::ATTR_RW);
-    task.pageDirectory.mapRange(task.kernelStack, task.kernelStackTop,
         PageDirectory::ATTR_RW);
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&exec);

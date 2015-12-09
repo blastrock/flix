@@ -136,7 +136,7 @@ void PageDirectory::mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)
   _mapPageTo(vaddr, paddr, attributes);
 
   // refill pool if needed
-  PageHeap::get().refillPool();
+  getPdPageHeap().refillPool();
 }
 
 void PageDirectory::_mapPageTo(void* vaddr, physaddr_t paddr, uint8_t attributes)

@@ -36,4 +36,5 @@ DECLARE_VIRT_SYMBOL(kernelVDataEnd, KernelVDataEnd);
 DECLARE_VIRT_SYMBOL(kernelVBssEnd, KernelVBssEnd);
 DECLARE_VIRT_SYMBOL(stackBase, StackBase);
 DECLARE_VIRT_SYMBOL(pageHeapBase, PageHeapBase);
+DECLARE_VIRT_SYMBOL(stackPageHeapBase, StackPageHeapBase);
 DECLARE_VIRT_SYMBOL(heapBase, HeapBase);

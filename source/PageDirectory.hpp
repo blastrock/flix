@@ -61,7 +61,7 @@ class PageDirectory
     typedef PageTableEntry PageMapLevel4Entry;
 
     typedef PageManager<
-      PageHeap,
+      PdAllocator,
       PageMapLevel4Entry,
       PageDirectoryPointerEntry,
       PageDirectoryEntry,

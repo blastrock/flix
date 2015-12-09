@@ -7,32 +7,40 @@
 
 XLL_LOG_CATEGORY("core/memory/pageheap");
 
-static constexpr unsigned BLOCK_SIZE = 2; // in pages
-
-static PageHeap g_pageHeap;
-
-PageHeap& PageHeap::get()
+PdPageHeap& getPdPageHeap()
 {
-  return g_pageHeap;
+  static PdPageHeap pageHeap(Symbols::getPageHeapBase());
+  return pageHeap;
 }
 
-void PageHeap::init()
+StackPageHeap& getStackPageHeap()
 {
-  m_heapStart = Symbols::getPageHeapBase();
-  m_allocating = false;
+  static StackPageHeap pageHeap(Symbols::getStackPageHeapBase());
+  return pageHeap;
 }
 
-std::pair<void*, physaddr_t> PageHeap::kmalloc()
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+PageHeap<BSize, PSize, SSize>::PageHeap(char* heapStart)
+  : m_heapStart(heapStart)
+{
+}
+
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+std::pair<void*, physaddr_t> PageHeap<BSize, PSize, SSize>::kmalloc()
 {
   std::pair<page_index_t, physaddr_t> item = allocBlock();
   return {pageToPtr(item.first), item.second};
 }
 
-std::pair<PageHeap::page_index_t, physaddr_t> PageHeap::allocBlock()
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+auto PageHeap<BSize, PSize, SSize>::allocBlock()
+    -> std::pair<page_index_t, physaddr_t>
 {
   // if we are reentering, use pool
   if (m_allocating)
   {
+    assert(PoolSize);
+
     xDeb("Nested page allocation, taking from pool");
     assert(!m_pool.empty());
 
@@ -50,8 +58,9 @@ std::pair<PageHeap::page_index_t, physaddr_t> PageHeap::allocBlock()
   return allocPage(index);
 }
 
-std::pair<PageHeap::page_index_t, physaddr_t>
-  PageHeap::allocPage(page_index_t index)
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+auto PageHeap<BSize, PSize, SSize>::allocPage(page_index_t index)
+    -> std::pair<page_index_t, physaddr_t>
 {
   m_allocating = true;
 
@@ -63,56 +72,33 @@ std::pair<PageHeap::page_index_t, physaddr_t>
   {
     // for now, there should be no reason we ask a page too far appart
     assert(index == m_map.size());
-    m_map.resize(index+1, false);
+    m_map.resize(index + 1, false);
   }
 
   m_map[index] = true;
 
   physaddr_t phys;
-  // first 32 pages are always mapped
-  if (index * BLOCK_SIZE >= 32)
+  // first StaticSize pages are always mapped
+  if (index * BlockSize >= StaticSize)
   {
     PageDirectory::getKernelDirectory()->mapPage(pageToPtr(index),
-        PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC, &phys);
-    for (unsigned n = 1; n < BLOCK_SIZE; ++n)
+        PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC,
+        &phys);
+    for (unsigned n = 1; n < BlockSize; ++n)
       PageDirectory::getKernelDirectory()->mapPage(
           static_cast<char*>(pageToPtr(index)) + n * PAGE_SIZE,
           PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
   }
   else
-    phys = Symbols::getKernelPageHeapStart() + index * PAGE_SIZE * BLOCK_SIZE;
+    phys = Symbols::getKernelPageHeapStart() + index * PAGE_SIZE * BlockSize;
 
   m_allocating = false;
 
   return {index, phys};
 }
 
-void* PageHeap::pageToPtr(page_index_t index)
-{
-  return m_heapStart + index * PAGE_SIZE * BLOCK_SIZE;
-}
-
-PageHeap::page_index_t PageHeap::ptrToPage(void* ptr)
-{
-  return (static_cast<char*>(ptr) - m_heapStart) / PAGE_SIZE / BLOCK_SIZE;
-}
-
-void PageHeap::refillPool()
-{
-  // this function is called everytime a page is mapped so it may reenter
-  if (m_allocating)
-    return;
-
-  // the pool may be used while we refill it
-  while (m_pool.size() < 16)
-  {
-    xDeb("Refilling page pool");
-    auto block = allocBlock();
-    m_pool.push_back(block);
-  }
-}
-
-void PageHeap::kfree(void* ptr)
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+void PageHeap<BSize, PSize, SSize>::kfree(void* ptr)
 {
   if (!ptr)
     return;
@@ -122,9 +108,9 @@ void PageHeap::kfree(void* ptr)
   assert(index < m_map.size());
   assert(m_map[index]);
 
-  // first 32 pages are always mapped
-  if (index * BLOCK_SIZE >= 32)
-    for (unsigned n = 0; n < BLOCK_SIZE; ++n)
+  // first StaticSize pages are always mapped
+  if (index * BlockSize >= StaticSize)
+    for (unsigned n = 0; n < BlockSize; ++n)
     {
       physaddr_t phys = PageDirectory::getKernelDirectory()->unmapPage(
           static_cast<char*>(ptr) + n * PAGE_SIZE);
@@ -133,3 +119,34 @@ void PageHeap::kfree(void* ptr)
 
   m_map[index] = false;
 }
+
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+void PageHeap<BSize, PSize, SSize>::refillPool()
+{
+  // this function is called everytime a page is mapped so it may reenter
+  if (m_allocating)
+    return;
+
+  // the pool may be used while we refill it
+  while (m_pool.size() < PoolSize)
+  {
+    xDeb("Refilling page pool");
+    auto block = allocBlock();
+    m_pool.push_back(block);
+  }
+}
+
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+void* PageHeap<BSize, PSize, SSize>::pageToPtr(page_index_t index)
+{
+  return m_heapStart + index * PAGE_SIZE * BlockSize;
+}
+
+template <unsigned BSize, unsigned PSize, unsigned SSize>
+auto PageHeap<BSize, PSize, SSize>::ptrToPage(void* ptr) -> page_index_t
+{
+  return (static_cast<char*>(ptr) - m_heapStart) / PAGE_SIZE / BlockSize;
+}
+
+template class PageHeap<2, 16, 32>;
+template class PageHeap<4, 0, 0>;

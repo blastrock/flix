@@ -3,6 +3,7 @@ BOOTSTRAP_SIZE = 0x10000;
 VIRTUAL_BASE = 0xffffffffc0000000;
 VIRTUAL_STACK = 0xffffffffd0000000;
 VIRTUAL_PAGEHEAP = 0xffffffffe0000000;
+VIRTUAL_STACKPAGEHEAP = 0xffffffffe8000000;
 VIRTUAL_HEAP = 0xfffffffff0000000;
 SHIFT = VIRTUAL_BASE - PHYSICAL_BASE;
 
@@ -94,6 +95,9 @@ SECTIONS
 
   . = VIRTUAL_PAGEHEAP;
   _pageHeapBase = .;
+
+  . = VIRTUAL_STACKPAGEHEAP;
+  _stackPageHeapBase = .;
 
   . = VIRTUAL_HEAP;
   _heapBase = .;
