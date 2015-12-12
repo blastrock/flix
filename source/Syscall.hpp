@@ -21,13 +21,14 @@ enum ScId
 namespace detail
 {
 
+// this class handles void return types
 template <typename R, typename... Args>
 struct HandlerCaller
 {
   static SyscallReturnType call(
-      const std::function<R(Args...)>& func, Args... args)
+      const std::function<R(const InterruptState&, Args...)>& func, const InterruptState& st, Args... args)
   {
-    return (SyscallReturnType)func(args...);
+    return (SyscallReturnType)func(st, args...);
   }
 };
 
@@ -35,9 +36,9 @@ template <typename... Args>
 struct HandlerCaller<void, Args...>
 {
   static SyscallReturnType call(
-      const std::function<void(Args...)>& func, Args... args)
+      const std::function<void(const InterruptState&, Args...)>& func, const InterruptState& st, Args... args)
   {
-    func(args...);
+    func(st, args...);
     return 0;
   }
 };
@@ -48,57 +49,57 @@ struct SysCallExecutor;
 template <typename R>
 struct SysCallExecutor<R>
 {
-  std::function<R()> handler;
+  std::function<R(const InterruptState&)> handler;
 
-  SyscallReturnType operator()(const InterruptState&)
+  SyscallReturnType operator()(const InterruptState& st)
   {
-    return HandlerCaller<R>::call(handler);
+    return HandlerCaller<R>::call(handler, st);
   }
 };
 
 template <typename R, typename A1>
 struct SysCallExecutor<R, A1>
 {
-  std::function<R(A1)> handler;
+  std::function<R(const InterruptState&, A1)> handler;
 
   SyscallReturnType operator()(const InterruptState& st)
   {
-    return HandlerCaller<R, A1>::call(handler, (A1)st.rdi);
+    return HandlerCaller<R, A1>::call(handler, st, (A1)st.rdi);
   }
 };
 
 template <typename R, typename A1, typename A2>
 struct SysCallExecutor<R, A1, A2>
 {
-  std::function<R(A1, A2)> handler;
+  std::function<R(const InterruptState&, A1, A2)> handler;
 
   SyscallReturnType operator()(const InterruptState& st)
   {
-    return HandlerCaller<R, A1, A2>::call(handler, (A1)st.rdi, (A2)st.rsi);
+    return HandlerCaller<R, A1, A2>::call(handler, st, (A1)st.rdi, (A2)st.rsi);
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3>
 struct SysCallExecutor<R, A1, A2, A3>
 {
-  std::function<R(A1, A2, A3)> handler;
+  std::function<R(const InterruptState&, A1, A2, A3)> handler;
 
   SyscallReturnType operator()(const InterruptState& st)
   {
-    return HandlerCaller<R, A1, A2, A3>::call(handler,
-        (A1)st.rdi, (A2)st.rsi, (A3)st.rdx);
+    return HandlerCaller<R, A1, A2, A3>::call(
+        handler, st, (A1)st.rdi, (A2)st.rsi, (A3)st.rdx);
   }
 };
 
 template <typename R, typename A1, typename A2, typename A3, typename A4>
 struct SysCallExecutor<R, A1, A2, A3, A4>
 {
-  std::function<R(A1, A2, A3, A4)> handler;
+  std::function<R(const InterruptState&, A1, A2, A3, A4)> handler;
 
   SyscallReturnType operator()(const InterruptState& st)
   {
-    return HandlerCaller<R, A1, A2, A3, A4>::call(handler,
-        (A1)st.rdi, (A2)st.rsi, (A3)st.rdx, (A4)st.rcx);
+    return HandlerCaller<R, A1, A2, A3, A4>::call(
+        handler, st, (A1)st.rdi, (A2)st.rsi, (A3)st.rdx, (A4)st.rcx);
   }
 };
 
@@ -110,30 +111,64 @@ template <typename R,
     typename A5>
 struct SysCallExecutor<R, A1, A2, A3, A4, A5>
 {
-  std::function<R(A1, A2, A3, A4, A5)> handler;
+  std::function<R(const InterruptState&, A1, A2, A3, A4, A5)> handler;
 
   SyscallReturnType operator()(const InterruptState& st)
   {
     return HandlerCaller<R, A1, A2, A3, A4, A5>::call(handler,
-        (A1)st.rdi, (A2)st.rsi, (A3)st.rdx, (A4)st.rcx, (A5)st.r8);
+        st,
+        (A1)st.rdi,
+        (A2)st.rsi,
+        (A3)st.rdx,
+        (A4)st.rcx,
+        (A5)st.r8);
   }
 };
 
 void registerHandler(ScId id, SyscallHandler handler);
+
+template <typename R, typename... T>
+struct RegisterHandler
+{
+  template <typename H>
+  static void regist(ScId id, H&& handler)
+  {
+    registerHandler(id,
+        detail::SysCallExecutor<R, T...>{
+          [handler = std::forward<H>(handler)](const InterruptState&, T... args){
+            return handler(args...);
+          }
+        });
+  }
+};
+
+template <typename R, typename... T>
+struct RegisterHandler<R, const InterruptState&, T...>
+{
+  template <typename H>
+  static void regist(ScId id, H&& handler)
+  {
+    registerHandler(id,
+        detail::SysCallExecutor<R, T...>{
+          [handler = std::forward<H>(handler)](const InterruptState& st, T... args){
+            return handler(st, args...);
+          }
+        });
+  }
+};
 
 }
 
 template <typename R, typename... T>
 void registerHandler(ScId id, std::function<R(T...)> handler)
 {
-  detail::registerHandler(id,
-      detail::SysCallExecutor<R, T...>{ std::move(handler) });
+  detail::RegisterHandler<R, T...>::regist(id, std::move(handler));
 }
 
 template <typename R, typename... T>
 void registerHandler(ScId id, R(*handler)(T...))
 {
-  registerHandler(id, std::function<R(T...)>(handler));
+  detail::RegisterHandler<R, T...>::regist(id, handler);
 }
 
 void initSysCalls();

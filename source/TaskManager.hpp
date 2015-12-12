@@ -7,6 +7,8 @@
 #include "PageDirectory.hpp"
 #include "FileManager.hpp"
 
+struct InterruptState;
+
 struct Task
 {
   struct Context
@@ -87,7 +89,7 @@ public:
   void downgradeCurrentTask();
   [[noreturn]] void terminateCurrentTask();
 
-  pid_t clone();
+  pid_t clone(const InterruptState& st);
 
   void prepareMeForSleep();
   void putMeToSleep();

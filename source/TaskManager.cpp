@@ -59,7 +59,7 @@ void TaskManager::addTask(Task&& t)
   doInterruptMasking();
 }
 
-pid_t TaskManager::clone()
+pid_t TaskManager::clone(const InterruptState& st)
 {
   xDeb("Cloning task");
 

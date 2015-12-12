@@ -216,7 +216,8 @@ int newfstatat(int dirfd, const char* pathname, struct stat* buf, int flags)
   return 0;
 }
 
-long clone(unsigned long flags,
+long clone(const InterruptState& st,
+    unsigned long flags,
     void* child_stack,
     void* ptid,
     void* ctid,
@@ -230,7 +231,7 @@ long clone(unsigned long flags,
     return -1;
   }
 
-  return TaskManager::get()->clone();
+  return TaskManager::get()->clone(st);
 }
 
 }
