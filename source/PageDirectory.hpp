@@ -114,6 +114,12 @@ class PageDirectory
 
     void use();
 
+    static uintptr_t extendSign(uintptr_t ptr)
+    {
+      static const auto SHIFT = (64 - (4*9 + 12));
+      return (static_cast<intptr_t>(ptr) << SHIFT) >> SHIFT;
+    }
+
     static void flushTlb();
 
   private:
