@@ -298,6 +298,17 @@ bool PageDirectory::isPageMapped(void* vaddr)
   return page && page->p;
 }
 
+std::optional<physaddr_t> PageDirectory::getPhysicalAddress(void* vaddr)
+{
+  assert(g_pagingReady);
+
+  PageTableEntry* page = m_manager->getPage(vaddr);
+  if (!page && !page->p)
+    return std::nullopt;
+
+  return page->base << BASE_SHIFT;
+}
+
 // TODO make something to invalidate a single page (invlpg)
 void PageDirectory::flushTlb()
 {

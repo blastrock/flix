@@ -2,6 +2,7 @@
 #define PAGE_DIRECTORY_HPP
 
 #include <cstdint>
+#include "Util.hpp"
 #include "PageHeap.hpp"
 #include "PageManager.hpp"
 
@@ -109,6 +110,7 @@ class PageDirectory
     bool handleFault(void* vaddr);
 
     bool isPageMapped(void* vaddr);
+    std::optional<physaddr_t> getPhysicalAddress(void* vaddr);
 
     void use();
 
