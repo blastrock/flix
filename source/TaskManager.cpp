@@ -258,11 +258,17 @@ Task* TaskManager::getActive()
   return &getActiveTask();
 }
 
+Task* TaskManager::getTask(pid_t tid)
+{
+  const auto iter = _tasks.find(tid);
+  return const_cast<Task*>(&*iter);
+}
+
 Task& TaskManager::getActiveTask()
 {
-  const auto iter = _tasks.find(_activeTask);
-  assert(iter != _tasks.end());
-  return const_cast<Task&>(*iter);
+  const auto task = getTask(_activeTask);
+  assert(task);
+  return *task;
 }
 
 TaskManager::Tasks::iterator TaskManager::getNext()

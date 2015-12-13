@@ -110,6 +110,10 @@ public:
    * If there is no active task, the behavior is undefined.
    */
   Task& getActiveTask();
+  /**
+   * Get the task corresponding to \p tid if it exists
+   */
+  Task* getTask(pid_t tid);
 
 private:
   using Tasks = std::set<Task, TaskComparator>;
