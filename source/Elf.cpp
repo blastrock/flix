@@ -78,10 +78,10 @@ bool exec(fs::Handle& f)
   }
 
   xDeb("Allocating new stack");
-  pd.mapRange(reinterpret_cast<void*>(0xffffffff00000000),
-      reinterpret_cast<void*>(0xffffffff00004000),
+  pd.mapRange(reinterpret_cast<void*>(0x000000f000000000),
+      reinterpret_cast<void*>(0x000000f000004000),
       PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
-  task.context.rsp = 0xffffffff00004000;
+  task.context.rsp = 0x000000f000004000;
 
   task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
 

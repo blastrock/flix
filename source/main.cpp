@@ -215,6 +215,7 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&exec);
     taskManager->addTask(std::move(task));
   }
+#if 0
   {
     Task task = taskManager->newKernelTask();
     task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
@@ -239,7 +240,6 @@ extern "C" [[noreturn]] int kmain(void* mboot)
     task.context.rip = reinterpret_cast<uint64_t>(&loop2);
     taskManager->addTask(std::move(task));
   }
-#if 0
   {
     Task task = taskManager->newKernelTask();
     task.stack = new char[0x4000];

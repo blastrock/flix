@@ -65,66 +65,72 @@ pid_t TaskManager::clone(const InterruptState& st)
   xDeb("Cloning task");
 
   Task task = newUserTask();
-  task.kernelStack = reinterpret_cast<char*>(0xffffffffb0000000 - 0x4000);
+  task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
   task.kernelStackTop = task.kernelStack + 0x4000;
   auto& newPd = task.pageDirectory;
 
   // TODO random address, use something less arbitrary
-  auto bufferPage = reinterpret_cast<void*>(0xffffffffaa000000);
+  auto bufferPage = reinterpret_cast<char*>(0xffffffffaa000000);
 
   xDeb("Showing memory map");
   auto& pd = getActiveTask().pageDirectory;
   for (auto& level4entry : pd.getManager())
   {
-    const auto add4 = pd.getManager().getAddress(*std::get<0>(level4entry));
+    const auto add4 = pd.extendSign(pd.getManager().getAddress(*std::get<0>(level4entry)));
     auto level3 = *std::get<1>(level4entry);
-    if (level3)
-      for (auto& level3entry : *level3)
+    if (!level3)
+      continue;
+
+    for (auto& level3entry : *level3)
+    {
+      const auto add3 = level3->getAddress(*std::get<0>(level3entry));
+      if ((add4 | add3) >= 0xffff00000000)
+        continue;
+
+      auto level2 = *std::get<1>(level3entry);
+      if (!level2)
+        continue;
+
+      for (auto& level2entry : *level2)
       {
-        const auto add3 = level3->getAddress(*std::get<0>(level3entry));
-        if ((add4 | add3) >= 0xffff00000000)
+        const auto add2 = level2->getAddress(*std::get<0>(level2entry));
+        auto level1 = *std::get<1>(level2entry);
+        if (!level1)
           continue;
 
-        auto level2 = *std::get<1>(level3entry);
-        if (level2)
-          for (auto& level2entry : *level2)
-          {
-            const auto add2 = level2->getAddress(*std::get<0>(level2entry));
-            auto level1 = *std::get<1>(level2entry);
-            if (level1)
-              for (auto& entry : *level1)
-              {
-                if (!entry.isValid())
-                  continue;
+        for (auto& entry : *level1)
+        {
+          if (!entry.isValid())
+            continue;
 
-                const auto add1 = level1->getAddress(entry);
-                const auto fullAddr =
-                    reinterpret_cast<void*>(add4 | add3 | add2 | add1);
-                xDeb("Entry %p, %x", fullAddr, entry.getAttributes());
+          const auto add1 = level1->getAddress(entry);
+          const auto fullAddr =
+              reinterpret_cast<void*>(add4 | add3 | add2 | add1);
+          xDeb("Entry %p, %x", fullAddr, entry.getAttributes());
 
-                physaddr_t physaddr;
-                newPd.mapPage(fullAddr, entry.getAttributes(), &physaddr);
+          physaddr_t physaddr;
+          newPd.mapPage(fullAddr, entry.getAttributes(), &physaddr);
 
-                if (entry.getAttributes() & PageDirectory::ATTR_DEFER)
-                  continue;
+          if (entry.getAttributes() & PageDirectory::ATTR_DEFER)
+            continue;
 
-                pd.mapPageTo(bufferPage,
-                    physaddr,
-                    PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
-                memcpy(bufferPage, fullAddr, PAGE_SIZE);
-                pd.unmapPage(bufferPage);
-              }
-          }
+          pd.mapPageTo(bufferPage,
+              physaddr,
+              PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
+          memcpy(bufferPage, fullAddr, PAGE_SIZE);
+          pd.unmapPage(bufferPage);
+        }
       }
+    }
   }
 
-  task.context = getActiveTask().context;
+  task.state = Task::State::Runnable;
+  task.context = st.toTaskContext();
+  task.context.rax = 0;
 
-  //addTask(std::move(task));
+  addTask(std::move(task));
 
-  xDeb("Finished!");
-
-  return -1;
+  return task.tid;
 }
 
 void TaskManager::terminateCurrentTask()

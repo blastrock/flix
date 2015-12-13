@@ -119,7 +119,7 @@ void* mmap(void*, size_t length)
   if (length == 0)
     return nullptr;
 
-  static uintptr_t curPtr = 0xffffffff00005000;
+  static uintptr_t curPtr = 0x00000000ff005000;
 
   void* start = reinterpret_cast<void*>(curPtr);
 
@@ -281,6 +281,6 @@ SyscallReturnType handle(const InterruptState& st)
 
 extern "C" void syscallHandler(InterruptState* s)
 {
-  xDeb("syscall %d", s->rax);
+  xDeb("Syscall %d, from ip %x, sp %x", s->rax, s->rip, s->rsp);
   s->rax = sys::handle(*s);
 }
