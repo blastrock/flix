@@ -68,7 +68,8 @@ void Interrupt::handle(InterruptState* s)
 
         xDeb("Page fault on %p", address);
 
-        if (PageDirectory::getCurrent()->handleFault(address))
+        if (!(s->errCode & 1) &&
+            PageDirectory::getCurrent()->handleFault(address))
           return;
 
         xDeb("Page was %s", s->errCode & 1 ? "present" : "not present");
