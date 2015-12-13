@@ -56,7 +56,8 @@ void TaskManager::addTask(Task&& t)
   xDeb("Adding new task with tid %d", t.tid);
   _tasks.insert(std::move(t));
 
-  doInterruptMasking();
+  if (t.state == Task::State::Runnable)
+    doInterruptMasking();
 }
 
 pid_t TaskManager::clone(const InterruptState& st)
