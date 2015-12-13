@@ -268,6 +268,8 @@ Task* TaskManager::getActive()
 Task* TaskManager::getTask(pid_t tid)
 {
   const auto iter = _tasks.find(tid);
+  if (iter == _tasks.end())
+    return nullptr;
   return const_cast<Task*>(&*iter);
 }
 
