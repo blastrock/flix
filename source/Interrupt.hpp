@@ -2,6 +2,7 @@
 #define INTERRUPT_HPP
 
 #include <cstdint>
+#include "TaskManager.hpp"
 
 struct InterruptState
 {
@@ -12,6 +13,8 @@ struct InterruptState
   uint8_t intNo;
   uint64_t errCode;
   uint64_t rip, cs, rflags, rsp, ss;
+
+  Task::Context toTaskContext() const;
 } __attribute__((packed));
 
 enum Interrupts

@@ -1,7 +1,6 @@
 #include "Interrupt.hpp"
 #include "io.hpp"
 #include "Debug.hpp"
-#include "TaskManager.hpp"
 #include "Syscall.hpp"
 #include "Keyboard.hpp"
 #include "DescTables.hpp"
@@ -11,6 +10,30 @@ XLL_LOG_CATEGORY("core/interrupt");
 extern "C" void intHandler(InterruptState* s)
 {
   Interrupt::handle(s);
+}
+
+Task::Context InterruptState::toTaskContext() const
+{
+  return Task::Context{r15,
+      r14,
+      r13,
+      r12,
+      rbx,
+      rbp,
+      r11,
+      r10,
+      r9,
+      r8,
+      rax,
+      rcx,
+      rdx,
+      rsi,
+      rdi,
+      rip,
+      cs,
+      rflags,
+      rsp,
+      ss};
 }
 
 struct ScopedExceptionHandling
