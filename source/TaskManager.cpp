@@ -56,7 +56,7 @@ void TaskManager::addTask(Task&& t)
   xDeb("Adding new task with tid %d", t.tid);
   _tasks.insert(std::move(t));
 
-  if (t.state == Task::State::Runnable)
+  if (t.sh.state == Task::State::Runnable)
     doInterruptMasking();
 }
 
@@ -124,7 +124,7 @@ pid_t TaskManager::clone(const InterruptState& st)
     }
   }
 
-  task.state = Task::State::Runnable;
+  task.sh.state = Task::State::Runnable;
   task.context = st.toTaskContext();
   task.context.rax = 0;
 
@@ -139,34 +139,51 @@ void TaskManager::terminateCurrentTask()
 
   assert(!(Cpu::rflags() & (1 << 9)));
 
-  // terminating a task will free its page directory and this stack, so we need
-  // to switch to the kernel stack before and then switch to the kernel page
-  // directory
-  xDeb("Changing stack");
-  jump_to_address(reinterpret_cast<void*>(&terminateCurrentTaskCont_C),
-      this,
-      Symbols::getStackBase());
-}
+  auto& task = getActiveTask();
 
-void TaskManager::terminateCurrentTaskCont_C(TaskManager* tm)
-{
-  tm->terminateCurrentTaskCont();
-}
+  if (task.tid == 1)
+    PANIC("PID 1 is dead");
 
-void TaskManager::terminateCurrentTaskCont()
-{
-  PageDirectory::getKernelDirectory()->use();
-
-  xDeb("Removing task");
-
-  const auto iter = _tasks.find(_activeTask);
   _activeTask = 0;
-  assert(iter != _tasks.end());
-  _tasks.erase(iter);
+
+  {
+    auto lock = task.sh.stateMutex.getScoped();
+    task.sh.state = Task::State::Zombie;
+    task.sh.stateCond.notify_one();
+  }
 
   doInterruptMasking();
 
   scheduleNext();
+}
+
+pid_t TaskManager::wait(pid_t tid, int* status)
+{
+  xDeb("Waiting on %d", tid);
+
+  // TODO check that pid is a child
+  auto task = getTask(tid);
+  if (!task)
+  {
+    xDeb("Invalid tid");
+    return -1;
+  }
+
+  {
+    auto lock = task->sh.stateMutex.getScoped();
+    if (task->sh.state != Task::State::Zombie)
+      task->sh.stateCond.wait(task->sh.stateMutex);
+  }
+
+  DisableInterrupts _;
+  xDeb("Wait finished, removing task");
+  const auto iter = _tasks.find(tid);
+  assert(iter != _tasks.end());
+  _tasks.erase(iter);
+
+  *status = 0;
+
+  return tid;
 }
 
 Task TaskManager::newKernelTask()
@@ -211,7 +228,7 @@ void TaskManager::saveCurrentTask(const Task::Context& ctx)
 void TaskManager::prepareMeForSleep()
 {
   Task& task = getActiveTask();
-  task.state = Task::State::Sleeping;
+  task.sh.state = Task::State::Sleeping;
 
   doInterruptMasking();
 }
@@ -227,7 +244,7 @@ void TaskManager::putMeToSleep()
 
   Task& task = getActiveTask();
 
-  if (task.state != Task::State::Sleeping)
+  if (task.sh.state != Task::State::Sleeping)
   {
     xDeb("Task has been woken up before going to sleep");
     return;
@@ -248,7 +265,7 @@ void TaskManager::putMeToSleep()
 
 void TaskManager::wakeUpTask(Task& task)
 {
-  task.state = Task::State::Runnable;
+  task.sh.state = Task::State::Runnable;
 
   doInterruptMasking();
 }
@@ -296,7 +313,7 @@ TaskManager::Tasks::iterator TaskManager::getNext()
       looped = true;
       continue;
     }
-    if (iter->state == Task::State::Runnable)
+    if (iter->sh.state == Task::State::Runnable)
       return iter;
     ++id;
   }
@@ -324,8 +341,9 @@ void TaskManager::enterSleep()
 
 void TaskManager::tryScheduleNext()
 {
-  if (_tasks.empty())
-    PANIC("Nothing to schedule!");
+  assert(!std::all_of(_tasks.begin(), _tasks.end(), [](const auto& task){
+          return task.sh.state == Task::State::Zombie;
+        }));
 
   const auto iter = getNext();
   if (iter == _tasks.end())
@@ -377,7 +395,7 @@ void TaskManager::doInterruptMasking()
   bool foundFirst = false;
 
   for (const auto& task : _tasks)
-    if (task.state == Task::Runnable)
+    if (task.sh.state == Task::Runnable)
     {
       if (foundFirst)
       {

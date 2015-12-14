@@ -49,14 +49,11 @@ void Semaphore::up()
 
   auto _ = _spinlock.getScoped();
 
+  xDeb("Number of waiters: %d", _waiters.size());
   if (_waiters.empty())
-  {
-    xDeb("No waiters");
     ++_count;
-  }
   else
   {
-    xDeb("There are waiters");
     Waiter* waiter = _waiters.front();
     _waiters.pop();
     waiter->up = true;

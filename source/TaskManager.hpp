@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <set>
 
+#include "Mutex.hpp"
+#include "CondVar.hpp"
 #include "PageDirectory.hpp"
 #include "FileManager.hpp"
 
@@ -24,11 +26,25 @@ struct Task
   {
     Runnable,
     Sleeping,
+    Zombie,
+  };
+
+  struct StateHolder
+  {
+    State state;
+    Mutex stateMutex;
+    CondVar stateCond;
+
+    StateHolder() = default;
+    StateHolder(StateHolder&& r)
+      : state(r.state)
+    {}
   };
 
   // TODO try to mark this const
   pid_t tid;
-  State state;
+  StateHolder sh;
+
   Context context;
   PageDirectory pageDirectory;
 
@@ -88,6 +104,7 @@ public:
   Task newUserTask();
   void downgradeCurrentTask();
   [[noreturn]] void terminateCurrentTask();
+  pid_t wait(pid_t tid, int* status);
 
   pid_t clone(const InterruptState& st);
 
@@ -125,9 +142,6 @@ private:
   std::set<Task, TaskComparator> _tasks;
   pid_t _activeTask;
   pid_t _nextTid;
-
-  [[noreturn]] static void terminateCurrentTaskCont_C(TaskManager* tm);
-  [[noreturn]] void terminateCurrentTaskCont();
 
   void setKernelStack();
   void updateNextTid();

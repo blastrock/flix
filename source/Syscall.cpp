@@ -137,6 +137,11 @@ void* mmap(void*, size_t length)
   return start;
 }
 
+pid_t wait4(pid_t pid, int* status, int options, struct rusage* rusage)
+{
+  return TaskManager::get()->wait(pid, status);
+}
+
 void exit()
 {
   TaskManager::get()->terminateCurrentTask();

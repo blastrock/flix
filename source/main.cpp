@@ -26,7 +26,7 @@ extern "C" void panic_message(const char* msg)
 
 void sleep()
 {
-  TaskManager::get()->getActiveTask().state = Task::State::Sleeping;
+  TaskManager::get()->getActiveTask().sh.state = Task::State::Sleeping;
   TaskManager::get()->scheduleNext();
 }
 
