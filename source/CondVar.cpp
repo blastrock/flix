@@ -56,6 +56,8 @@ void CondVar::notify_one()
   Waiter* curWaiter;
   {
     auto _ = _lock.getScoped();
+    if (_waiters.empty())
+      return;
     curWaiter = _waiters.back();
     _waiters.pop_back();
   }
