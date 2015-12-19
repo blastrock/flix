@@ -53,8 +53,13 @@ void TaskManager::addTask(Task&& t)
 
   t.tid = _nextTid;
   ++_nextTid;
+
   xDeb("Adding new task with tid %d", t.tid);
-  _tasks.insert(std::move(t));
+  auto ret = _tasks.insert(std::move(t));
+  assert(ret.second);
+
+  if (t.tid > 1)
+    getActiveTask().hh.addChild(const_cast<Task&>(*ret.first));
 
   if (t.sh.state == Task::State::Runnable)
     doInterruptMasking();
@@ -73,7 +78,8 @@ pid_t TaskManager::clone(const InterruptState& st)
   auto bufferPage = reinterpret_cast<char*>(0xffffffffaa000000);
 
   xDeb("Showing memory map");
-  auto& pd = getActiveTask().pageDirectory;
+  auto& activeTask = getActiveTask();
+  auto& pd = activeTask.pageDirectory;
   for (auto& level4entry : pd.getManager())
   {
     const auto add4 = pd.extendSign(pd.getManager().getAddress(*std::get<0>(level4entry)));
@@ -127,6 +133,7 @@ pid_t TaskManager::clone(const InterruptState& st)
   task.sh.state = Task::State::Runnable;
   task.context = st.toTaskContext();
   task.context.rax = 0;
+  task.hh.parent = &activeTask;
 
   addTask(std::move(task));
 
@@ -161,11 +168,33 @@ pid_t TaskManager::wait(pid_t tid, int* status)
 {
   xDeb("Waiting on %d", tid);
 
-  // TODO check that pid is a child
+  if (tid == static_cast<pid_t>(-1))
+  {
+    // TODO wait on all children
+    xWar("wait(-1) is partially implemented, waiting only on first child");
+
+    auto& task = getActiveTask();
+    auto lock = task.hh.mutex.getScoped();
+    if (!task.hh.firstChild)
+    {
+      xDeb("No child to wait");
+      return -1;
+    }
+    tid = task.hh.firstChild->tid;
+    xDeb("Will wait on %d", tid);
+  }
+
   auto task = getTask(tid);
   if (!task)
   {
     xDeb("Invalid tid");
+    return -1;
+  }
+
+  // FIXME lock?
+  if (task->hh.parent->tid != _activeTask)
+  {
+    xDeb("Waiting on a non-child");
     return -1;
   }
 
@@ -293,7 +322,7 @@ Task* TaskManager::getTask(pid_t tid)
 Task& TaskManager::getActiveTask()
 {
   const auto task = getTask(_activeTask);
-  assert(task);
+  assert(task && "there is active task");
   return *task;
 }
 

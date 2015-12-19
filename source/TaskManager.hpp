@@ -41,8 +41,83 @@ struct Task
     {}
   };
 
+  // this is a threadsafe structure, locks are always taken from top to bottom
+  // and then from left to right to avoid deadlocks
+  struct HierarchyHolder
+  {
+    Mutex mutex;
+    Task* parent;
+    Task* firstChild;
+    Task* nextSibling;
+    Task* prevSibling;
+
+    HierarchyHolder() = default;
+    HierarchyHolder(HierarchyHolder&& r)
+      : parent(r.parent)
+      , firstChild(r.firstChild)
+      , nextSibling(r.nextSibling)
+    {
+      r.parent = nullptr;
+    }
+
+    ~HierarchyHolder()
+    {
+      // was moved out
+      if (!parent)
+        return;
+
+      std::vector<decltype(mutex.getScoped())> locks;
+
+      locks.emplace_back(parent->hh.mutex.getScoped());
+
+      if (prevSibling)
+        locks.emplace_back(prevSibling->hh.mutex.getScoped());
+
+      locks.emplace_back(mutex.getScoped());
+
+      if (nextSibling)
+        locks.emplace_back(nextSibling->hh.mutex.getScoped());
+
+      for (auto* child = firstChild; child; child = child->hh.nextSibling)
+        locks.emplace_back(child->hh.mutex.getScoped());
+
+      if (&parent->hh.firstChild->hh == this)
+        parent->hh.firstChild = nextSibling;
+      if (prevSibling)
+        prevSibling->hh.nextSibling = nextSibling;
+      if (nextSibling)
+        nextSibling->hh.prevSibling = prevSibling;
+
+      assert(!firstChild && "making orphans is not implemented");
+    }
+
+    void addChild(Task& child)
+    {
+      std::vector<decltype(mutex.getScoped())> locks;
+      locks.reserve(3);
+      locks.emplace_back(child.hh.mutex.getScoped());
+      locks.emplace_back(mutex.getScoped());
+      if (firstChild)
+      {
+        locks.emplace_back(firstChild->hh.mutex.getScoped());
+
+        assert(!firstChild->hh.prevSibling);
+        firstChild->hh.prevSibling = &child;
+      }
+
+      assert(!child.hh.prevSibling);
+      child.hh.nextSibling = firstChild;
+
+      firstChild = &child;
+
+      assert(child.hh.parent);
+    }
+  };
+
   // TODO try to mark this const
   pid_t tid;
+  HierarchyHolder hh;
+
   StateHolder sh;
 
   Context context;
