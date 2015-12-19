@@ -264,9 +264,16 @@ int execve(const char* filename, const char* argv[], const char* envp[])
     return -1;
   }
 
+  std::vector<std::string> args;
+  while (*argv)
+  {
+    args.push_back(*argv);
+    ++argv;
+  }
+
   PageDirectory::getCurrent()->unmapUserSpace();
 
-  elf::exec(**exphandle);
+  elf::exec(**exphandle, args);
 
   // something failed
   return -1;

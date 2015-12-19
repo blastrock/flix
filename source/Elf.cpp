@@ -15,7 +15,7 @@ bool checkHeader(const ElfHeader& hdr)
     && magic[3] == 'F';
 }
 
-bool exec(fs::Handle& f)
+bool exec(fs::Handle& f, const std::vector<std::string>& args)
 {
   xDeb("Reading header");
   ElfHeader hdr;
@@ -81,7 +81,31 @@ bool exec(fs::Handle& f)
   pd.mapRange(reinterpret_cast<void*>(0x000000f000000000),
       reinterpret_cast<void*>(0x000000f000004000),
       PageDirectory::ATTR_RW | PageDirectory::ATTR_PUBLIC);
-  task.context.rsp = 0x000000f000004000;
+
+  xDeb("Pushing arguments on stack");
+  // TODO check size for overflow
+  auto curPos = reinterpret_cast<char*>(0x000000f000004000);
+  // FIXME this vector will never be destroyed, same for the one received in
+  // argument because this function is noreturn
+  std::vector<char*> address;
+  for (const auto& arg : args)
+  {
+    const auto len = arg.length() + 1;
+    curPos -= len;
+    std::memcpy(curPos, arg.data(), len);
+    address.push_back(curPos);
+  }
+  auto curPosAddr = reinterpret_cast<void**>(curPos);
+  --curPosAddr;
+  *curPosAddr = nullptr;
+  for (const auto& add : address)
+  {
+    --curPosAddr;
+    *curPosAddr = add;
+  }
+  --curPosAddr;
+  *curPosAddr = reinterpret_cast<void*>(address.size());
+  task.context.rsp = reinterpret_cast<uintptr_t>(curPosAddr);
 
   task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
 

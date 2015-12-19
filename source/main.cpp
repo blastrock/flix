@@ -90,9 +90,10 @@ void exec()
     sys::call(sys::exit);
   }
   auto ehndl = (*einode)->open();
+  std::vector<std::string> args = {"sh"};
   xDeb("Execing");
-  // FIXME exec never returns so hndl leaks
-  elf::exec(**ehndl);
+  // FIXME exec never returns so hndl and args leak
+  elf::exec(**ehndl, args);
 
   PANIC("init exec failed");
 }
