@@ -258,6 +258,16 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
   return base << BASE_SHIFT;
 }
 
+void PageDirectory::unmapUserSpace()
+{
+  PageDirectory newPd;
+  newPd.mapKernel();
+  newPd.use();
+  xDeb("moving pd");
+  *this = std::move(newPd);
+  g_currentPageDirectory = this;
+}
+
 physaddr_t PageDirectory::resolve(void* vaddr)
 {
   assert(g_pagingReady);

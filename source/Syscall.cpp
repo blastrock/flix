@@ -3,6 +3,7 @@
 #include "TaskManager.hpp"
 #include "DescTables.hpp"
 #include "Cpu.hpp"
+#include "Elf.hpp"
 #include <array>
 #include <functional>
 #include <flix/stat.h>
@@ -237,6 +238,38 @@ long clone(const InterruptState& st,
   }
 
   return TaskManager::get()->clone(st);
+}
+
+int execve(const char* filename, const char* argv[], const char* envp[])
+{
+  xDeb("execve(\"%s\", %p, %p)", filename, argv, envp);
+
+  if (filename[0] != '/')
+  {
+    xErr("execve with relative path is not implemented");
+    return -1;
+  }
+
+  auto exptarget = fs::lookup(nullptr, filename, fs::LookupOptions_None);
+  if (!exptarget)
+  {
+    xDeb("Can't get exec target inode");
+    return -1;
+  }
+
+  auto exphandle = (*exptarget)->open();
+  if (!exphandle)
+  {
+    xDeb("Can't open exec target");
+    return -1;
+  }
+
+  PageDirectory::getCurrent()->unmapUserSpace();
+
+  elf::exec(**exphandle);
+
+  // something failed
+  return -1;
 }
 
 }

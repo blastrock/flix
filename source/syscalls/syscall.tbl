@@ -8,6 +8,7 @@
 5 fstat
 9 mmap
 56 clone
+59 execve
 61 wait4
 158 arch_prctl
 231 exit
