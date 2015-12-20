@@ -255,6 +255,8 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
   const auto base = page->base;
   page->base = 0;
 
+  asm volatile("invlpg %0" ::"m"(*(char*)vaddr));
+
   return base << BASE_SHIFT;
 }
 
