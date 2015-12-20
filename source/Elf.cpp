@@ -98,14 +98,15 @@ bool exec(fs::Handle& f, const std::vector<std::string>& args)
   auto curPosAddr = reinterpret_cast<void**>(curPos);
   --curPosAddr;
   *curPosAddr = nullptr;
+  auto endAddr = curPosAddr -= address.size();
   for (const auto& add : address)
   {
-    --curPosAddr;
     *curPosAddr = add;
+    ++curPosAddr;
   }
-  --curPosAddr;
-  *curPosAddr = reinterpret_cast<void*>(address.size());
-  task.context.rsp = reinterpret_cast<uintptr_t>(curPosAddr);
+  --endAddr;
+  *endAddr = reinterpret_cast<void*>(address.size());
+  task.context.rsp = reinterpret_cast<uintptr_t>(endAddr);
 
   task.context.rip = reinterpret_cast<uint64_t>(hdr.e_entry);
 
