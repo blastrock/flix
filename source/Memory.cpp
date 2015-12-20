@@ -53,3 +53,12 @@ void Memory::setRangeUsed(page_t from, page_t to)
   for (; from < to; ++from)
     setPageUsed(from);
 }
+
+void Memory::completeRangeUsed(page_t from, page_t to)
+{
+  assert(from <= to);
+
+  for (; from < to; ++from)
+    if (from >= g_frames.size() || !g_frames[from])
+      setPageUsed(from);
+}
