@@ -140,6 +140,8 @@ void* mmap(void*, size_t length)
 
 pid_t wait4(pid_t pid, int* status, int options, struct rusage* rusage)
 {
+  (void)options;
+  (void)rusage;
   return TaskManager::get()->wait(pid, status);
 }
 
