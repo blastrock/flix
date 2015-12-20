@@ -56,11 +56,17 @@ void Screen::putChar(char c, Color fg, Color bg)
       g_cursor.x = 0;
       break;
     case '\b':
-      --g_cursor.x;
+      if (g_cursor.x)
+        --g_cursor.x;
       putChar(g_cursor, '\0', fg, bg);
       break;
     case '\t':
       g_cursor.x += 8 - g_cursor.x % 8;
+      if (g_cursor.x >= 80)
+      {
+        g_cursor.x = 0;
+        ++g_cursor.y;
+      }
       break;
     default:
       putChar(g_cursor, c, fg, bg);
@@ -71,17 +77,22 @@ void Screen::putChar(char c, Color fg, Color bg)
         g_cursor.x = 0;
         ++g_cursor.y;
       }
+      break;
   }
 
-  if (g_cursor.y == 25)
+  if (g_cursor.y == 24)
   {
     scrollOneLine();
     --g_cursor.y;
   }
+  assert(g_cursor.x < 80 && g_cursor.x >= 0);
+  assert(g_cursor.y < 24 && g_cursor.y >= 0);
 }
 
 void Screen::putChar(Position pos, char c, Color fg, Color bg)
 {
+  assert(pos.x < 80 && pos.x >= 0);
+  assert(pos.y < 24 && pos.y >= 0);
   uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
   uint16_t* screen = (uint16_t*)VGA_BASE;
   screen[pos.y * 80 + pos.x] = val;
