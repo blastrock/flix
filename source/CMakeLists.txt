@@ -30,7 +30,7 @@ include_directories(${LIBKCXX_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_executable(flix
+add_library(flix STATIC
   ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_ENUM}
   ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_REGISTER}
   ${CMAKE_CURRENT_BINARY_DIR}/syscalls/${SYSCALL_GLIBC_DEFINES}
@@ -50,7 +50,7 @@ add_executable(flix
   IntUtil.cpp
   Keyboard.cpp
   KHeap.cpp
-  main.cpp
+  kmain.cpp
   Memory.cpp
   Multiboot.cpp
   PageHeap.cpp
@@ -86,3 +86,9 @@ target_link_libraries(flix
   cxx
   c
 )
+
+add_executable(flixmain
+  main.cpp
+)
+
+target_link_libraries(flixmain flix)
