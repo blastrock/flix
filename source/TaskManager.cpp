@@ -322,7 +322,7 @@ Task* TaskManager::getTask(pid_t tid)
 Task& TaskManager::getActiveTask()
 {
   const auto task = getTask(_activeTask);
-  assert(task && "there is active task");
+  assert(task && "there is an active task");
   return *task;
 }
 
