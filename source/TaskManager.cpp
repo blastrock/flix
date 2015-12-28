@@ -59,7 +59,12 @@ void TaskManager::addTask(Task&& t)
   assert(ret.second);
 
   if (t.tid > 1)
-    getActiveTask().hh.addChild(const_cast<Task&>(*ret.first));
+    if (ret.first->hh.parent)
+      ret.first->hh.parent->hh.addChild(const_cast<Task&>(*ret.first));
+    else
+      getActiveTask().hh.addChild(const_cast<Task&>(*ret.first));
+  else
+    assert(!t.hh.parent && "task 1 has no parent");
 
   if (t.sh.state == Task::State::Runnable)
     doInterruptMasking();

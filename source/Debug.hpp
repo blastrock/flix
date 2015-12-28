@@ -2,6 +2,7 @@
 #define DEBUG_HPP
 
 #include "Screen.hpp"
+#include "io.hpp"
 #include <xll/log.hpp>
 
 #define dumpRegisters() \
@@ -67,6 +68,12 @@
   DBG_BREAK();
   while (true)
     asm volatile ("hlt");
+}
+
+inline void printE9(const char* str)
+{
+  for (; *str; ++str)
+    io::outb(0xe9, *str);
 }
 
 void printStackTrace();
