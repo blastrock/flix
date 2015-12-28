@@ -57,14 +57,19 @@ void TaskManager::addTask(Task&& t)
   xDeb("Adding new task with tid %d", t.tid);
   auto ret = _tasks.insert(std::move(t));
   assert(ret.second);
+  auto& newTask = const_cast<Task&>(*ret.first);
 
   if (t.tid > 1)
-    if (ret.first->hh.parent)
-      ret.first->hh.parent->hh.addChild(const_cast<Task&>(*ret.first));
+    if (newTask.hh.parent)
+      newTask.hh.parent->hh.addChild(newTask);
     else
-      getActiveTask().hh.addChild(const_cast<Task&>(*ret.first));
+    {
+      auto& activeTask = getActiveTask();
+      newTask.hh.parent = &activeTask;
+      activeTask.hh.addChild(newTask);
+    }
   else
-    assert(!t.hh.parent && "task 1 has no parent");
+    assert(!t.hh.parent && "task 1 must have no parent");
 
   if (t.sh.state == Task::State::Runnable)
     doInterruptMasking();
@@ -138,7 +143,6 @@ pid_t TaskManager::clone(const InterruptState& st)
   task.sh.state = Task::State::Runnable;
   task.context = st.toTaskContext();
   task.context.rax = 0;
-  task.hh.parent = &activeTask;
 
   addTask(std::move(task));
 
