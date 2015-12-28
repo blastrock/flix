@@ -14,7 +14,8 @@ void waitEnd()
 {
   while (!finish1 || !finish2)
     ;
-  printE9("[ALL TESTS RUN]\n");
+  printE9("\n[END TEST]\n");
+  printE9("\n[ALL TESTS RUN]\n");
   sys::call(sys::exit);
 }
 
@@ -22,7 +23,6 @@ void loop()
 {
   for (unsigned int i = 0; i < 800; ++i)
     xDeb("stuff %d", i++);
-  printE9("[END TEST \"multitask1\" OK]\n");
   finish1 = true;
   sys::call(sys::exit);
 }
@@ -31,7 +31,6 @@ void loop2()
 {
   for (unsigned int i = 0; i < 800; ++i)
     xDeb("different stuff %d", i++);
-  printE9("[END TEST \"multitask2\" OK]\n");
   finish2 = true;
   sys::call(sys::exit);
 }
@@ -43,15 +42,16 @@ void loop2()
 
   auto taskManager = TaskManager::get();
 
-  printE9("[BEGIN TEST \"multitask1\"]\n");
-  printE9("[BEGIN TEST \"multitask2\"]\n");
+  printE9("\n[BEGIN TEST \"multitask\"]\n");
 
   {
     Task task = taskManager->newKernelTask();
-    task.stack = static_cast<char*>(getStackPageHeap().kmalloc().first);
+    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
     task.kernelStackTop = task.kernelStack + 0x4000;
+    task.pageDirectory.mapRange(task.stack, task.stackTop,
+        PageDirectory::ATTR_RW);
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&waitEnd);
     taskManager->addTask(std::move(task));

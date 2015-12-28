@@ -5,57 +5,61 @@ import re
 import sys
 
 _TEST_START_RE = re.compile(b'^\[BEGIN TEST "(.*)"\]$')
-_TEST_END_RE = re.compile(b'^\[END TEST "(.*)" (FAIL|OK)\]$')
+_TEST_END_RE = re.compile(b'^\[END TEST\]$')
+_TEST_FAIL_RE = re.compile(b'^\[FAIL\]$')
 _FINISH_RE = re.compile(b'^\[ALL TESTS RUN\]$')
 
 class LogProcessor:
     def __init__(self):
+        self.state = 'NONE'
         self.error = None
+        self.test_ok = True
         self.failed_tests = []
         self.successed_tests = []
-        self.running_tests = []
-        self.finished = False
+        self.running_test = None
 
     def is_finished(self):
-        return self.finished and not self.running_tests and not self.error
+        return self.state == 'FINISHED' and not self.error
 
     def process(self, line):
         match_start = _TEST_START_RE.match(line)
         if match_start:
-            if self.finished:
-                self.error = 'Test logs after finish'
-                return False
             name = match_start.group(1)
-            if name in self.successed_tests or name in self.failed_tests or name in self.running_tests:
+            if self.state != 'NONE':
+                self.error = 'Test begin at the wrong moment: %s' % name
+                return False
+            if name in self.successed_tests or name in self.failed_tests:
                 self.error = 'Same test name used more than once: %s' % name
                 return False
-            self.running_tests.append(name)
+            self.running_test = name
+            self.state = 'TESTING'
+            self.test_ok = True
             return True
         match_end = _TEST_END_RE.match(line)
         if match_end:
-            if self.finished:
-                self.error = 'Test logs after finish'
+            if self.state != 'TESTING':
+                self.error = 'Test end at the wrong moment'
                 return False
-            name = match_end.group(1)
-            if name not in self.running_tests:
-                self.error = 'Test has finished without starting: %s' % name
-                return False
-            self.running_tests.remove(name)
-            status = match_end.group(2)
-            if status == b'OK':
-                self.successed_tests.append(name)
+            if self.test_ok:
+                self.successed_tests.append(self.running_test)
             else:
-                self.failed_tests.append(name)
+                self.failed_tests.append(self.running_test)
+            self.running_test = None
+            self.state = 'NONE'
+            return True
+        match_fail = _TEST_FAIL_RE.match(line)
+        if match_fail:
+            if self.state != 'TESTING':
+                self.error = 'Test fail at the wrong moment'
+                return False
+            self.test_ok = False
             return True
         match_finish = _FINISH_RE.match(line)
         if match_finish:
-            if self.finished:
-                self.error = 'Finished twice'
+            if self.state != 'NONE':
+                self.error = 'End of tests at the wrong moment'
                 return False
-            if self.running_tests:
-                self.error = 'Finished while tests where running'
-                return False
-            self.finished = True
+            self.state = 'FINISHED'
             return True
         return True
 

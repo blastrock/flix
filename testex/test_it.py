@@ -12,10 +12,9 @@ def testex(request):
 
 @pytest.mark.parametrize("content,nbsuccess,nbfail", [
     (b'[ALL TESTS RUN]', 0, 0),
-    (b'[BEGIN TEST "test"]\n[END TEST "test" OK]\n[ALL TESTS RUN]', 1, 0),
-    (b'[BEGIN TEST "test"]\n[END TEST "test" FAIL]\n[ALL TESTS RUN]', 0, 1),
-    (b'[BEGIN TEST "test"]\n[END TEST "test" OK]\n[BEGIN TEST "test2"]\n[END TEST "test2" FAIL]\n[ALL TESTS RUN]', 1, 1),
-    (b'[BEGIN TEST "test"]\n[BEGIN TEST "test2"]\n[END TEST "test" OK]\n[END TEST "test2" FAIL]\n[ALL TESTS RUN]', 1, 1),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n[ALL TESTS RUN]', 1, 0),
+    (b'[BEGIN TEST "test"]\n[FAIL]\n[END TEST]\n[ALL TESTS RUN]', 0, 1),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n[BEGIN TEST "test2"]\n[FAIL]\n[END TEST]\n[ALL TESTS RUN]', 1, 1),
 ])
 def test_run(testex, content, nbsuccess, nbfail):
     open(TMP_FILE, 'wb').write(content)
@@ -26,11 +25,13 @@ def test_run(testex, content, nbsuccess, nbfail):
     assert len(lp.failed_tests) == nbfail
 
 @pytest.mark.parametrize("content", [
-    (b'[BEGIN TEST "test"]\n[END TEST "test" OK]\n[BEGIN TEST "test"]\n[END TEST "test" FAIL]\n[ALL TESTS RUN]'),
-    (b'[BEGIN TEST "test"]\n[END TEST "test" OK]\n'),
+    (b'[BEGIN TEST "test"]\n[BEGIN TEST "test2"]\n[END TEST]\n[END TEST]\n[ALL TESTS RUN]'),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n[BEGIN TEST "test"]\n[END TEST]\n[ALL TESTS RUN]'),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n'),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n[FAIL]\n[ALL TESTS RUN]\n'),
     (b'[BEGIN TEST "test"]\n[ALL TESTS RUN]'),
-    (b'[BEGIN TEST "test"]\n[END TEST "test" OK]\n[ALL TESTS RUN]\n[BEGIN TEST "test"]\n'),
-    (b'[END TEST "test" OK]\n[ALL TESTS RUN]\n'),
+    (b'[BEGIN TEST "test"]\n[END TEST]\n[ALL TESTS RUN]\n[BEGIN TEST "test"]\n'),
+    (b'[END TEST]\n[ALL TESTS RUN]\n'),
     (b''),
 ])
 def test_incorrect(testex, content):
