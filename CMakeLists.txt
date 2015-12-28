@@ -67,7 +67,7 @@ add_subdirectory(libcxxabi)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-exceptions")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 
+add_subdirectory(debug)
 add_subdirectory(libkc)
 add_subdirectory(libkcxx)
 add_subdirectory(source)
-add_subdirectory(debug)

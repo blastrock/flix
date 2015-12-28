@@ -92,3 +92,5 @@ add_executable(flixmain
 )
 
 target_link_libraries(flixmain flix)
+
+make_flix_image(flixmain WITH_MODULE)
