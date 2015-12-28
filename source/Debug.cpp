@@ -3,6 +3,13 @@
 
 XLL_LOG_CATEGORY("support/debug");
 
+void printE9(const char* str)
+{
+  DisableInterrupts _;
+  for (; *str; ++str)
+    io::outb(0xe9, *str);
+}
+
 void printStackTrace()
 {
   uint64_t rbp;

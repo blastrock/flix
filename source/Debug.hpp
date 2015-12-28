@@ -70,11 +70,7 @@
     asm volatile ("hlt");
 }
 
-inline void printE9(const char* str)
-{
-  for (; *str; ++str)
-    io::outb(0xe9, *str);
-}
+void printE9(const char* str);
 
 void printStackTrace();
 void printStackTrace(uint64_t stackPointer);
