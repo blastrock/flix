@@ -36,4 +36,14 @@ function(make_flix_image FROM_TARGET)
     DEPENDS ${OUTPUT_IMG_NAME}
     COMMAND qemu-system-x86_64 -hda ${OUTPUT_IMG_NAME} -m 128 -monitor stdio
   )
+
+  if(${ARG_TEST})
+    set(BOCHS_CONFIG ${CMAKE_CURRENT_BINARY_DIR}/bochsrc_${FROM_TARGET})
+    set(IMAGE_FILE ${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_IMG_NAME})
+    configure_file(${PROJECT_SOURCE_DIR}/debug/bochsrc.in ${BOCHS_CONFIG})
+    add_test(NAME test_${FROM_TARGET}
+      COMMAND python3 ${PROJECT_SOURCE_DIR}/testex/run.py
+            bochs -q -f ${BOCHS_CONFIG}
+      )
+  endif()
 endfunction()
