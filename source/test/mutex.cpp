@@ -7,8 +7,6 @@
 
 XLL_LOG_CATEGORY("main");
 
-volatile bool finished;
-
 Mutex* mutex;
 volatile bool updating = false;
 
@@ -22,31 +20,88 @@ void lockAndUpdate()
     updating = true;
     updating = false;
   }
-  finished = true;
+}
+
+void runTask(std::function<void()>* pf)
+{
+  auto f = std::move(*pf);
+  delete pf;
+  f();
+}
+
+template <typename F>
+void startTask(F&& func)
+{
+  auto taskManager = TaskManager::get();
+  Task task = taskManager->newKernelTask();
+  task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
+  task.stackTop = task.stack + 0x4000;
+  task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
+  task.kernelStackTop = task.kernelStack + 0x4000;
+  task.pageDirectory.mapRange(task.stack, task.stackTop,
+      PageDirectory::ATTR_RW);
+  task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
+  task.context.rip = reinterpret_cast<uint64_t>(&runTask);
+  task.context.rdi = reinterpret_cast<uint64_t>(
+      new std::function<void()>(std::forward<F>(func)));
+  taskManager->addTask(std::move(task));
+}
+
+template <std::size_t... I, typename... F, typename A>
+void startVariadic(
+    A& vec, std::index_sequence<I...>, F&&... funcs)
+{
+  (void)std::initializer_list<int>{(
+      startTask([funcs = std::forward<F>(funcs), &vec]{
+          funcs();
+          vec[I] = true;
+          sys::call(sys::exit);
+      }), 0)...};
+}
+
+template <typename... F>
+void runTestProcesses(const char* name, F&&... funcs)
+{
+  // must be on the heap to be shared with everybody
+  auto finished =
+    std::make_unique<std::array<volatile bool, sizeof...(funcs)>>();
+
+  {
+    std::ostringstream ss;
+    xll::pnt::writef(*ss.rdbuf(), "\n[BEGIN TEST \"%s\"]\n", name);
+    printE9(ss.str().c_str());
+  }
+
+  startVariadic(
+      *finished, std::index_sequence_for<F...>(), std::forward<F>(funcs)...);
+
+  for (const auto& finish : *finished)
+    while (!finish)
+      ;
+  printE9("\n[END TEST]\n");
+}
+
+template <typename F>
+void runTestProcess(const char* name, F&& func)
+{
+  {
+    std::ostringstream ss;
+    xll::pnt::writef(*ss.rdbuf(), "\n[BEGIN TEST \"%s\"]\n", name);
+    printE9(ss.str().c_str());
+  }
+
+  func();
+
+  printE9("\n[END TEST]\n");
 }
 
 void waitEnd()
 {
-  auto taskManager = TaskManager::get();
   mutex = new Mutex;
 
-  finished = false;
-  printE9("\n[BEGIN TEST \"mutex_simple_lock\"]\n");
-  {
-    Task task = taskManager->newKernelTask();
-    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
-    task.stackTop = task.stack + 0x4000;
-    task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
-    task.kernelStackTop = task.kernelStack + 0x4000;
-    task.pageDirectory.mapRange(task.stack, task.stackTop,
-        PageDirectory::ATTR_RW);
-    task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
-    task.context.rip = reinterpret_cast<uint64_t>(&lockAndUpdate);
-    taskManager->addTask(std::move(task));
-  }
-  while (!finished)
-    ;
-  printE9("\n[END TEST]\n");
+  //runTestProcess("mutex_simple_lock", lockAndUpdate);
+  runTestProcesses("mutex_simple_lock", lockAndUpdate);
+
   printE9("\n[ALL TESTS RUN]\n");
   sys::call(sys::exit);
 }
