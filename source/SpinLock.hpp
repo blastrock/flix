@@ -38,6 +38,9 @@ public:
   {
     xDebC("support/sync/spinlock", "SpinLock unlock");
     assert(_disableInterrupts);
+    // do not reenable interrupts before we reset the optional or the assert in
+    // lock() may fail
+    auto di = std::move(*_disableInterrupts);
     _disableInterrupts = std::nullopt;
   }
 
