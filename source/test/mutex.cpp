@@ -12,7 +12,7 @@ volatile bool updating = false;
 
 void lockAndUpdate()
 {
-  for (int i = 0; i < 100; ++i)
+  for (int i = 0; i < 50; ++i)
   {
     auto lock = mutex->getScoped();
     if (updating)
@@ -34,12 +34,10 @@ void startTask(F&& func)
 {
   auto taskManager = TaskManager::get();
   Task task = taskManager->newKernelTask();
-  task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
+  task.stack = static_cast<char*>(getStackPageHeap().kmalloc().first);
   task.stackTop = task.stack + 0x4000;
   task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
   task.kernelStackTop = task.kernelStack + 0x4000;
-  task.pageDirectory.mapRange(task.stack, task.stackTop,
-      PageDirectory::ATTR_RW);
   task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
   task.context.rip = reinterpret_cast<uint64_t>(&runTask);
   task.context.rdi = reinterpret_cast<uint64_t>(
@@ -99,8 +97,9 @@ void waitEnd()
 {
   mutex = new Mutex;
 
-  //runTestProcess("mutex_simple_lock", lockAndUpdate);
-  runTestProcesses("mutex_simple_lock", lockAndUpdate);
+  runTestProcess("mutex_simple_lock", lockAndUpdate);
+
+  runTestProcesses("mutex_concurrent_lock", lockAndUpdate, lockAndUpdate);
 
   printE9("\n[ALL TESTS RUN]\n");
   sys::call(sys::exit);
@@ -115,12 +114,10 @@ void waitEnd()
 
   {
     Task task = taskManager->newKernelTask();
-    task.stack = reinterpret_cast<char*>(0xffffffffa0000000 - 0x4000);
+    task.stack = static_cast<char*>(getStackPageHeap().kmalloc().first);
     task.stackTop = task.stack + 0x4000;
     task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
     task.kernelStackTop = task.kernelStack + 0x4000;
-    task.pageDirectory.mapRange(task.stack, task.stackTop,
-        PageDirectory::ATTR_RW);
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&waitEnd);
     taskManager->addTask(std::move(task));
