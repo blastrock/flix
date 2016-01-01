@@ -5,7 +5,22 @@
 
 XLL_LOG_CATEGORY("main");
 
-void lockAndUpdate(Mutex& mutex, volatile bool& updating)
+void disableIrq(volatile bool& updating)
+{
+  for (int i = 0; i < 50; ++i)
+  {
+    DisableInterrupts _;
+    if (updating)
+      th::fail();
+    updating = true;
+    for (int i = 0; i < 10; ++i)
+      asm volatile ("");
+    updating = false;
+  }
+}
+
+template <typename L>
+void lockAndUpdate(L& mutex, volatile bool& updating)
 {
   for (int i = 0; i < 50; ++i)
   {
@@ -13,19 +28,46 @@ void lockAndUpdate(Mutex& mutex, volatile bool& updating)
     if (updating)
       th::fail();
     updating = true;
+    for (int i = 0; i < 10; ++i)
+      asm volatile ("");
     updating = false;
   }
 }
 
 void waitEnd()
 {
-  Mutex mutex;
-  volatile bool updating = false;
-  auto lockUpdateFunc = [&]{ lockAndUpdate(mutex, updating); };
+  {
+    volatile bool updating = false;
+    auto lockUpdateFunc = [&]{ disableIrq(updating); };
 
-  th::runTestProcess("mutex_simple_lock", lockUpdateFunc);
+    th::runTestProcess("disable_irq_simple", lockUpdateFunc);
+    th::runTestProcesses("disable_irq_concurrent",
+        lockUpdateFunc,
+        lockUpdateFunc,
+        lockUpdateFunc);
+  }
+  {
+    SpinLock spinlock;
+    volatile bool updating = false;
+    auto lockUpdateFunc = [&]{ lockAndUpdate(spinlock, updating); };
 
-  th::runTestProcesses("mutex_concurrent_lock", lockUpdateFunc, lockUpdateFunc);
+    th::runTestProcess("spinlock_simple_lock", lockUpdateFunc);
+    th::runTestProcesses("spinlock_concurrent_lock",
+        lockUpdateFunc,
+        lockUpdateFunc,
+        lockUpdateFunc);
+  }
+  {
+    Mutex mutex;
+    volatile bool updating = false;
+    auto lockUpdateFunc = [&]{ lockAndUpdate(mutex, updating); };
+
+    th::runTestProcess("mutex_simple_lock", lockUpdateFunc);
+    th::runTestProcesses("mutex_concurrent_lock",
+        lockUpdateFunc,
+        lockUpdateFunc,
+        lockUpdateFunc);
+  }
 
   th::finish();
   sys::call(sys::exit);
