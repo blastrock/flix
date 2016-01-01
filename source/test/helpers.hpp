@@ -63,7 +63,7 @@ void runTestProcesses(const char* name, F&&... funcs)
 }
 
 template <typename F>
-void runTestProcess(const char* name, F&& func)
+void runTest(const char* name, F&& func)
 {
   {
     std::ostringstream ss;

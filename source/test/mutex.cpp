@@ -40,7 +40,7 @@ void waitEnd()
     volatile bool updating = false;
     auto lockUpdateFunc = [&]{ disableIrq(updating); };
 
-    th::runTestProcess("disable_irq_simple", lockUpdateFunc);
+    th::runTest("disable_irq_simple", lockUpdateFunc);
     th::runTestProcesses("disable_irq_concurrent",
         lockUpdateFunc,
         lockUpdateFunc,
@@ -51,7 +51,7 @@ void waitEnd()
     volatile bool updating = false;
     auto lockUpdateFunc = [&]{ lockAndUpdate(spinlock, updating); };
 
-    th::runTestProcess("spinlock_simple_lock", lockUpdateFunc);
+    th::runTest("spinlock_simple_lock", lockUpdateFunc);
     th::runTestProcesses("spinlock_concurrent_lock",
         lockUpdateFunc,
         lockUpdateFunc,
@@ -62,7 +62,7 @@ void waitEnd()
     volatile bool updating = false;
     auto lockUpdateFunc = [&]{ lockAndUpdate(mutex, updating); };
 
-    th::runTestProcess("mutex_simple_lock", lockUpdateFunc);
+    th::runTest("mutex_simple_lock", lockUpdateFunc);
     th::runTestProcesses("mutex_concurrent_lock",
         lockUpdateFunc,
         lockUpdateFunc,
