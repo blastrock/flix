@@ -275,13 +275,9 @@ void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
-  // this function is dangerous when interrupts are enabled because an
-  // interrupt might trigger and use the stack we are currently using.
-  assert(!(Cpu::rflags() & (1 << 9)) &&
-      "putMeToSleep called with interrupts enabled");
-
   Task& task = getActiveTask();
 
+  DisableInterrupts _;
   if (task.sh.state != Task::State::Sleeping)
   {
     xDeb("Task has been woken up before going to sleep");
