@@ -96,6 +96,9 @@ void KHeap::init()
 
 void* KHeap::kmalloc(uint32_t size)
 {
+  if (!size)
+    return nullptr;
+
   // count header
   size += HEADER_SIZE;
   // ceil to align
