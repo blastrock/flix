@@ -10,6 +10,10 @@ class KHeap
   public:
     static KHeap& get();
 
+    KHeap() = default;
+    KHeap(const KHeap&) = delete;
+    KHeap& operator=(const KHeap&) = delete;
+
     void* kmalloc(uint32_t size);
     void kfree(void* ptr);
 
