@@ -29,14 +29,14 @@ public:
 
   void lock()
   {
-    xDebC("support/sync/spinlock", "SpinLock lock");
+    xDebC("support/sync/spinlock", "%p: SpinLock lock", this);
     assert(!_disableInterrupts);
     _disableInterrupts = DisableInterrupts();
   }
 
   void unlock()
   {
-    xDebC("support/sync/spinlock", "SpinLock unlock");
+    xDebC("support/sync/spinlock", "%p: SpinLock unlock", this);
     assert(_disableInterrupts);
     // do not reenable interrupts before we reset the optional or the assert in
     // lock() may fail

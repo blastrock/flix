@@ -15,7 +15,7 @@ struct Semaphore::Waiter
 
 void Semaphore::down()
 {
-  xDeb("Semaphore down");
+  xDeb("%p: Semaphore down", this);
 
   auto _ = _spinlock.getScoped();
 
@@ -45,7 +45,7 @@ void Semaphore::down()
 
 void Semaphore::up()
 {
-  xDeb("Semaphore up");
+  xDeb("%p: Semaphore up", this);
 
   auto _ = _spinlock.getScoped();
 

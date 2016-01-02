@@ -26,12 +26,12 @@ public:
 
   void lock()
   {
-    xDebC("support/sync/mutex", "Mutex lock");
+    xDebC("support/sync/mutex", "%p: Mutex lock", this);
     _semaphore.down();
   }
   void unlock()
   {
-    xDebC("support/sync/mutex", "Mutex unlock");
+    xDebC("support/sync/mutex", "%p: Mutex unlock", this);
     _semaphore.up();
   }
 
