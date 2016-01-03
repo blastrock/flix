@@ -87,58 +87,26 @@ pid_t TaskManager::clone(const InterruptState& st)
   // TODO random address, use something less arbitrary
   auto bufferPage = reinterpret_cast<char*>(0xffffffffaa000000);
 
-  xDeb("Showing memory map");
+  xDeb("Cloning memory");
   auto& activeTask = getActiveTask();
   auto& pd = activeTask.pageDirectory;
-  for (auto& level4entry : pd.getManager())
-  {
-    const auto add4 = pd.extendSign(pd.getManager().getAddress(*std::get<0>(level4entry)));
-    auto level3 = *std::get<1>(level4entry);
-    if (!level3)
-      continue;
-
-    for (auto& level3entry : *level3)
-    {
-      const auto add3 = level3->getAddress(*std::get<0>(level3entry));
-      if ((add4 | add3) >= 0xffff00000000)
-        continue;
-
-      auto level2 = *std::get<1>(level3entry);
-      if (!level2)
-        continue;
-
-      for (auto& level2entry : *level2)
+  pd.forEachUserPage(
+      [&](const PageDirectory::PageTableEntry& entry, void* addr, physaddr_t)
       {
-        const auto add2 = level2->getAddress(*std::get<0>(level2entry));
-        auto level1 = *std::get<1>(level2entry);
-        if (!level1)
-          continue;
+        xDeb("Cloning %p, %x", addr, entry.getAttributes());
 
-        for (auto& entry : *level1)
-        {
-          if (!entry.isValid())
-            continue;
+        physaddr_t physaddr;
+        newPd.mapPage(addr, entry.getAttributes(), &physaddr);
 
-          const auto add1 = level1->getAddress(entry);
-          const auto fullAddr =
-              reinterpret_cast<void*>(add4 | add3 | add2 | add1);
-          xDeb("Entry %p, %x", fullAddr, entry.getAttributes());
+        if (entry.getAttributes() & PageDirectory::ATTR_DEFER)
+          return;
 
-          physaddr_t physaddr;
-          newPd.mapPage(fullAddr, entry.getAttributes(), &physaddr);
-
-          if (entry.getAttributes() & PageDirectory::ATTR_DEFER)
-            continue;
-
-          pd.mapPageTo(bufferPage,
-              physaddr,
-              PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
-          memcpy(bufferPage, fullAddr, PAGE_SIZE);
-          pd.unmapPage(bufferPage);
-        }
-      }
-    }
-  }
+        pd.mapPageTo(bufferPage,
+            physaddr,
+            PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
+        memcpy(bufferPage, addr, PAGE_SIZE);
+        pd.unmapPage(bufferPage);
+      });
 
   task.sh.state = Task::State::Runnable;
   task.context = st.toTaskContext();

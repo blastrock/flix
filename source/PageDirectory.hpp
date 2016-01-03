@@ -114,6 +114,9 @@ class PageDirectory
     bool isPageMapped(void* vaddr);
     std::optional<physaddr_t> getPhysicalAddress(void* vaddr);
 
+    void forEachUserPage(
+        const std::function<void(PageTableEntry&, void*, physaddr_t)>& f);
+
     void use();
 
     static uintptr_t extendSign(uintptr_t ptr)

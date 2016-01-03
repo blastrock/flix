@@ -268,6 +268,53 @@ void PageDirectory::unmapUserSpace()
   xDeb("moving pd");
   *this = std::move(newPd);
   g_currentPageDirectory = this;
+
+}
+
+void PageDirectory::forEachUserPage(
+    const std::function<void(PageTableEntry&, void*, physaddr_t)>& f)
+{
+  for (auto& level4entry : *m_manager)
+  {
+    const auto add4 =
+        extendSign(m_manager->getAddress(*std::get<0>(level4entry)));
+    auto level3 = *std::get<1>(level4entry);
+    if (!level3)
+      continue;
+
+    for (auto& level3entry : *level3)
+    {
+      const auto add3 = level3->getAddress(*std::get<0>(level3entry));
+      // TODO make this constant more meaningful
+      if ((add4 | add3) >= 0xffff00000000)
+        continue;
+
+      auto level2 = *std::get<1>(level3entry);
+      if (!level2)
+        continue;
+
+      for (auto& level2entry : *level2)
+      {
+        const auto add2 = level2->getAddress(*std::get<0>(level2entry));
+        auto level1 = *std::get<1>(level2entry);
+        if (!level1)
+          continue;
+
+        for (auto& entry : *level1)
+        {
+          if (!entry.isValid())
+            continue;
+
+          const auto add1 = level1->getAddress(entry);
+          const auto fullAddr =
+              reinterpret_cast<void*>(add4 | add3 | add2 | add1);
+          const auto physAddr = entry.base << BASE_SHIFT;
+
+          f(entry, fullAddr, physAddr);
+        }
+      }
+    }
+  }
 }
 
 physaddr_t PageDirectory::resolve(void* vaddr)
