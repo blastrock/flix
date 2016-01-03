@@ -19,7 +19,6 @@ void loop2()
 }
 
 volatile bool childHere = false;
-volatile bool fatherDone = false;
 
 void forkit()
 {
@@ -32,7 +31,6 @@ void forkit()
   {
     while (!childHere)
       ;
-    fatherDone = true;
     int status;
     sys::call(sys::wait4, ret, &status, 0, nullptr);
   }
@@ -55,8 +53,6 @@ void testfork()
     task.context.rip = reinterpret_cast<uint64_t>(&forkit);
     tid = taskManager.addTask(std::move(task));
   }
-  while (!fatherDone)
-    ;
   int status;
   sys::call(sys::wait4, tid, &status, 0, nullptr);
 }

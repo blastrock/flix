@@ -28,13 +28,17 @@ pid_t startTask(F&& func)
   return taskManager->addTask(std::move(task));
 }
 
-template <std::size_t... I, typename... F, typename A>
-void startVariadic(
-    A& vec, std::index_sequence<I...>, F&&... funcs)
+template <typename... F>
+void runTestProcesses(const char* name, F&&... funcs)
 {
-  auto pids = {startTask([funcs = std::forward<F>(funcs), &vec]{
+  {
+    std::ostringstream ss;
+    xll::pnt::writef(*ss.rdbuf(), "\n[BEGIN TEST \"%s\"]\n", name);
+    printE9(ss.str().c_str());
+  }
+
+  auto pids = {startTask([funcs = std::forward<F>(funcs)]{
         funcs();
-        vec[I] = true;
         sys::call(sys::exit);
       })...};
   for (const auto& pid : pids)
@@ -42,27 +46,7 @@ void startVariadic(
     int status;
     sys::call(sys::wait4, pid, &status, 0, nullptr);
   }
-}
 
-template <typename... F>
-void runTestProcesses(const char* name, F&&... funcs)
-{
-  // must be on the heap to be shared with everybody
-  auto finished =
-    std::make_unique<std::array<volatile bool, sizeof...(funcs)>>();
-
-  {
-    std::ostringstream ss;
-    xll::pnt::writef(*ss.rdbuf(), "\n[BEGIN TEST \"%s\"]\n", name);
-    printE9(ss.str().c_str());
-  }
-
-  startVariadic(
-      *finished, std::index_sequence_for<F...>(), std::forward<F>(funcs)...);
-
-  for (const auto& finish : *finished)
-    while (!finish)
-      ;
   printE9("\n[END TEST]\n");
 }
 
