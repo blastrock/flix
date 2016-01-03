@@ -73,6 +73,7 @@ def run_and_process(command):
 
         if proc.returncode != 0:
             print('Finished with error')
+            log_processor.error = 'Finished with error'
 
         stdout = stdout.split(b'\n')
 
