@@ -17,6 +17,10 @@ void Semaphore::down()
 {
   xDeb("%p: Semaphore down", this);
 
+  assert(
+      SpinLock::getLockCount() == 0 &&
+      "no spinlock must be taken during a semaphore down (which might block)");
+
   auto _ = _spinlock.getScoped();
 
   if (_count)

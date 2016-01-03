@@ -32,6 +32,9 @@ public:
     xDebC("support/sync/spinlock", "%p: SpinLock lock", this);
     assert(!_disableInterrupts);
     _disableInterrupts = DisableInterrupts();
+#ifndef NDEBUG
+    ++g_lockCount;
+#endif
   }
 
   void unlock()
@@ -40,12 +43,26 @@ public:
     assert(_disableInterrupts);
     // do not reenable interrupts before we reset the optional or the assert in
     // lock() may fail
+#ifndef NDEBUG
+    --g_lockCount;
+#endif
     auto di = std::move(*_disableInterrupts);
     _disableInterrupts = std::nullopt;
   }
 
+#ifndef NDEBUG
+  static uint8_t getLockCount()
+  {
+    return g_lockCount;
+  }
+#endif
+
 private:
   std::optional<DisableInterrupts> _disableInterrupts;
+
+#ifndef NDEBUG
+  static uint8_t g_lockCount;
+#endif
 };
 
 #endif

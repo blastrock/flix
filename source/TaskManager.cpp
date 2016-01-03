@@ -275,6 +275,9 @@ void TaskManager::putMeToSleep()
 {
   xDeb("Putting task to sleep");
 
+  assert(SpinLock::getLockCount() == 0 &&
+         "no spinlock must be taken while going to sleep");
+
   Task& task = getActiveTask();
 
   DisableInterrupts _;

@@ -58,6 +58,7 @@ add_library(flix STATIC
   Screen.cpp
   Semaphore.cpp
   Serial.cpp
+  SpinLock.cpp
   StaticMemoryPool.cpp
   Symbols.cpp
   Syscall.cpp
