@@ -1,6 +1,7 @@
 #include "Debug.hpp"
 #include "TaskManager.hpp"
 #include "Syscall.hpp"
+#include "Timer.hpp"
 #include "helpers.hpp"
 
 XLL_LOG_CATEGORY("main");
@@ -75,6 +76,8 @@ void waitEnd()
 
 [[noreturn]] void _main()
 {
+  Timer::init(1000);
+
   auto& taskManager = *TaskManager::get();
 
   {
