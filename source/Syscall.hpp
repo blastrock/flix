@@ -183,16 +183,76 @@ inline SyscallReturnType call(ScId sc)
   return out;
 }
 
-inline SyscallReturnType call(ScId sc, int fd, const void* buf, long size)
+template <typename A1>
+inline SyscallReturnType call(ScId sc, const A1 a1)
 {
   SyscallReturnType out;
   asm volatile (
       "int $0x80"
       :"=a"(out)
       :"a"(static_cast<uint64_t>(sc)),
-      "D"((uint64_t)fd),
-      "S"((uint64_t)buf),
-      "d"((uint64_t)size));
+      "D"((uint64_t)a1));
+  return out;
+}
+
+template <typename A1, typename A2>
+inline SyscallReturnType call(ScId sc, const A1 a1, const A2 a2)
+{
+  SyscallReturnType out;
+  asm volatile (
+      "int $0x80"
+      :"=a"(out)
+      :"a"(static_cast<uint64_t>(sc)),
+      "D"((uint64_t)a1),
+      "S"((uint64_t)a2));
+  return out;
+}
+
+template <typename A1, typename A2, typename A3>
+inline SyscallReturnType call(ScId sc, const A1 a1, const A2 a2, const A3 a3)
+{
+  SyscallReturnType out;
+  asm volatile (
+      "int $0x80"
+      :"=a"(out)
+      :"a"(static_cast<uint64_t>(sc)),
+      "D"((uint64_t)a1),
+      "S"((uint64_t)a2),
+      "d"((uint64_t)a3));
+  return out;
+}
+
+template <typename A1, typename A2, typename A3, typename A4>
+inline SyscallReturnType call(
+    ScId sc, const A1 a1, const A2 a2, const A3 a3, const A4 a4)
+{
+  SyscallReturnType out;
+  asm volatile (
+      "int $0x80"
+      :"=a"(out)
+      :"a"(static_cast<uint64_t>(sc)),
+      "D"((uint64_t)a1),
+      "S"((uint64_t)a2),
+      "d"((uint64_t)a3),
+      "c"((uint64_t)a4));
+  return out;
+}
+
+template <typename A1, typename A2, typename A3, typename A4, typename A5>
+inline SyscallReturnType call(
+    ScId sc, const A1 a1, const A2 a2, const A3 a3, const A4 a4, const A5 a5)
+{
+  SyscallReturnType out;
+  asm volatile (
+      "mov %6, %%r8\n"
+      "int $0x80\n"
+      :"=a"(out)
+      :"a"(static_cast<uint64_t>(sc)),
+      "D"((uint64_t)a1),
+      "S"((uint64_t)a2),
+      "d"((uint64_t)a3),
+      "c"((uint64_t)a4),
+      "r"((uint64_t)a5));
   return out;
 }
 
