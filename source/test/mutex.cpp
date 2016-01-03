@@ -69,6 +69,28 @@ void waitEnd()
         lockUpdateFunc,
         lockUpdateFunc);
   }
+  {
+    Mutex mutex;
+    CondVar condvar;
+    volatile bool waiting = false;
+    // TODO test notify_all
+    th::runTestProcesses("condvar_notify_one",
+        [&]{
+          xDeb("Ready to wait");
+          auto lock = mutex.getScoped();
+          waiting = true;
+          condvar.wait(mutex);
+        },
+        [&]{
+          // TODO yield
+          xDeb("Waiting for waiter");
+          while (!waiting)
+            ;
+          xDeb("Waiter is ready");
+          auto lock = mutex.getScoped();
+          condvar.notify_one();
+        });
+  }
 
   th::finish();
   sys::call(sys::exit);
