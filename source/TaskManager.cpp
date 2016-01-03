@@ -189,7 +189,8 @@ pid_t TaskManager::wait(pid_t tid, int* status)
   assert(iter != _tasks.end());
   _tasks.erase(iter);
 
-  *status = 0;
+  if (status)
+    *status = 0;
 
   return tid;
 }

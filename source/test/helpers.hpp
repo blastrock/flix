@@ -42,10 +42,7 @@ void runTestProcesses(const char* name, F&&... funcs)
         sys::call(sys::exit);
       })...};
   for (const auto& pid : pids)
-  {
-    int status;
-    sys::call(sys::wait4, pid, &status, 0, nullptr);
-  }
+    sys::call(sys::wait4, pid, nullptr, 0, nullptr);
 
   printE9("\n[END TEST]\n");
 }

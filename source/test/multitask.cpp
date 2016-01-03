@@ -31,8 +31,7 @@ void forkit()
   {
     while (!childHere)
       ;
-    int status;
-    sys::call(sys::wait4, ret, &status, 0, nullptr);
+    sys::call(sys::wait4, ret, nullptr, 0, nullptr);
   }
   sys::call(sys::exit);
 }
@@ -53,8 +52,7 @@ void testfork()
     task.context.rip = reinterpret_cast<uint64_t>(&forkit);
     tid = taskManager.addTask(std::move(task));
   }
-  int status;
-  sys::call(sys::wait4, tid, &status, 0, nullptr);
+  sys::call(sys::wait4, tid, nullptr, 0, nullptr);
 }
 
 void waitEnd()
