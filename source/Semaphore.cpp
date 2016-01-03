@@ -37,24 +37,23 @@ void Semaphore::down()
     // FIXME what if the task finishes before the wait is finished?
     auto& tm = *TaskManager::get();
     Waiter waiter{ tm.getActiveTask() };
+
+    if (_lastWaiter)
+    {
+      _lastWaiter->next = &waiter;
+      _lastWaiter = &waiter;
+    }
+    else
+    {
+      assert(!_firstWaiter);
+      _firstWaiter = _lastWaiter = &waiter;
+    }
+
     do
     {
-      if (_lastWaiter)
-      {
-        _lastWaiter->next = &waiter;
-        _lastWaiter = &waiter;
-      }
-      else
-      {
-        assert(!_firstWaiter);
-        _firstWaiter = _lastWaiter = &waiter;
-      }
-
-      {
-        tm.prepareMeForSleep();
-        auto _ = _spinlock.getScopedUnlock();
-        tm.putMeToSleep();
-      }
+      tm.prepareMeForSleep();
+      auto _ = _spinlock.getScopedUnlock();
+      tm.putMeToSleep();
     } while (!waiter.up);
   }
 }

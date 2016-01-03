@@ -1,7 +1,6 @@
 #ifndef SEMAPHORE_HPP
 #define SEMAPHORE_HPP
 
-#include <queue>
 #include <cstdint>
 
 #include "SpinLock.hpp"
