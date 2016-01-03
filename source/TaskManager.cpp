@@ -45,7 +45,7 @@ void TaskManager::updateNextTid()
     ++_nextTid;
 }
 
-void TaskManager::addTask(Task&& t)
+pid_t TaskManager::addTask(Task&& t)
 {
   DisableInterrupts _;
 
@@ -73,6 +73,8 @@ void TaskManager::addTask(Task&& t)
 
   if (t.sh.state == Task::State::Runnable)
     doInterruptMasking();
+
+  return t.tid;
 }
 
 pid_t TaskManager::clone(const InterruptState& st)

@@ -174,7 +174,7 @@ public:
 
   void setUpTss();
 
-  void addTask(Task&& t);
+  pid_t addTask(Task&& t);
   Task newKernelTask();
   Task newUserTask();
   void downgradeCurrentTask();

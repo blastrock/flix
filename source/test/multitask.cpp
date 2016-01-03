@@ -33,6 +33,8 @@ void forkit()
     while (!childHere)
       ;
     fatherDone = true;
+    int status;
+    sys::call(sys::wait4, ret, &status, 0, nullptr);
   }
   sys::call(sys::exit);
 }
@@ -40,6 +42,7 @@ void forkit()
 void testfork()
 {
   auto& taskManager = *TaskManager::get();
+  pid_t tid;
   {
     Task task = taskManager.newKernelTask();
     task.stack = reinterpret_cast<char*>(0x00000000a0000000 - 0x4000);
@@ -50,10 +53,12 @@ void testfork()
     task.kernelStackTop = task.kernelStack + 0x4000;
     task.context.rsp = reinterpret_cast<uint64_t>(task.stackTop);
     task.context.rip = reinterpret_cast<uint64_t>(&forkit);
-    taskManager.addTask(std::move(task));
+    tid = taskManager.addTask(std::move(task));
   }
   while (!fatherDone)
     ;
+  int status;
+  sys::call(sys::wait4, tid, &status, 0, nullptr);
 }
 
 void waitEnd()

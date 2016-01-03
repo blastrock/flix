@@ -13,7 +13,7 @@ void runTask(std::function<void()>* pf)
 }
 
 template <typename F>
-void startTask(F&& func)
+pid_t startTask(F&& func)
 {
   auto taskManager = TaskManager::get();
   Task task = taskManager->newKernelTask();
@@ -25,19 +25,23 @@ void startTask(F&& func)
   task.context.rip = reinterpret_cast<uint64_t>(&runTask);
   task.context.rdi = reinterpret_cast<uint64_t>(
       new std::function<void()>(std::forward<F>(func)));
-  taskManager->addTask(std::move(task));
+  return taskManager->addTask(std::move(task));
 }
 
 template <std::size_t... I, typename... F, typename A>
 void startVariadic(
     A& vec, std::index_sequence<I...>, F&&... funcs)
 {
-  (void)std::initializer_list<int>{(
-      startTask([funcs = std::forward<F>(funcs), &vec]{
-          funcs();
-          vec[I] = true;
-          sys::call(sys::exit);
-      }), 0)...};
+  auto pids = {startTask([funcs = std::forward<F>(funcs), &vec]{
+        funcs();
+        vec[I] = true;
+        sys::call(sys::exit);
+      })...};
+  for (const auto& pid : pids)
+  {
+    int status;
+    sys::call(sys::wait4, pid, &status, 0, nullptr);
+  }
 }
 
 template <typename... F>
