@@ -11,8 +11,6 @@ static constexpr unsigned BLOCK_ALIGN_SHIFT = 2;
 static constexpr unsigned BLOCK_ALIGN = 1 << BLOCK_ALIGN_SHIFT;
 static constexpr unsigned BLOCK_MIN_SIZE = HEADER_SIZE + 4;
 
-static KHeap g_heap;
-
 class KHeap::HeapBlock
 {
   public:
@@ -62,6 +60,7 @@ class KHeap::HeapBlock
 
 KHeap& KHeap::get()
 {
+  static KHeap g_heap;
   return g_heap;
 }
 
@@ -96,8 +95,11 @@ void KHeap::init()
 
 void* KHeap::kmalloc(uint32_t size)
 {
+  xDeb("kmalloc(%d)", size);
   if (!size)
     return nullptr;
+
+  auto lock = m_mutex.getScoped();
 
   // count header
   size += HEADER_SIZE;
@@ -111,7 +113,8 @@ void* KHeap::kmalloc(uint32_t size)
     block = reinterpret_cast<HeapBlock*>(ptr);
     uint32_t blockSize = block->getSize();
 
-    assert(blockSize > BLOCK_MIN_SIZE);
+    assert(block <= m_lastBlock);
+    assert(blockSize >= BLOCK_MIN_SIZE);
 
     if (!block->getUsed())
     {
@@ -135,6 +138,7 @@ void* KHeap::kmalloc(uint32_t size)
         block->setUsed(true);
 
         assert(!blocks.second->getUsed());
+        assert(blocks.second->getSize() >= BLOCK_MIN_SIZE);
         assert(block->getSize() >= size);
 
         return block->getData();
@@ -147,50 +151,75 @@ void* KHeap::kmalloc(uint32_t size)
   xDeb("Heap enlarge");
 
   // count last block size if it's free
-  uint32_t blockSize = block->getUsed() ? 0 : block->getSize();
+  assert(block == m_lastBlock);
+  const uint32_t blockSize = block->getUsed() ? 0 : block->getSize();
   // asked size - last block size if it's free -> round up
-  uint32_t neededPages = (size - blockSize + 0x1000-1) / 0x1000;
+  const uint32_t neededPages = (size - blockSize + 0x1000-1) / 0x1000;
 
-  for (uint32_t i = 0; i < neededPages; ++i)
-  {
-    // kmalloc may be reentered here!
-    PageDirectory::getKernelDirectory()->mapPage(m_heapEnd,
-        PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
-    m_heapEnd += 0x1000;
+  enlargeHeap(neededPages);
 
-    // if block is used, go to next block
-    if (!m_lastBlock->getUsed())
-      block = m_lastBlock;
-    else
-    {
-      block = ptrAdd(m_lastBlock, m_lastBlock->getSize());
-
-      assert(reinterpret_cast<uint64_t>(block) % 0x1000 == 0);
-      assert(reinterpret_cast<char*>(block) < m_heapEnd);
-
-      // set size to 0, it will be updated below
-      block->setSize(0);
-    }
-
-    block->setSize(block->getSize() + 0x1000);
-  }
+  block = m_lastBlock;
 
   assert(size <= block->getSize());
 
+  // split the block if it's too large
   if (size <= block->getSize() - BLOCK_MIN_SIZE)
-    block = splitBlock(block, size).first;
+  {
+    const auto blocks = splitBlock(block, size);
+    block = blocks.first;
+    m_lastBlock = blocks.second;
+  }
 
   block->setUsed(true);
 
   assert(block->getSize() >= size);
+  assert(reinterpret_cast<char*>(m_lastBlock) + m_lastBlock->getSize() ==
+         m_heapEnd);
 
   return block->getData();
+}
+
+void KHeap::enlargeHeap(const std::size_t pageCount)
+{
+  for (uint32_t i = 0; i < pageCount; ++i)
+  {
+    // FIXME kmalloc may be reentered here because of Memory, Memory should
+    // allocate its vector on another heap
+    PageDirectory::getKernelDirectory()->mapPage(m_heapEnd,
+        PageDirectory::ATTR_RW | PageDirectory::ATTR_NOEXEC);
+    m_heapEnd += PAGE_SIZE;
+
+    HeapBlock* block;
+    if (m_lastBlock->getUsed())
+    {
+      // if last block is used, create a new block
+      block = ptrAdd(m_lastBlock, m_lastBlock->getSize());
+
+      assert(reinterpret_cast<uint64_t>(block) % PAGE_SIZE == 0);
+      assert(reinterpret_cast<char*>(block) < m_heapEnd);
+
+      // set size to 0, it will be updated below
+      block->setSize(0);
+
+      m_lastBlock = block;
+    }
+    else
+      // else enlarge it
+      block = m_lastBlock;
+
+    block->setSize(block->getSize() + PAGE_SIZE);
+  }
+
+  assert(reinterpret_cast<char*>(m_lastBlock) + m_lastBlock->getSize() ==
+         m_heapEnd);
 }
 
 void KHeap::kfree(void* ptr)
 {
   if (!ptr)
     return;
+
+  auto lock = m_mutex.getScoped();
 
   HeapBlock* block =
     reinterpret_cast<HeapBlock*>(ptrAdd(ptr, -(int)HEADER_SIZE));
@@ -221,12 +250,12 @@ extern "C"
 
 void free(void* ptr)
 {
-  g_heap.kfree(ptr);
+  KHeap::get().kfree(ptr);
 }
 
 void* malloc(size_t size)
 {
-  return g_heap.kmalloc(size);
+  return KHeap::get().kmalloc(size);
 }
 
 }

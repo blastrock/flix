@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <utility>
 #include <cassert>
+#include "Mutex.hpp"
 
 class KHeap
 {
@@ -22,12 +23,16 @@ class KHeap
   private:
     class HeapBlock;
 
+    Mutex m_mutex;
+
     char* m_heapStart;
     char* m_heapEnd;
     HeapBlock* m_lastBlock;
 
     std::pair<HeapBlock*, HeapBlock*> splitBlock(HeapBlock* block,
         uint64_t size);
+    /// Enlarge the heap and updates m_lastBlock
+    void enlargeHeap(std::size_t pageCount);
 };
 
 #endif /* K_HEAP_HPP */
