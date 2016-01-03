@@ -286,11 +286,12 @@ Task* TaskManager::getActive()
 {
   if (_activeTask == 0)
     return nullptr;
-  return &getActiveTask();
+  return getTask(_activeTask);
 }
 
 Task* TaskManager::getTask(pid_t tid)
 {
+  // FIXME we should lock something here
   const auto iter = _tasks.find(tid);
   if (iter == _tasks.end())
     return nullptr;
@@ -299,7 +300,7 @@ Task* TaskManager::getTask(pid_t tid)
 
 Task& TaskManager::getActiveTask()
 {
-  const auto task = getTask(_activeTask);
+  const auto task = getActive();
   assert(task && "there is an active task");
   return *task;
 }
