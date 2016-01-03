@@ -11,6 +11,9 @@ struct Semaphore::Waiter
 
   bool up = false;
   Task& task;
+
+  // we need an intrusive list to avoid allocations in this critical code path
+  Waiter* next = nullptr;
 };
 
 void Semaphore::down()
@@ -36,7 +39,16 @@ void Semaphore::down()
     Waiter waiter{ tm.getActiveTask() };
     do
     {
-      _waiters.push(&waiter);
+      if (_lastWaiter)
+      {
+        _lastWaiter->next = &waiter;
+        _lastWaiter = &waiter;
+      }
+      else
+      {
+        assert(!_firstWaiter);
+        _firstWaiter = _lastWaiter = &waiter;
+      }
 
       {
         tm.prepareMeForSleep();
@@ -53,13 +65,23 @@ void Semaphore::up()
 
   auto _ = _spinlock.getScoped();
 
-  xDeb("Number of waiters: %d", _waiters.size());
-  if (_waiters.empty())
+  if (!_firstWaiter)
+  {
+    xDeb("No waiter");
+    assert(!_lastWaiter);
+
     ++_count;
+  }
   else
   {
-    Waiter* waiter = _waiters.front();
-    _waiters.pop();
+    xDeb("At least one waiter");
+    assert(_lastWaiter);
+
+    Waiter* waiter = _firstWaiter;
+    if (_firstWaiter == _lastWaiter)
+      _lastWaiter = nullptr;
+    _firstWaiter = _firstWaiter->next;
+
     waiter->up = true;
     TaskManager::get()->wakeUpTask(waiter->task);
   }

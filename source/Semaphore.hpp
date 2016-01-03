@@ -40,9 +40,10 @@ public:
 private:
   struct Waiter;
 
-  uint32_t _count;
-  std::queue<Waiter*> _waiters;
   SpinLock _spinlock;
+  uint32_t _count;
+  Waiter* _firstWaiter = nullptr;
+  Waiter* _lastWaiter = nullptr;
 };
 
 #endif
