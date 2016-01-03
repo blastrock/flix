@@ -1,8 +1,6 @@
 #ifndef COND_VAR_HPP
 #define COND_VAR_HPP
 
-#include <vector>
-
 #include "SpinLock.hpp"
 
 class Mutex;
@@ -25,7 +23,9 @@ private:
   struct Waiter;
 
   SpinLock _lock;
-  std::vector<Waiter*> _waiters;
+  Waiter* _firstWaiter;
+  Waiter* _lastWaiter;
+  unsigned _waiterCount;
 };
 
 #endif
