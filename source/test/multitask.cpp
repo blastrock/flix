@@ -34,6 +34,7 @@ void forkit()
       ;
     fatherDone = true;
   }
+  sys::call(sys::exit);
 }
 
 void testfork()
