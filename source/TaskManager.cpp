@@ -130,6 +130,7 @@ void TaskManager::terminateCurrentTask()
   if (task.tid == 1)
     PANIC("PID 1 is dead");
 
+  DisableInterrupts _;
   _activeTask = 0;
 
   {
@@ -285,6 +286,7 @@ bool TaskManager::isTaskActive()
 
 Task* TaskManager::getActive()
 {
+  DisableInterrupts _;
   if (_activeTask == 0)
     return nullptr;
   return getTask(_activeTask);
@@ -292,7 +294,7 @@ Task* TaskManager::getActive()
 
 Task* TaskManager::getTask(pid_t tid)
 {
-  // FIXME we should lock something here
+  DisableInterrupts _;
   const auto iter = _tasks.find(tid);
   if (iter == _tasks.end())
     return nullptr;
@@ -301,9 +303,15 @@ Task* TaskManager::getTask(pid_t tid)
 
 Task& TaskManager::getActiveTask()
 {
+  DisableInterrupts _;
   const auto task = getActive();
   assert(task && "there is an active task");
   return *task;
+}
+
+pid_t TaskManager::getActiveTid()
+{
+  return _activeTask;
 }
 
 TaskManager::Tasks::iterator TaskManager::getNext()

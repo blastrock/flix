@@ -54,8 +54,10 @@ public:
     (void)line;
 
     if (ready && TaskManager::get()->isTaskActive())
-      xll::pnt::writef(*this, "%d: %s: ", TaskManager::get()->getActive()->tid,
+    {
+      xll::pnt::writef(*this, "%d: %s: ", TaskManager::get()->getActiveTid(),
           category);
+    }
     else
       xll::pnt::writef(*this, "0: %s: ", category);
   }

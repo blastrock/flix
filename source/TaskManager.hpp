@@ -203,6 +203,15 @@ public:
    */
   Task& getActiveTask();
   /**
+   * Get the active TID.
+   *
+   * This method does not lock and is safe to use in logging contexts to avoid
+   * re-entrance.
+   *
+   * \return the TID of the active task, 0 if there is no such task.
+   */
+  pid_t getActiveTid();
+  /**
    * Get the task corresponding to \p tid if it exists
    */
   Task* getTask(pid_t tid);
