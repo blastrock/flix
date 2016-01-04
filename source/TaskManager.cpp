@@ -15,6 +15,12 @@ TaskManager* TaskManager::instance;
     void* addr, void* arg1, void* stack);
 extern "C" int task_save(Task::Context* task);
 
+Task::~Task()
+{
+  if (pageDirectory.isValid())
+    pageDirectory.unmapUserSpace();
+}
+
 TaskManager* TaskManager::get()
 {
   if (!instance)

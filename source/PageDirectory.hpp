@@ -85,6 +85,10 @@ class PageDirectory
     {
       return *m_manager;
     }
+    bool isValid() const
+    {
+      return m_manager ? true : false;
+    }
 
     void mapKernel();
 

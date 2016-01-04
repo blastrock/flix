@@ -262,13 +262,24 @@ physaddr_t PageDirectory::unmapPage(void* vaddr)
 
 void PageDirectory::unmapUserSpace()
 {
+  xDeb("Unmapping userspace");
+
+  const bool mainIsMe = (this == g_currentPageDirectory);
+
   PageDirectory newPd;
   newPd.mapKernel();
-  newPd.use();
-  xDeb("moving pd");
-  *this = std::move(newPd);
-  g_currentPageDirectory = this;
+  if (mainIsMe)
+    newPd.use();
+  std::swap(*this, newPd);
 
+  if (mainIsMe)
+    g_currentPageDirectory = this;
+
+  xDeb("Marking pages as free");
+  newPd.forEachUserPage([](PageTableEntry&, void* addr, physaddr_t phys){
+        xDeb("Unmapped %p", addr);
+        Memory::setPageFree(phys / PAGE_SIZE);
+      });
 }
 
 void PageDirectory::forEachUserPage(

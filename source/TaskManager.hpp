@@ -130,6 +130,10 @@ struct Task
   char* kernelStackTop;
 
   FileManager fileManager;
+
+  Task(Task&&) = default;
+  Task& operator=(Task&&) = default;
+  ~Task();
 };
 
 struct TaskComparator

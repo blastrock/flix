@@ -17,7 +17,7 @@ page_t Memory::getFreePage()
       g_frames[i] = true;
       return i;
     }
-  xDeb("No more freepage, enlaring...");
+  xDeb("No more freepage, enlarging...");
   page_t i = g_frames.size();
   g_frames.resize(i+16, false);
   g_frames[i] = true;
