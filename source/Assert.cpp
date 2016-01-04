@@ -6,7 +6,7 @@ XLL_LOG_CATEGORY("support/assert");
 
 extern "C" void assert_fail(const char* file, int line, const char* condition)
 {
-  disableInterrupts();
+  asm volatile ("cli");
   xDeb("%s:%d\nAssertion failed: %s", file, line, condition);
   printStackTrace();
   PANIC("Assertion failed");
