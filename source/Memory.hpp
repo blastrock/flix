@@ -7,15 +7,17 @@
 
 class Memory
 {
-  public:
-    static page_t getFreePage();
-    static void setPageFree(page_t page);
-    static void setPageUsed(page_t page);
-    static void setRangeUsed(page_t from, page_t to);
-    static void completeRangeUsed(page_t from, page_t to);
+public:
+  static Memory& get();
 
-  private:
-    static std::vector<bool> g_frames;
+  page_t getFreePage();
+  void setPageFree(page_t page);
+  void setPageUsed(page_t page);
+  void setRangeUsed(page_t from, page_t to);
+  void completeRangeUsed(page_t from, page_t to);
+
+private:
+  std::vector<bool> _frames;
 };
 
 #endif /* MEMORY_HPP */

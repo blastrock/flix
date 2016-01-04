@@ -114,7 +114,7 @@ void PageHeap<BSize, PSize, SSize>::kfree(void* ptr)
     {
       physaddr_t phys = PageDirectory::getKernelDirectory()->unmapPage(
           static_cast<char*>(ptr) + n * PAGE_SIZE);
-      Memory::setPageFree(phys / PAGE_SIZE);
+      Memory::get().setPageFree(phys / PAGE_SIZE);
     }
 
   m_map[index] = false;

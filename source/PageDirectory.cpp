@@ -66,12 +66,13 @@ void PageDirectory::initWithDefaultPaging()
 
   xDeb("Mapping VGA");
   _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
-  Memory::setPageUsed(0xB8000 / 0x1000);
+  Memory::get().setPageUsed(0xB8000 / 0x1000);
 
 #define MAP_RANGE(name, from, to, phys, attr)         \
   xDeb("Mapping " name " (size: %x)", (to) - (from)); \
   mapRangeTo((from), (to), (phys), (attr));           \
-  Memory::setRangeUsed((phys) / 0x1000, ((phys) + ((to) - (from))) / 0x1000);
+  Memory::get().setRangeUsed(                         \
+      (phys) / 0x1000, ((phys) + ((to) - (from))) / 0x1000);
 
 #define MAP_RANGE_SYM(name, from, to, phys, attr)                       \
   MAP_RANGE(name, Symbols::getKernel##from(), Symbols::getKernel##to(), \
@@ -235,7 +236,7 @@ void PageDirectory::mapPage(void* vaddr, uint8_t attributes, physaddr_t* paddr)
     target = INVALID_PHYS;
   else
   {
-    page_t page = Memory::getFreePage();
+    page_t page = Memory::get().getFreePage();
     assert(page != INVALID_PAGE);
     target = page * PAGE_SIZE;
   }
@@ -278,7 +279,7 @@ void PageDirectory::unmapUserSpace()
   xDeb("Marking pages as free");
   newPd.forEachUserPage([](PageTableEntry&, void* addr, physaddr_t phys){
         xDeb("Unmapped %p", addr);
-        Memory::setPageFree(phys / PAGE_SIZE);
+        Memory::get().setPageFree(phys / PAGE_SIZE);
       });
 }
 
@@ -351,7 +352,7 @@ bool PageDirectory::handleFault(void* vaddr)
     return false;
   }
 
-  page_t page = Memory::getFreePage();
+  page_t page = Memory::get().getFreePage();
   entry->p = true;
   entry->base = page;
   xDeb("Handled deferred allocation, mapped %p to %x",

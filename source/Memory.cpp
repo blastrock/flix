@@ -4,46 +4,50 @@
 
 XLL_LOG_CATEGORY("core/memory/memorymap");
 
-std::vector<bool> Memory::g_frames;
+Memory& Memory::get()
+{
+  static Memory memory;
+  return memory;
+}
 
 page_t Memory::getFreePage()
 {
   xDeb("Free page request");
 
-  for (page_t i = 0; i < g_frames.size(); ++i)
-    if (!g_frames[i])
+  for (page_t i = 0; i < _frames.size(); ++i)
+    if (!_frames[i])
     {
       xDeb("Free page got");
-      g_frames[i] = true;
+      _frames[i] = true;
       return i;
     }
   xDeb("No more freepage, enlarging...");
-  page_t i = g_frames.size();
-  g_frames.resize(i+16, false);
-  g_frames[i] = true;
+  page_t i = _frames.size();
+  _frames.resize(i+16, false);
+  _frames[i] = true;
   return i;
 }
 
 void Memory::setPageFree(page_t page)
 {
-  //if (g_frames.size() <= page)
-  //  g_frames.resize(intAlignSup(page+1, 16));
+  //if (_frames.size() <= page)
+  //  _frames.resize(intAlignSup(page+1, 16));
 
-  assert(g_frames.size() > page);
-  assert(g_frames[page]);
+  assert(_frames.size() > page);
+  assert(_frames[page]);
 
-  g_frames[page] = false;
+  _frames[page] = false;
 }
 
 void Memory::setPageUsed(page_t page)
 {
-  if (g_frames.size() <= page)
-    g_frames.resize(intAlignSup(page+1, 16));
+  if (_frames.size() <= page)
+    _frames.resize(intAlignSup(page+1, 16));
 
-  assert(g_frames.size() > page);
-  assert(!g_frames[page]);
+  assert(_frames.size() > page);
+  assert(!_frames[page]);
 
-  g_frames[page] = true;
+  _frames[page] = true;
 }
 
 void Memory::setRangeUsed(page_t from, page_t to)
@@ -59,6 +63,6 @@ void Memory::completeRangeUsed(page_t from, page_t to)
   assert(from <= to);
 
   for (; from < to; ++from)
-    if (from >= g_frames.size() || !g_frames[from])
+    if (from >= _frames.size() || !_frames[from])
       setPageUsed(from);
 }

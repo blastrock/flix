@@ -79,7 +79,7 @@ void MultibootLoader::prehandleModule(Module* mod)
   xDeb("Reserved memory for module: %x-%x", mod->mod_start, mod->mod_end);
   handleModule(mod,
       [](auto, auto paddr) {
-        Memory::setPageUsed(paddr / PAGE_SIZE);
+        Memory::get().setPageUsed(paddr / PAGE_SIZE);
       });
 }
 
@@ -127,5 +127,5 @@ void MultibootLoader::handleMemoryMapEntry(MemoryMapEntry* entry)
       lastPage = page + (entry->length + 0xFFF) / 0x1000;
       page < lastPage;
       ++page)
-    Memory::setPageUsed(page);
+    Memory::get().setPageUsed(page);
 }
