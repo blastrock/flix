@@ -6,18 +6,6 @@
 
 XLL_LOG_CATEGORY("main");
 
-void loop1()
-{
-  for (unsigned int i = 0; i < 800; ++i)
-    xDeb("stuff %d", i++);
-}
-
-void loop2()
-{
-  for (unsigned int i = 0; i < 800; ++i)
-    xDeb("different stuff %d", i++);
-}
-
 volatile bool childHere = false;
 
 void forkit()
@@ -57,7 +45,15 @@ void testfork()
 
 void waitEnd()
 {
-  th::runTestProcesses("double_loop", loop1, loop2);
+  th::runTestProcesses("double_loop",
+      []{
+        for (unsigned int i = 0; i < 800; ++i)
+          xDeb("stuff %d", i++);
+      },
+      []{
+        for (unsigned int i = 0; i < 800; ++i)
+          xDeb("different stuff %d", i++);
+      });
 
   th::runTest("fork", testfork);
 
