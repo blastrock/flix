@@ -23,8 +23,8 @@ private:
   struct Waiter;
 
   SpinLock _lock;
-  Waiter* _firstWaiter;
-  Waiter* _lastWaiter;
+  Waiter* _firstWaiter = nullptr;
+  Waiter* _lastWaiter = nullptr;
   unsigned _waiterCount;
 };
 
