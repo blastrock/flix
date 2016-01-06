@@ -17,8 +17,13 @@ extern "C" int task_save(Task::Context* task);
 
 Task::~Task()
 {
+  // if pageDirectory is invalid, it means the task has been moved out
   if (pageDirectory.isValid())
+  {
+    if (releaseFunction)
+      releaseFunction(*this);
     pageDirectory.unmapUserSpace();
+  }
 }
 
 TaskManager* TaskManager::get()
@@ -90,6 +95,9 @@ pid_t TaskManager::clone(const InterruptState& st)
   Task task = newUserTask();
   task.kernelStack = static_cast<char*>(getStackPageHeap().kmalloc().first);
   task.kernelStackTop = task.kernelStack + 0x4000;
+  task.releaseFunction = [](auto& task){
+    getStackPageHeap().kfree(task.kernelStack);
+  };
   auto& newPd = task.pageDirectory;
 
   // TODO random address, use something less arbitrary

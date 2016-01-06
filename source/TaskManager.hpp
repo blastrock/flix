@@ -118,6 +118,8 @@ struct Task
   pid_t tid;
   HierarchyHolder hh;
 
+  std::function<void(Task&)> releaseFunction;
+
   StateHolder sh;
 
   Context context;
