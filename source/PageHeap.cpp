@@ -92,6 +92,8 @@ auto PageHeap<BSize, PSize, SSize>::allocPage(page_index_t index)
   else
     phys = Symbols::getKernelPageHeapStart() + index * PAGE_SIZE * BlockSize;
 
+  ++m_usedBlockCount;
+
   m_allocating = false;
 
   return {index, phys};
@@ -116,6 +118,8 @@ void PageHeap<BSize, PSize, SSize>::kfree(void* ptr)
           static_cast<char*>(ptr) + n * PAGE_SIZE);
       Memory::get().setPageFree(phys / PAGE_SIZE);
     }
+
+  --m_usedBlockCount;
 
   m_map[index] = false;
 }

@@ -28,8 +28,14 @@ public:
   std::pair<void*, physaddr_t> kmalloc();
   void kfree(void* ptr);
   void refillPool();
+  uint64_t getUsedBlockCount() const
+  {
+    return m_usedBlockCount;
+  }
 
 private:
+  uint64_t m_usedBlockCount = 0;
+
   bool m_allocating = false;
   char* m_heapStart;
 
