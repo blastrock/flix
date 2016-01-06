@@ -309,7 +309,7 @@ PageManager<Allocator, CurLevel, Levels...>::~PageManager()
     // TODO remove this hack...
     // this hack is here to avoid freeing kernel pages which are shared between
     // all processes
-    if ((std::tuple_size<Levels>::value == 4 || std::tuple_size<Levels>::value == 3) && i == ((1 << ADD_BITS) - 1))
+    if (std::tuple_size<Levels>::value == 3 && i == ((1 << ADD_BITS) - 1))
       continue;
 
     auto& next = m_nextLayouts[i];
