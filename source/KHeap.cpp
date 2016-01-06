@@ -106,7 +106,7 @@ void* KHeap::kmalloc(uint32_t size)
   // ceil to align
   size = intAlignSup(size, BLOCK_ALIGN);
 
-  HeapBlock* block;
+  HeapBlock* block = nullptr;
   char* ptr = m_heapStart;
   while (ptr < m_heapEnd)
   {
