@@ -18,13 +18,13 @@ page_t Memory::getFreePage()
     if (!_frames[i])
     {
       xDeb("Free page got");
-      _frames[i] = true;
+      setPageUsed(i);
       return i;
     }
   xDeb("No more freepage, enlarging...");
   page_t i = _frames.size();
   _frames.resize(i+16, false);
-  _frames[i] = true;
+  setPageUsed(i);
   return i;
 }
 
@@ -37,6 +37,7 @@ void Memory::setPageFree(page_t page)
   assert(_frames[page]);
 
   _frames[page] = false;
+  --_usedPageCount;
 }
 
 void Memory::setPageUsed(page_t page)
@@ -48,6 +49,7 @@ void Memory::setPageUsed(page_t page)
   assert(!_frames[page]);
 
   _frames[page] = true;
+  ++_usedPageCount;
 }
 
 void Memory::setRangeUsed(page_t from, page_t to)
