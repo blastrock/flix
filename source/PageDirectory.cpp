@@ -383,7 +383,7 @@ std::optional<physaddr_t> PageDirectory::getPhysicalAddress(void* vaddr)
   assert(g_pagingReady);
 
   PageTableEntry* page = m_manager->getPage(vaddr);
-  if (!page && !page->p)
+  if (!page || !page->p)
     return std::nullopt;
 
   return page->base << BASE_SHIFT;
