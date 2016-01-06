@@ -39,6 +39,12 @@ void waitEnd()
         "concurrent_malloc", loopRun, loopRun);
   }
 
+  th::runTest("mmap_defered",
+      []{
+        char* p = (char*)sys::call(sys::mmap, nullptr, 0x10000);
+        p[0x1005] = 'p';
+      });
+
   th::finish();
   sys::call(sys::exit);
 }

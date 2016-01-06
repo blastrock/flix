@@ -55,6 +55,11 @@ void waitEnd()
           xDeb("different stuff %d", i++);
       });
 
+  th::runTestProcesses("mmap",
+      []{
+        sys::call(sys::mmap, nullptr, 0x10000);
+      });
+
   th::runTest("fork", testfork);
 
   th::finish();

@@ -26,6 +26,6 @@ static constexpr physaddr_t PHYS_ADDRESS_MASK =
 static constexpr page_t INVALID_PAGE =
     (static_cast<page_t>(-1) & PHYS_ADDRESS_MASK) >> LOG_PAGE_SIZE;
 /// Invalid physical address
-static constexpr page_t INVALID_PHYS = static_cast<physaddr_t>(-1);
+static constexpr page_t INVALID_PHYS = INVALID_PAGE << LOG_PAGE_SIZE;
 
 #endif

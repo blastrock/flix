@@ -277,8 +277,16 @@ void PageDirectory::unmapUserSpace()
     g_currentPageDirectory = this;
 
   xDeb("Marking pages as free");
-  newPd.forEachUserPage([](PageTableEntry&, void* addr, physaddr_t phys){
+  newPd.forEachUserPage([](PageTableEntry& e, void* addr, physaddr_t phys){
         xDeb("Unmapped %p", addr);
+
+        // deferred allocation
+        if (!e.p)
+        {
+          assert(phys == INVALID_PHYS);
+          return;
+        }
+
         Memory::get().setPageFree(phys / PAGE_SIZE);
       });
 }
@@ -346,7 +354,8 @@ bool PageDirectory::handleFault(void* vaddr)
   if (!entry || entry->p || entry->base != INVALID_PAGE)
   {
     if (entry)
-      xDeb("Not a deferred allocation %s %x", entry->p, entry->base);
+      xDeb("Not a deferred allocation (p:%s base:%x)", (bool)entry->p,
+          entry->base);
     else
       xDeb("Not a deferred allocation (no entry)");
     return false;
