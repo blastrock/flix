@@ -46,10 +46,10 @@ struct Task
   struct HierarchyHolder
   {
     Mutex mutex;
-    Task* parent;
-    Task* firstChild;
-    Task* nextSibling;
-    Task* prevSibling;
+    Task* parent = nullptr;
+    Task* firstChild = nullptr;
+    Task* nextSibling = nullptr;
+    Task* prevSibling = nullptr;
 
     HierarchyHolder() = default;
     HierarchyHolder(HierarchyHolder&& r)
