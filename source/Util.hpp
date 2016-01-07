@@ -138,7 +138,7 @@ template <typename T>
 class ScopedLock
 {
 public:
-  ScopedLock(T& lock)
+  explicit ScopedLock(T& lock)
     : lock(lock)
   {
     lock.lock();
@@ -171,7 +171,7 @@ template <typename T>
 class ScopedUnlock
 {
 public:
-  ScopedUnlock(T& lock)
+  explicit ScopedUnlock(T& lock)
     : lock(lock)
   {
     lock.unlock();

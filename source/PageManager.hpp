@@ -250,7 +250,7 @@ class PageManager<Allocator, CurLevel>
     private:
       Entry* m_ptr = nullptr;
 
-      Iterator(Entry* entry)
+      explicit Iterator(Entry* entry)
         : m_ptr(entry)
       {}
 

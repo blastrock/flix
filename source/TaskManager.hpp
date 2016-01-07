@@ -227,11 +227,11 @@ private:
 
   static TaskManager* instance;
 
-  TaskStateSegment* _tss;
+  TaskStateSegment* _tss = nullptr;
 
   std::set<Task, TaskComparator> _tasks;
-  pid_t _activeTask;
-  pid_t _nextTid;
+  pid_t _activeTask = 0;
+  pid_t _nextTid = 1;
 
   void setKernelStack();
   void updateNextTid();

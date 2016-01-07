@@ -6,7 +6,7 @@ XLL_LOG_CATEGORY("support/sync/condvar");
 
 struct CondVar::Waiter
 {
-  Waiter(Task& task)
+  explicit Waiter(Task& task)
     : task(task)
   {}
 

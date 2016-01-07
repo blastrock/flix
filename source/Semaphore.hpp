@@ -10,7 +10,7 @@ class Semaphore
 public:
   using Scoped = ScopedLock<Semaphore>;
 
-  Semaphore(uint32_t init)
+  explicit Semaphore(uint32_t init)
     : _count(init)
   {}
 

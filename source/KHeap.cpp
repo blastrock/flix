@@ -21,7 +21,7 @@ class KHeap::HeapBlock
       return &data;
     }
 
-    uint32_t getSize()
+    uint32_t getSize() const
     {
       return state.sizeUpper << BLOCK_ALIGN_SHIFT;
     }
@@ -31,7 +31,7 @@ class KHeap::HeapBlock
       state.sizeUpper = asize >> BLOCK_ALIGN_SHIFT;
     }
 
-    bool getUsed()
+    bool getUsed() const
     {
       return state.used;
     }

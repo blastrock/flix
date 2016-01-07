@@ -17,7 +17,7 @@ public:
   static constexpr unsigned PoolSize = PSize;   // in blocks
   static constexpr unsigned StaticSize = SSize; // in pages
 
-  PageHeap(char* heapStart);
+  explicit PageHeap(char* heapStart);
 
   /**
    * Allocate BSize pages of memory on the page heap

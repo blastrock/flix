@@ -34,8 +34,6 @@ TaskManager* TaskManager::get()
 }
 
 TaskManager::TaskManager()
-  : _activeTask(0)
-  , _nextTid(1)
 {
   // for the moment there are 0 task, so we don't need to tick
   Interrupt::mask(IRQ_TIMER);

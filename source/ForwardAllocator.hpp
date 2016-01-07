@@ -9,7 +9,7 @@ class ForwardAllocator
   public:
     typedef T value_type;
 
-    ForwardAllocator(Pool* pool = nullptr);
+    explicit ForwardAllocator(Pool* pool = nullptr);
     template <typename T2>
     ForwardAllocator(const ForwardAllocator<T2, Pool>& o);
     template <typename T2>

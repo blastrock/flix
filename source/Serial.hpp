@@ -6,7 +6,7 @@
 class Serial
 {
 public:
-  Serial(uint16_t port)
+  explicit Serial(uint16_t port)
     : _port(port)
   {}
 

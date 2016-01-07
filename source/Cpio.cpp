@@ -9,7 +9,7 @@ class CpioFileInode;
 class CpioFileHandle : public fs::Handle
 {
 public:
-  CpioFileHandle(std::shared_ptr<CpioFileInode> inode)
+  explicit CpioFileHandle(std::shared_ptr<CpioFileInode> inode)
     : _file(inode)
     , _pos(0)
   {}
@@ -93,8 +93,8 @@ class CpioFs : public fs::SuperBlock
 {
 public:
   CpioFs()
+    : _root(std::make_shared<CpioFolderInode>())
   {
-    _root = std::make_shared<CpioFolderInode>();
   }
 
   virtual std::shared_ptr<fs::Inode> getRoot() override

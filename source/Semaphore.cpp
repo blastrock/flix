@@ -5,7 +5,7 @@ XLL_LOG_CATEGORY("support/sync/semaphore");
 
 struct Semaphore::Waiter
 {
-  Waiter(Task& task)
+  explicit Waiter(Task& task)
     : task(task)
   {}
 
