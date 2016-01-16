@@ -124,28 +124,7 @@ void Interrupt::handle(InterruptState* s)
       if (tm->isTaskActive())
       {
         // for the moment, only switch task
-        Task::Context context;
-        context.r15 = s->r15;
-        context.r14 = s->r14;
-        context.r13 = s->r13;
-        context.r12 = s->r12;
-        context.rbx = s->rbx;
-        context.rbp = s->rbp;
-        context.r11 = s->r11;
-        context.r10 = s->r10;
-        context.r9 = s->r9;
-        context.r8 = s->r8;
-        context.rax = s->rax;
-        context.rcx = s->rcx;
-        context.rdx = s->rdx;
-        context.rsi = s->rsi;
-        context.rdi = s->rdi;
-        context.rip = s->rip;
-        context.cs = s->cs;
-        context.rflags = s->rflags;
-        context.rsp = s->rsp;
-        context.ss = s->ss;
-        tm->saveCurrentTask(context);
+        tm->saveCurrentTask(s->toTaskContext());
       }
       tm->scheduleNext();
     }
