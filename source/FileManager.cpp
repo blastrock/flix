@@ -17,7 +17,7 @@ public:
 fs::IoExpected<off_t> StdOut::write(const void* buffer, off_t size)
 {
   auto str = static_cast<const char*>(buffer);
-  Screen::putString(str, size);
+  Screen::getInstance().putString(str, size);
   return size;
 }
 

@@ -22,13 +22,13 @@ void Tty::feedInput(char data)
     if (!_stdin.empty())
     {
       _stdin.pop_back();
-      Screen::putChar(data);
+      Screen::getInstance().putChar(data);
     }
     return;
   }
 
   _stdin.push_back(data);
-  Screen::putChar(data);
+  Screen::getInstance().putChar(data);
 
   if (data == '\n')
     _condvar.notify_all();
@@ -38,7 +38,7 @@ void Tty::feedInput(char data)
 
 void Tty::print(const char* buf, size_t size)
 {
-  Screen::putString(buf, size);
+  Screen::getInstance().putString(buf, size);
 }
 
 size_t Tty::readInto(char* buf, size_t size)

@@ -2,55 +2,58 @@
 #define SCREEN_HPP
 
 #include <stddef.h>
-
-struct Position
-{
-  int x;
-  int y;
-};
-
-enum class Color
-{
-  Black,
-  Blue,
-  Green,
-  Cyan,
-  Red,
-  Magenta,
-  Brown,
-  LightGrey,
-  DarkGrey,
-  LightBlue,
-  LightGreen,
-  LightCyan,
-  LightRed,
-  LightMagenta,
-  LightBrown,
-  White
-};
+#include "SpinLock.hpp"
 
 class Screen
 {
-  public:
-    static void clear();
-    static void putString(const char* c,
-        size_t size,
-        Color fg = Color::LightGrey,
-        Color bg = Color::Black);
-    static void putString(
-        const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    static void putChar(
-        char c, Color fg = Color::LightGrey, Color bg = Color::Black);
-    static void putChar(Position pos,
-        char c,
-        Color fg = Color::LightGrey,
-        Color bg = Color::Black);
-    static void updateCursor();
+public:
+  struct Position
+  {
+    int x;
+    int y;
+  };
 
-  private:
-    static Position g_cursor;
+  enum class Color
+  {
+    Black,
+    Blue,
+    Green,
+    Cyan,
+    Red,
+    Magenta,
+    Brown,
+    LightGrey,
+    DarkGrey,
+    LightBlue,
+    LightGreen,
+    LightCyan,
+    LightRed,
+    LightMagenta,
+    LightBrown,
+    White,
+  };
 
-    static void scrollOneLine();
+  static Screen& getInstance();
+
+  void clear();
+  void putString(const char* c,
+      size_t size,
+      Color fg = Color::LightGrey,
+      Color bg = Color::Black);
+  void putString(
+      const char* c, Color fg = Color::LightGrey, Color bg = Color::Black);
+  void putChar(char c, Color fg = Color::LightGrey, Color bg = Color::Black);
+  void putChar(Position pos,
+      char c,
+      Color fg = Color::LightGrey,
+      Color bg = Color::Black);
+  void updateCursor();
+
+private:
+  SpinLock _lock;
+  Position _cursor = {};
+
+  void scrollOneLine();
 };
 
 #endif /* SCREEN_HPP */

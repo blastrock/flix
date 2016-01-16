@@ -8,18 +8,22 @@
 
 static constexpr uintptr_t VGA_BASE = 0xffffffffc1000000;
 
-Position Screen::g_cursor = {0, 0};
+Screen& Screen::getInstance()
+{
+  static Screen g_screen;
+  return g_screen;
+}
 
 void Screen::clear()
 {
+  auto _ = _lock.getScoped();
+
   std::memset((void*)VGA_BASE, 0, sizeof(uint16_t)*80*25);
-  g_cursor = {0, 0};
+  _cursor = {0, 0};
 }
 
 void Screen::putString(const char* c, size_t size, Color fg, Color bg)
 {
-  DisableInterrupts _;
-
   while (size--)
   {
     putChar(*c, fg, bg);
@@ -31,8 +35,6 @@ void Screen::putString(const char* c, size_t size, Color fg, Color bg)
 
 void Screen::putString(const char* c, Color fg, Color bg)
 {
-  DisableInterrupts _;
-
   while (*c)
   {
     putChar(*c, fg, bg);
@@ -44,63 +46,65 @@ void Screen::putString(const char* c, Color fg, Color bg)
 
 void Screen::putChar(char c, Color fg, Color bg)
 {
-  DisableInterrupts _;
+  auto _ = _lock.getScoped();
 
   switch (c)
   {
     case '\n':
-      g_cursor.x = 0;
-      ++g_cursor.y;
+      _cursor.x = 0;
+      ++_cursor.y;
       break;
     case '\r':
-      g_cursor.x = 0;
+      _cursor.x = 0;
       break;
     case '\b':
-      if (g_cursor.x)
-        --g_cursor.x;
-      putChar(g_cursor, '\0', fg, bg);
+      if (_cursor.x)
+        --_cursor.x;
+      putChar(_cursor, '\0', fg, bg);
       break;
     case '\t':
-      g_cursor.x += 8 - g_cursor.x % 8;
-      if (g_cursor.x >= 80)
+      _cursor.x += 8 - _cursor.x % 8;
+      if (_cursor.x >= 80)
       {
-        g_cursor.x = 0;
-        ++g_cursor.y;
+        _cursor.x = 0;
+        ++_cursor.y;
       }
       break;
     default:
-      putChar(g_cursor, c, fg, bg);
+      putChar(_cursor, c, fg, bg);
 
-      ++g_cursor.x;
-      if (g_cursor.x == 80)
+      ++_cursor.x;
+      if (_cursor.x == 80)
       {
-        g_cursor.x = 0;
-        ++g_cursor.y;
+        _cursor.x = 0;
+        ++_cursor.y;
       }
       break;
   }
 
-  if (g_cursor.y == 24)
+  if (_cursor.y == 24)
   {
     scrollOneLine();
-    --g_cursor.y;
+    --_cursor.y;
   }
-  assert(g_cursor.x < 80 && g_cursor.x >= 0);
-  assert(g_cursor.y < 24 && g_cursor.y >= 0);
+  assert(_cursor.x < 80 && _cursor.x >= 0);
+  assert(_cursor.y < 24 && _cursor.y >= 0);
 }
 
 void Screen::putChar(Position pos, char c, Color fg, Color bg)
 {
   assert(pos.x < 80 && pos.x >= 0);
   assert(pos.y < 24 && pos.y >= 0);
-  uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
-  uint16_t* screen = (uint16_t*)VGA_BASE;
+  const uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
+  uint16_t* const screen = (uint16_t*)VGA_BASE;
   screen[pos.y * 80 + pos.x] = val;
 }
 
 void Screen::updateCursor()
 {
-  uint16_t cursorLocation = g_cursor.y * 80 + g_cursor.x;
+  auto _ = _lock.getScoped();
+
+  uint16_t cursorLocation = _cursor.y * 80 + _cursor.x;
   io::outb(0x3D4, 14);                  // Tell the VGA board we are setting the high cursor byte.
   io::outb(0x3D5, cursorLocation >> 8); // Send the high cursor byte.
   io::outb(0x3D4, 15);                  // Tell the VGA board we are setting the low cursor byte.

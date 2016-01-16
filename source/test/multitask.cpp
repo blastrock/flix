@@ -68,8 +68,8 @@ void waitEnd()
 
 [[noreturn]] void _main()
 {
-  Screen::clear();
-  Screen::putString("Booting Flix\n");
+  Screen::getInstance().clear();
+  Screen::getInstance().putString("Booting Flix\n");
 
   auto& taskManager = *TaskManager::get();
 

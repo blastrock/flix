@@ -1,7 +1,6 @@
 #ifndef DEBUG_HPP
 #define DEBUG_HPP
 
-#include "Screen.hpp"
 #include "io.hpp"
 #include <xll/log.hpp>
 

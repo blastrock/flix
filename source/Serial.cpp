@@ -47,14 +47,6 @@ void Serial::write(char c)
   int i = 0;
   while ((io::inb(_port + REG_LINE_STATUS) & 0x20) == 0)
     ++i;
-
-  if (i)
-  {
-  std::ostringstream ss;
-  ss << "looped for " << i << "time\n";
-  Screen::putString(ss.str().c_str());
-      }
-
   io::outb(_port + REG_DATA, c);
 }
 
