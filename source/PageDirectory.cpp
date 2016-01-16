@@ -65,7 +65,7 @@ void PageDirectory::initWithDefaultPaging()
   createPm();
 
   xDeb("Mapping VGA");
-  _mapPageTo(Symbols::getKernelVTextStart() + 0x01000000, 0xB8000, ATTR_RW);
+  _mapPageTo(Symbols::getKernelVVga(), 0xB8000, ATTR_RW);
   Memory::get().setPageUsed(0xB8000 / 0x1000);
 
 #define MAP_RANGE(name, from, to, phys, attr)         \

@@ -24,6 +24,7 @@ public:
   static char* getKernelVDataStart();
   static char* getKernelVDataEnd();
   static char* getKernelVBssEnd();
+  static char* getKernelVVga();
   static char* getStackBase();
   static char* getPageHeapBase();
   static char* getStackPageHeapBase();

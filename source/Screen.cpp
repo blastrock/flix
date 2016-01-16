@@ -1,12 +1,11 @@
 #include "Screen.hpp"
 #include "Cpu.hpp"
 #include "Util.hpp"
+#include "Symbols.hpp"
 
 #include <cstdint>
 #include <cstring>
 #include "io.hpp"
-
-static constexpr uintptr_t VGA_BASE = 0xffffffffc1000000;
 
 Screen& Screen::getInstance()
 {
@@ -18,7 +17,7 @@ void Screen::clear()
 {
   auto _ = _lock.getScoped();
 
-  std::memset((void*)VGA_BASE, 0, sizeof(uint16_t)*80*25);
+  std::memset(Symbols::getKernelVVga(), 0, sizeof(uint16_t)*80*25);
   _cursor = {0, 0};
 }
 
@@ -96,7 +95,7 @@ void Screen::putChar(Position pos, char c, Color fg, Color bg)
   assert(pos.x < 80 && pos.x >= 0);
   assert(pos.y < 24 && pos.y >= 0);
   const uint16_t val = c | ((uint16_t)fg) << 8 | ((uint16_t)bg) << 12;
-  uint16_t* const screen = (uint16_t*)VGA_BASE;
+  auto const screen = reinterpret_cast<uint16_t*>(Symbols::getKernelVVga());
   screen[pos.y * 80 + pos.x] = val;
 }
 
@@ -105,14 +104,22 @@ void Screen::updateCursor()
   auto _ = _lock.getScoped();
 
   uint16_t cursorLocation = _cursor.y * 80 + _cursor.x;
-  io::outb(0x3D4, 14);                  // Tell the VGA board we are setting the high cursor byte.
-  io::outb(0x3D5, cursorLocation >> 8); // Send the high cursor byte.
-  io::outb(0x3D4, 15);                  // Tell the VGA board we are setting the low cursor byte.
-  io::outb(0x3D5, cursorLocation);      // Send the low cursor byte.
+  // Tell the VGA board we are setting the high cursor byte.
+  io::outb(0x3D4, 14);
+  // Send the high cursor byte.
+  io::outb(0x3D5, cursorLocation >> 8);
+  // Tell the VGA board we are setting the low cursor byte.
+  io::outb(0x3D4, 15);
+  // Send the low cursor byte.
+  io::outb(0x3D5, cursorLocation);
 }
 
 void Screen::scrollOneLine()
 {
-  std::memcpy((void*)VGA_BASE, (void*)(VGA_BASE + 80*sizeof(uint16_t)), sizeof(uint16_t)*80*24);
-  std::memset((void*)(VGA_BASE + 24*80*sizeof(uint16_t)), 0, 80*sizeof(uint16_t));
+  std::memcpy(Symbols::getKernelVVga(),
+      Symbols::getKernelVVga() + 80 * sizeof(uint16_t),
+      sizeof(uint16_t) * 80 * 24);
+  std::memset(Symbols::getKernelVVga() + 24 * 80 * sizeof(uint16_t),
+      0,
+      80 * sizeof(uint16_t));
 }
