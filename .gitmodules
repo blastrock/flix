@@ -1,21 +1,21 @@
 [submodule "libkcxx"]
 	path = libkcxx
-	url = https://BlastRock@bitbucket.org/BlastRock/libkcxx.git
+	url = https://github.com/blastrock/libkcxx.git
 [submodule "libkc"]
 	path = libkc
-	url = https://BlastRock@bitbucket.org/BlastRock/libkc.git
+	url = https://github.com/blastrock/libkc.git
 [submodule "libcxxabi"]
 	path = libcxxabi
 	url = https://github.com/llvm-mirror/libcxxabi.git
 [submodule "external/variant"]
 	path = external/variant
-	url = https://github.com/eggs-cpp/variant
+	url = https://github.com/eggs-cpp/variant.git
 [submodule "external/expected"]
 	path = external/expected
-	url = https://BlastRock@bitbucket.org/BlastRock/expected.git
+	url = https://github.com/blastrock/xllexpected.git
 [submodule "external/xllpnt"]
 	path = external/xllpnt
-	url = https://github.com/blastrock/xllpnt
+	url = https://github.com/blastrock/xllpnt.git
 [submodule "external/xlllog"]
 	path = external/xlllog
-	url = https://bitbucket.org/BlastRock/xlllog
+	url = https://github.com/blastrock/xlllog.git
