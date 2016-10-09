@@ -84,3 +84,10 @@ You can make a bootable USB drive with the following command, inside the build
 directory::
 
     $ dd if=build/source/flix_flixmain.img of=/dev/<your drive> bs=1M
+
+How to compile something for flix
+---------------------------------
+
+You need to compile a `libc<https://github.com/blastrock/platform_bionic>`_ and
+then you can compile `my fork of
+busybox<https://github.com/blastrock/busybox>`_.
